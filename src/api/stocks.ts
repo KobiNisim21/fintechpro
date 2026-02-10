@@ -1,0 +1,95 @@
+import apiClient from './client';
+
+export const stocksAPI = {
+    getQuote: async (symbol: string) => {
+        const response = await apiClient.get(`/stocks/${symbol}/quote`);
+        return response.data;
+    },
+
+    getStockNews: async (symbol: string) => {
+        const response = await apiClient.get(`/stocks/${symbol}/news`);
+        return response.data;
+    },
+
+    getMarketNews: async () => {
+        const response = await apiClient.get('/stocks/market/news');
+        return response.data;
+    },
+
+    getForexRate: async () => {
+        const response = await apiClient.get('/stocks/forex/usd-ils');
+        return response.data;
+    },
+
+    getStockHistory: async (symbol: string, from: number, to: number, resolution: string = 'D') => {
+        const response = await apiClient.get(`/stocks/${symbol}/history`, {
+            params: { from, to, resolution }
+        });
+        return response.data;
+    },
+
+    getExtendedQuote: async (symbol: string): Promise<ExtendedQuote> => {
+        const response = await apiClient.get(`/stocks/${symbol}/extended-quote`);
+        return response.data;
+    },
+
+    getBatchExtendedQuotes: async (symbols: string[]): Promise<Record<string, ExtendedQuote>> => {
+        const response = await apiClient.get('/stocks/batch-extended-quote', {
+            params: { symbols: symbols.join(',') }
+        });
+        return response.data;
+    },
+};
+
+export interface StockQuote {
+    c: number; // Current price
+    d: number; // Change
+    dp: number; // Percent change
+    h: number; // High price of the day
+    l: number; // Low price of the day
+    o: number; // Open price of the day
+    pc: number; // Previous close price
+    t: number; // Timestamp
+}
+
+export interface ExtendedQuote {
+    symbol: string;
+    regularMarketPrice: number;
+    regularMarketPreviousClose: number;
+    regularMarketChange: number;
+    regularMarketChangePercent: number;
+    preMarketPrice: number | null;
+    preMarketChange: number | null;
+    preMarketChangePercent: number | null;
+    postMarketPrice: number | null;
+    postMarketChange: number | null;
+    postMarketChangePercent: number | null;
+    marketState: 'PRE' | 'REGULAR' | 'POST' | 'CLOSED' | 'POSTPOST' | 'PREPRE';
+    exchangeTimezoneName: string;
+}
+
+export interface CandleData {
+    c: number[]; // Close prices
+    t: number[]; // Timestamps
+    s: string; // Status
+}
+
+export interface NewsItem {
+    category: string;
+    datetime: number;
+    headline: string;
+    id: number;
+    image: string;
+    related: string;
+    source: string;
+    summary: string;
+    url: string;
+}
+
+export interface ForexRate {
+    rate: number;
+    source: string;
+    base?: string;
+    target?: string;
+    error?: string;
+}
