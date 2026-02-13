@@ -1,4 +1,5 @@
 import { Sidebar } from './components/Sidebar';
+import { MobileNav } from './components/MobileNav';
 import { PortfolioHero } from './components/PortfolioHero';
 import { StockGrid } from './components/StockGrid';
 import { PortfolioChart } from './components/PortfolioChart';
@@ -11,24 +12,29 @@ import { RegisterForm } from './components/RegisterForm';
 
 function Dashboard() {
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#0f0f12]">
-      {/* Fixed Sidebar */}
-      <Sidebar />
+    <div className="flex h-screen w-full overflow-hidden bg-[#0f0f12] flex-col lg:flex-row">
+      {/* Mobile Navigation - Only visible on mobile */}
+      <MobileNav />
+
+      {/* Fixed Sidebar - Hidden on mobile, Flex on desktop */}
+      <div className="hidden lg:flex h-full shrink-0">
+        <Sidebar />
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 h-full overflow-y-auto p-8 space-y-8 w-full min-w-0">
+      <main className="flex-1 h-full overflow-y-auto p-4 lg:p-8 space-y-6 lg:space-y-8 w-full min-w-0">
         {/* Hero Card */}
         <PortfolioHero />
 
         {/* Stock Portfolio Grid */}
         <section>
-          <h2 className="text-2xl font-semibold mb-6 text-white/90">Portfolio Holdings</h2>
+          <h2 className="text-xl lg:text-2xl font-semibold mb-4 lg:mb-6 text-white/90">Portfolio Holdings</h2>
           <StockGrid />
         </section>
 
         {/* Statistics & Analytics */}
         <section>
-          <h2 className="text-2xl font-semibold mb-6 text-white/90">Statistics & Analytics</h2>
+          <h2 className="text-xl lg:text-2xl font-semibold mb-4 lg:mb-6 text-white/90">Statistics & Analytics</h2>
           <PortfolioChart />
         </section>
       </main>
