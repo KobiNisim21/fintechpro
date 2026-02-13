@@ -62,7 +62,7 @@ export function PortfolioHero() {
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
 
       <div className="relative z-10">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-6 mb-6">
+        <div className="flex flex-wrap items-start justify-between gap-6 mb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider">Total Portfolio Value</h3>
