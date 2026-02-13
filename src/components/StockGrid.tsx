@@ -7,7 +7,7 @@ export function StockGrid() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-start">
         <AddPositionDialog />
       </div>
       <div className="flex flex-wrap gap-4 justify-start pb-20" style={{ flexWrap: 'wrap' }}>

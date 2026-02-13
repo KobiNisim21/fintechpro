@@ -44,7 +44,7 @@ export function AddPositionDialog() {
         <>
             <Button
                 onClick={() => setOpen(true)}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2"
+                className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 border-0"
             >
                 <Plus className="w-4 h-4" />
                 Add Position
