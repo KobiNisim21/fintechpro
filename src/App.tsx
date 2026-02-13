@@ -24,7 +24,7 @@ function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 h-full overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-8 w-full min-w-0 pt-20 md:pt-8">
+      <main className="flex-1 h-full overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-8 w-full min-w-0 pt-20 md:pt-8 pb-32">
         {/* Hero Card */}
         <PortfolioHero />
 

@@ -57,12 +57,12 @@ export function PortfolioHero() {
   const isTotalPositive = totalGainUSD >= 0;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500/20 via-[#1a1a1f]/80 to-cyan-500/20 backdrop-blur-2xl border border-white/10 p-8">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500/20 via-[#1a1a1f]/80 to-cyan-500/20 backdrop-blur-2xl border border-white/10 p-6 md:p-8">
       {/* Glassmorphism overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
 
       <div className="relative z-10">
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-6 mb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider">Total Portfolio Value</h3>
