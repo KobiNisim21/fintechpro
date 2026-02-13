@@ -6,7 +6,7 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 export function MobileNav() {
     return (
-        <div className="md:hidden mobile-nav-container flex items-center justify-between p-4 border-b border-white/10 bg-[#0f0f12]">
+        <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#0f0f12]">
             <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                     Portfolio Pro
