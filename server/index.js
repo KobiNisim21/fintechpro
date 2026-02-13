@@ -37,7 +37,13 @@ const PORT = process.env.PORT || 5000;
 // Socket.io setup with CORS
 const io = new Server(httpServer, {
     cors: {
-        origin: ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'],
+        origin: [
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5173',
+            process.env.ALLOWED_ORIGIN // Add production frontend URL from env
+        ].filter(Boolean),
         methods: ['GET', 'POST'],
         credentials: true
     }
