@@ -12,29 +12,29 @@ import { RegisterForm } from './components/RegisterForm';
 
 function Dashboard() {
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#0f0f12] flex-col lg:flex-row">
+    <div className="flex h-screen w-full overflow-hidden bg-[#0f0f12] flex-col md:flex-row">
       {/* Mobile Navigation - Only visible on mobile */}
       <MobileNav />
 
       {/* Fixed Sidebar - Hidden on mobile, Flex on desktop */}
-      <div className="hidden lg:flex h-full shrink-0">
+      <div className="hidden md:flex h-full shrink-0">
         <Sidebar />
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 h-full overflow-y-auto p-4 lg:p-8 space-y-6 lg:space-y-8 w-full min-w-0">
+      <main className="flex-1 h-full overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-8 w-full min-w-0">
         {/* Hero Card */}
         <PortfolioHero />
 
         {/* Stock Portfolio Grid */}
         <section>
-          <h2 className="text-xl lg:text-2xl font-semibold mb-4 lg:mb-6 text-white/90">Portfolio Holdings</h2>
+          <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 text-white/90">Portfolio Holdings</h2>
           <StockGrid />
         </section>
 
         {/* Statistics & Analytics */}
         <section>
-          <h2 className="text-xl lg:text-2xl font-semibold mb-4 lg:mb-6 text-white/90">Statistics & Analytics</h2>
+          <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 text-white/90">Statistics & Analytics</h2>
           <PortfolioChart />
         </section>
       </main>
