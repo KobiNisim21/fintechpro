@@ -11,6 +11,22 @@ import * as stockData from '../services/stockDataService.js';
 // ============================================
 const candleCache = new Map();
 
+// @desc    Search for stocks
+// @route   GET /api/stocks/search?q=query
+// @access  Private
+export const searchStocks = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q) {
+            return res.status(400).json({ message: 'Missing search query' });
+        }
+        const data = await stockData.searchStocks(q);
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Get stock quote (price, change, etc.)
 // @route   GET /api/stocks/:symbol/quote
 // @access  Private
