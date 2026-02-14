@@ -4,9 +4,15 @@ export default async function handler(req, res) {
     try {
         console.log('API Handler triggered');
 
+        // Dynamically import app to catch initialization errors
+        const { default: app, dbConnection } = await import('../server/app.js');
+        console.log('App loaded');
+
         // Ensure DB is connected before handling the request
-        await dbConnection;
-        console.log('DB Connection waiting complete');
+        if (dbConnection) {
+            await dbConnection;
+            console.log('DB Connection waiting complete');
+        }
 
         return app(req, res);
     } catch (error) {
