@@ -2,9 +2,8 @@ import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
-// Use VITE_API_URL from environment, ensuring we strip '/api' suffix for the socket connection
-// Fallback to localhost:5000 if not set
-const SOCKET_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
+// Use VITE_SOCKET_URL for dedicated socket server, or fallback to VITE_API_URL/localhost
+const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
 
 /**
  * Get or create the Socket.io connection
