@@ -41,7 +41,7 @@ app.use(express.json());
 // Connect to MongoDB
 // Note: In Vercel serverless, connection might need to be managed differently (cached), 
 // but mongoose usually handles connection pooling well enough for this scale.
-connectDB();
+connectDB().catch(err => console.error('Initial MongoDB connection error:', err));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -51,6 +51,11 @@ app.use('/api/stocks', stocksRoutes);
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'TraderAI Backend is running' });
+});
+
+// Root API route for testing
+app.get('/api', (req, res) => {
+    res.json({ message: 'TraderAI API Root' });
 });
 
 // Error handling middleware (must be last)
