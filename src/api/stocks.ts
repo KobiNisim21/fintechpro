@@ -39,6 +39,13 @@ export const stocksAPI = {
         });
         return response.data;
     },
+
+    search: async (query: string) => {
+        const response = await apiClient.get('/stocks/search', {
+            params: { q: query }
+        });
+        return response.data;
+    },
 };
 
 export interface StockQuote {

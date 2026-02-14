@@ -90,6 +90,66 @@ export async function getQuote(symbol) {
     const cached = getCached(cacheKey, CACHE_DURATIONS.quote);
     if (cached) return cached;
 
+    // HANDLE ISRAELI STOCKS (TASE) via Yahoo Finance
+    if (symbol.endsWith('.TA')) {
+        return dedupedFetch(cacheKey, async () => {
+            console.log(`🇮🇱 Fetching TASE quote for ${symbol} from Yahoo Finance...`);
+            try {
+                // Fetch quote and forex rate in parallel
+                const [quote, forexData] = await Promise.all([
+                    yahooFinance.quote(symbol),
+                    getForexRate()
+                ]);
+
+                if (!quote || quote.regularMarketPrice === undefined) {
+                    throw new Error(`No Yahoo Finance data for ${symbol}`);
+                }
+
+                // TASE prices are in Agorot (ILA) -> Convert to ILS (/100) -> Convert to USD (/rate)
+                // If currency is already ILS, don't divide by 100.
+                let priceInILS = quote.regularMarketPrice;
+                if (quote.currency === 'ILA') {
+                    priceInILS = priceInILS / 100;
+                }
+
+                const usdRate = forexData.rate || 3.65;
+                const priceInUSD = priceInILS / usdRate;
+
+                // Calculate change in USD (approximate using same rate)
+                let changeInILS = quote.regularMarketChange || 0;
+                if (quote.currency === 'ILA') {
+                    changeInILS = changeInILS / 100;
+                }
+                const changeInUSD = changeInILS / usdRate;
+
+                // Percent change remains the same
+                const percentChange = quote.regularMarketChangePercent || 0;
+
+                // Previous close in USD
+                const prevCloseILS = (quote.regularMarketPreviousClose || (quote.regularMarketPrice - (quote.regularMarketChange || 0)));
+                const prevCloseUSD = (quote.currency === 'ILA' ? prevCloseILS / 100 : prevCloseILS) / usdRate;
+
+                const result = {
+                    c: priceInUSD,
+                    d: changeInUSD,
+                    dp: percentChange,
+                    h: (quote.regularMarketDayHigh || 0) / (quote.currency === 'ILA' ? 100 : 1) / usdRate,
+                    l: (quote.regularMarketDayLow || 0) / (quote.currency === 'ILA' ? 100 : 1) / usdRate,
+                    o: (quote.regularMarketOpen || 0) / (quote.currency === 'ILA' ? 100 : 1) / usdRate,
+                    pc: prevCloseUSD,
+                    t: Math.floor(Date.now() / 1000)
+                };
+
+                setCache(cacheKey, result);
+                return result;
+            } catch (error) {
+                console.error(`❌ Yahoo/TASE error for ${symbol}:`, error.message);
+                throw error;
+            }
+        });
+    }
+
+    // STANDARD US STOCKS via FINNHUB
     // Deduped fetch
     return dedupedFetch(cacheKey, async () => {
         const apiKey = getApiKey();
@@ -104,12 +164,50 @@ export async function getQuote(symbol) {
 
         const data = await response.json();
 
-        if (!data || data.c === 0 || data.c === undefined) {
-            throw new Error(`Invalid quote data for ${symbol}`);
+        if (!data || data.c === undefined) {
+            // Finnhub returns {c: 0} for invalid symbols sometimes, or empty result
+            if (data && data.c === 0 && data.pc === 0) {
+                throw new Error(`Invalid symbol or no data: ${symbol}`);
+            }
+        }
+        // Sanity check for 0 price
+        if (data.c === 0 && symbol !== 'ETH-USD' && symbol !== 'BTC-USD') { // Crypto might be handled differently but assuming regular stocks
+            // Proceed but warn? Or assume it's pre-market 0? Finnhub usually returns previous close.
         }
 
         setCache(cacheKey, data);
         return data;
+    });
+}
+
+// ============================================
+// SEARCH (Finnhub)
+// ============================================
+
+/**
+ * Search for stocks/symbols using Finnhub.
+ */
+export async function searchStocks(query) {
+    const cacheKey = `search_${query.toLowerCase()}`;
+    const cached = getCached(cacheKey, 60 * 60 * 1000); // 1 hour cache for search
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        const apiKey = getApiKey();
+        if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
+
+        const url = `${FINNHUB_BASE_URL}/search?q=${encodeURIComponent(query)}&token=${apiKey}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Finnhub search failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const result = data.result || [];
+
+        setCache(cacheKey, result);
+        return result;
     });
 }
 

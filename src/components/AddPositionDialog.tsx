@@ -1,10 +1,25 @@
-import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, X, Check, ChevronsUpDown } from 'lucide-react';
 import { SimpleDialog } from './SimpleDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePortfolio } from '@/context/PortfolioContext';
+import { stocksAPI } from '@/api/stocks';
+import { cn } from '@/components/ui/utils';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 
 export function AddPositionDialog() {
     const { addPosition } = usePortfolio();
@@ -17,6 +32,34 @@ export function AddPositionDialog() {
         quantity: '',
         averagePrice: '',
     });
+
+    // Search state
+    const [openCombobox, setOpenCombobox] = useState(false);
+    const [searchValue, setSearchValue] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searching, setSearching] = useState(false);
+
+    // Debounced search
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(async () => {
+            if (searchValue && searchValue.length > 1) {
+                setSearching(true);
+                try {
+                    const results = await stocksAPI.search(searchValue);
+                    setSearchResults(results);
+                } catch (err) {
+                    console.error('Search failed', err);
+                    setSearchResults([]);
+                } finally {
+                    setSearching(false);
+                }
+            } else {
+                setSearchResults([]);
+            }
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchValue]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,6 +75,7 @@ export function AddPositionDialog() {
             );
 
             setFormData({ symbol: '', name: '', quantity: '', averagePrice: '' });
+            setSearchValue('');
             setOpen(false);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to add position');
@@ -97,14 +141,64 @@ export function AddPositionDialog() {
 
                         <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center', gap: '16px' }}>
                             <Label htmlFor="symbol" className="text-right text-white/70">Symbol</Label>
-                            <Input
-                                id="symbol"
-                                className="bg-white/5 border-white/10 text-white"
-                                placeholder="AAPL"
-                                value={formData.symbol}
-                                onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
-                                required
-                            />
+                            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={openCombobox}
+                                        className="w-full justify-between bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white"
+                                    >
+                                        {formData.symbol
+                                            ? formData.symbol
+                                            : "Search stock..."}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[300px] p-0 bg-[#1a1a1f] border-white/10 text-white">
+                                    <Command className="bg-transparent">
+                                        <CommandInput
+                                            placeholder="Search symbol..."
+                                            value={searchValue}
+                                            onValueChange={setSearchValue}
+                                            className="text-white"
+                                        />
+                                        <CommandList>
+                                            <CommandEmpty>
+                                                {searching ? 'Searching...' : 'No stock found.'}
+                                            </CommandEmpty>
+                                            <CommandGroup>
+                                                {searchResults.map((stock) => (
+                                                    <CommandItem
+                                                        key={stock.symbol}
+                                                        value={stock.symbol}
+                                                        onSelect={(currentValue) => {
+                                                            setFormData({
+                                                                ...formData,
+                                                                symbol: stock.symbol, // Use exact symbol from API
+                                                                name: stock.description
+                                                            });
+                                                            setOpenCombobox(false);
+                                                        }}
+                                                        className="text-white aria-selected:bg-white/10 cursor-pointer"
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                formData.symbol === stock.symbol ? "opacity-100" : "opacity-0"
+                                                            )}
+                                                        />
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold">{stock.displaySymbol}</span>
+                                                            <span className="text-xs text-white/50">{stock.description}</span>
+                                                        </div>
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center', gap: '16px' }}>
