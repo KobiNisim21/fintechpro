@@ -64,6 +64,11 @@ function AppContent() {
     return <LoginForm />;
   }
 
+  // Redirect to dashboard if on login/register page but authenticated
+  if (currentPath === '/login' || currentPath === '/register') {
+    window.history.replaceState(null, '', '/');
+  }
+
   return <Dashboard />;
 }
 
