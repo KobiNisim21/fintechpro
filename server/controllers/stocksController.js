@@ -177,3 +177,39 @@ export const getBatchExtendedQuote = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Get Analyst Recommendations
+// @route   GET /api/stocks/:symbol/recommendation
+export const getAnalystRecommendations = async (req, res) => {
+    try {
+        const { symbol } = req.params;
+        const data = await stockData.getAnalystRecommendations(symbol);
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get Price Target
+// @route   GET /api/stocks/:symbol/price-target
+export const getPriceTarget = async (req, res) => {
+    try {
+        const { symbol } = req.params;
+        const data = await stockData.getPriceTarget(symbol);
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get Company Profile (Sector/Industry)
+// @route   GET /api/stocks/:symbol/profile
+export const getCompanyProfile = async (req, res) => {
+    try {
+        const { symbol } = req.params;
+        const data = await stockData.getCompanyProfile(symbol);
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

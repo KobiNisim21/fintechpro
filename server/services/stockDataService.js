@@ -441,3 +441,91 @@ export async function getForexRate() {
         }
     });
 }
+
+// ============================================
+// PORTFOLIO INSIGHTS (Analyst Recs, Price Targets, Company Profile)
+// ============================================
+
+/**
+ * Get Analyst Recommendations (Buy/Sell/Hold)
+ * Finnhub Endpoint: /stock/recommendation?symbol=AAPL
+ */
+export async function getAnalystRecommendations(symbol) {
+    const cacheKey = `recs_${symbol}`;
+    const cached = getCached(cacheKey, 60 * 60 * 1000); // 1 hour cache
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        const apiKey = getApiKey();
+        if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
+
+        const url = `${FINNHUB_BASE_URL}/stock/recommendation?symbol=${symbol}&token=${apiKey}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            if (response.status === 403) {
+                console.warn(`Finnhub Premium required for recs on ${symbol}, returning empty.`);
+                return [];
+            }
+            throw new Error(`Finnhub recs failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setCache(cacheKey, data);
+        return data;
+    });
+}
+
+/**
+ * Get Price Target (High/Low/Avg/Median)
+ * Finnhub Endpoint: /stock/price-target?symbol=AAPL
+ */
+export async function getPriceTarget(symbol) {
+    const cacheKey = `target_${symbol}`;
+    const cached = getCached(cacheKey, 24 * 60 * 60 * 1000); // 24 hour cache
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        const apiKey = getApiKey();
+        if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
+
+        const url = `${FINNHUB_BASE_URL}/stock/price-target?symbol=${symbol}&token=${apiKey}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            if (response.status === 403) return null;
+            throw new Error(`Finnhub price target failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setCache(cacheKey, data);
+        return data;
+    });
+}
+
+/**
+ * Get Company Profile (Sector, Industry, etc.)
+ * Finnhub Endpoint: /stock/profile2?symbol=AAPL
+ */
+export async function getCompanyProfile(symbol) {
+    const cacheKey = `profile_${symbol}`;
+    const cached = getCached(cacheKey, 7 * 24 * 60 * 60 * 1000); // 7 days cache (static data)
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        const apiKey = getApiKey();
+        if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
+
+        const url = `${FINNHUB_BASE_URL}/stock/profile2?symbol=${symbol}&token=${apiKey}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            if (response.status === 403) return null;
+            throw new Error(`Finnhub profile failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setCache(cacheKey, data);
+        return data;
+    });
+}

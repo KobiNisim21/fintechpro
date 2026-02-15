@@ -46,6 +46,21 @@ export const stocksAPI = {
         });
         return response.data;
     },
+
+    getAnalystRecommendations: async (symbol: string): Promise<RecommendationTrend[]> => {
+        const response = await apiClient.get(`/stocks/${symbol}/recommendation`);
+        return response.data;
+    },
+
+    getPriceTarget: async (symbol: string): Promise<PriceTarget> => {
+        const response = await apiClient.get(`/stocks/${symbol}/price-target`);
+        return response.data;
+    },
+
+    getCompanyProfile: async (symbol: string): Promise<CompanyProfile> => {
+        const response = await apiClient.get(`/stocks/${symbol}/profile`);
+        return response.data;
+    },
 };
 
 export interface StockQuote {
@@ -99,4 +114,38 @@ export interface ForexRate {
     base?: string;
     target?: string;
     error?: string;
+}
+
+export interface RecommendationTrend {
+    buy: number;
+    hold: number;
+    period: string;
+    sell: number;
+    strongBuy: number;
+    strongSell: number;
+    symbol: string;
+}
+
+export interface PriceTarget {
+    lastUpdated: string;
+    symbol: string;
+    targetHigh: number;
+    targetLow: number;
+    targetMean: number;
+    targetMedian: number;
+}
+
+export interface CompanyProfile {
+    country: string;
+    currency: string;
+    exchange: string;
+    finnhubIndustry: string;
+    ipo: string;
+    logo: string;
+    marketCapitalization: number;
+    name: string;
+    phone: string;
+    shareOutstanding: number;
+    ticker: string;
+    weburl: string;
 }
