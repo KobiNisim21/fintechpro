@@ -203,6 +203,7 @@ export function StockCard({ stock }: StockCardProps) {
           <div className="h-12 -mx-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
+                <YAxis domain={['dataMin', 'dataMax']} hide />
                 <Line
                   type="monotone"
                   dataKey="value"
