@@ -29,3 +29,30 @@ httpServer.listen(PORT, () => {
     startLiveAlertsService(io);
 });
 
+// Graceful Shutdown
+const shutdown = async () => {
+    console.log('🛑 Shutting down server...');
+    io.close();
+    httpServer.close(async () => {
+        console.log('HTTP server closed');
+        try {
+            const mongoose = await import('mongoose');
+            await mongoose.default.connection.close(false);
+            console.log('MongoDB connection closed');
+            process.exit(0);
+        } catch (err) {
+            console.error('Error closing MongoDB connection:', err);
+            process.exit(1);
+        }
+    });
+
+    // Force close if graceful shutdown fails/hangs
+    setTimeout(() => {
+        console.error('Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+    }, 10000);
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
