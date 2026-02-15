@@ -19,9 +19,9 @@ const CustomTreemapContent = (props: any) => {
                 height={height}
                 style={{
                     fill: colors[index % colors.length],
-                    stroke: '#fff',
-                    strokeWidth: 2 / (depth + 1e-10),
-                    strokeOpacity: 1 / (depth + 1e-10),
+                    stroke: '#18181b', // Dark border for better separation
+                    strokeWidth: 2,
+                    strokeOpacity: 1,
                 }}
             />
             {width > 50 && height > 30 && (
@@ -30,8 +30,9 @@ const CustomTreemapContent = (props: any) => {
                     y={y + height / 2}
                     textAnchor="middle"
                     fill="#fff"
-                    fontSize={12}
-                    fontWeight="bold"
+                    fontSize={14} // Larger font
+                    fontWeight="600" // Semi-bold
+                    style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.5)' }} // Text shadow for contrast
                 >
                     {name}
                 </text>
@@ -39,16 +40,43 @@ const CustomTreemapContent = (props: any) => {
             {width > 50 && height > 50 && (
                 <text
                     x={x + width / 2}
-                    y={y + height / 2 + 16}
+                    y={y + height / 2 + 18}
                     textAnchor="middle"
-                    fill="rgba(255,255,255,0.7)"
-                    fontSize={11}
+                    fill="rgba(255,255,255,0.9)"
+                    fontSize={12}
+                    style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.5)' }}
                 >
                     {((value / root.value) * 100).toFixed(1)}%
                 </text>
             )}
         </g>
     );
+};
+
+// Custom Tooltip for Charts
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-[#1a1a1a]/90 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-xl">
+                <p className="text-white font-medium mb-1">{payload[0].name}</p>
+                <div className="flex items-center gap-2 text-zinc-300 text-sm">
+                    <span>Value:</span>
+                    <span className="font-mono text-white">
+                        ${payload[0].value.toFixed(2)}
+                    </span>
+                </div>
+                {payload[0].payload.percent !== undefined && (
+                    <div className="flex items-center gap-2 text-zinc-300 text-sm">
+                        <span>Share:</span>
+                        <span className="font-mono text-cyan-400">
+                            {(payload[0].payload.percent * 100).toFixed(1)}%
+                        </span>
+                    </div>
+                )}
+            </div>
+        );
+    }
+    return null;
 };
 
 export function InsightsView() {
@@ -186,7 +214,7 @@ export function InsightsView() {
                 {/* Allocation Pie Chart */}
                 <Card className="bg-zinc-900/50 backdrop-blur-xl border-white/10">
                     <CardHeader>
-                        <CardTitle className="text-white flex items-center gap-2">
+                        <CardTitle className="text-xl md:text-2xl font-semibold text-white/90 flex items-center gap-2">
                             <PieChartIcon className="w-5 h-5 text-cyan-400" />
                             Portfolio Allocation
                         </CardTitle>
@@ -199,18 +227,16 @@ export function InsightsView() {
                                     cx="50%"
                                     cy="50%"
                                     innerRadius={60}
-                                    outerRadius={100}
+                                    outerRadius={90}
                                     paddingAngle={5}
                                     dataKey="value"
+                                    label={false}
                                 >
                                     {distributionData.map((_, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.2)" />
                                     ))}
                                 </Pie>
-                                <RechartsTooltip
-                                    formatter={(value: number) => `$${value.toFixed(2)}`}
-                                    contentStyle={{ backgroundColor: '#18181b', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }}
-                                />
+                                <RechartsTooltip content={<CustomTooltip />} />
                                 <Legend
                                     layout="vertical"
                                     verticalAlign="middle"
@@ -227,7 +253,7 @@ export function InsightsView() {
                 {/* Sector Heatmap */}
                 <Card className="bg-zinc-900/50 backdrop-blur-xl border-white/10">
                     <CardHeader>
-                        <CardTitle className="text-white flex items-center gap-2">
+                        <CardTitle className="text-xl md:text-2xl font-semibold text-white/90 flex items-center gap-2">
                             <Activity className="w-5 h-5 text-purple-400" />
                             Sector Distribution
                         </CardTitle>
@@ -239,13 +265,10 @@ export function InsightsView() {
                                     data={sectorData}
                                     dataKey="value"
                                     aspectRatio={4 / 3}
-                                    stroke="#fff"
+                                    stroke="#18181b"
                                     content={<CustomTreemapContent colors={COLORS} />}
                                 >
-                                    <RechartsTooltip
-                                        formatter={(value: number) => `$${value.toFixed(2)}`}
-                                        contentStyle={{ backgroundColor: '#18181b', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }}
-                                    />
+                                    <RechartsTooltip content={<CustomTooltip />} />
                                 </Treemap>
                             </ResponsiveContainer>
                         ) : (
@@ -259,7 +282,7 @@ export function InsightsView() {
 
             {/* Analyst Recommendations Feed */}
             <div>
-                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <h3 className="text-xl md:text-2xl font-semibold text-white/90 mb-4 flex items-center gap-2">
                     <Target className="w-5 h-5 text-emerald-400" />
                     Analyst Recommendations & Price Targets
                 </h3>

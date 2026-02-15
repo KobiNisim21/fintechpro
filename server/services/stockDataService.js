@@ -492,15 +492,36 @@ export async function getPriceTarget(symbol) {
         const url = `${FINNHUB_BASE_URL}/stock/price-target?symbol=${symbol}&token=${apiKey}`;
         const response = await fetch(url);
 
-        if (!response.ok) {
-            if (response.status === 403) return null;
-            throw new Error(`Finnhub price target failed: ${response.status}`);
+        if (response.ok) {
+            const data = await response.json();
+            return data;
         }
 
-        const data = await response.json();
-        setCache(cacheKey, data);
-        return data;
+        // Fallback to Yahoo Finance if Finnhub fails (e.g. Premium required)
+        console.log(`[INFO] Falling back to Yahoo Finance for ${symbol} price target`);
+        try {
+            const yahooUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=financialData`;
+            const yahooResp = await fetch(yahooUrl);
+            const yahooData = await yahooResp.json();
+
+            const financials = yahooData?.quoteSummary?.result?.[0]?.financialData;
+            if (financials) {
+                // Map Yahoo data to Finnhub structure for frontend compatibility
+                return {
+                    targetHigh: financials.targetHighPrice?.raw || 0,
+                    targetLow: financials.targetLowPrice?.raw || 0,
+                    targetMean: financials.targetMeanPrice?.raw || 0,
+                    targetMedian: financials.targetMedianPrice?.raw || 0,
+                    lastUpdated: new Date().toISOString()
+                };
+            }
+        } catch (yError) {
+            console.error(`Yahoo Finance fallback failed for ${symbol}`, yError);
+        }
+
+        return null;
     });
+
 }
 
 /**
