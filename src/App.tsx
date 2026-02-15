@@ -40,7 +40,6 @@ function Dashboard() {
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <h2 className="text-xl md:text-2xl font-semibold text-white/90">
               {viewMode === 'holdings' ? 'Portfolio Holdings' : 'Portfolio Insights'}
-              <span className="text-xs text-red-500 ml-2">(v2)</span>
             </h2>
 
             <div className="flex items-center gap-3">
