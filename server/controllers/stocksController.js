@@ -213,3 +213,26 @@ export const getCompanyProfile = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Batch fetch insights (recs + targets + profiles) for multiple symbols
+// @route   GET /api/stocks/batch-insights?symbols=NVDA,AAPL,...
+// @access  Private
+export const getBatchInsights = async (req, res) => {
+    try {
+        const { symbols } = req.query;
+        if (!symbols) {
+            return res.status(400).json({ message: 'Missing symbols query parameter' });
+        }
+
+        const symbolList = symbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+        if (symbolList.length === 0) {
+            return res.status(400).json({ message: 'No valid symbols provided' });
+        }
+
+        const data = await stockData.getBatchInsights(symbolList);
+        res.json(data);
+    } catch (error) {
+        console.error('❌ Error in getBatchInsights:', error.message);
+        res.status(500).json({ message: error.message });
+    }
+};

@@ -506,14 +506,16 @@ export async function getPriceTarget(symbol) {
 
             const financials = yahooData?.quoteSummary?.result?.[0]?.financialData;
             if (financials) {
-                // Map Yahoo data to Finnhub structure for frontend compatibility
-                return {
+                const result = {
                     targetHigh: financials.targetHighPrice?.raw || 0,
                     targetLow: financials.targetLowPrice?.raw || 0,
                     targetMean: financials.targetMeanPrice?.raw || 0,
                     targetMedian: financials.targetMedianPrice?.raw || 0,
                     lastUpdated: new Date().toISOString()
                 };
+                // Cache the Yahoo fallback result too!
+                setCache(cacheKey, result);
+                return result;
             }
         } catch (yError) {
             console.error(`Yahoo Finance fallback failed for ${symbol}`, yError);
@@ -549,4 +551,35 @@ export async function getCompanyProfile(symbol) {
         setCache(cacheKey, data);
         return data;
     });
+}
+
+// ============================================
+// BATCH INSIGHTS (single call for all symbols)
+// ============================================
+
+/**
+ * Fetch recommendations, price targets, and profiles for multiple symbols
+ * in a single batch call. Uses existing cache + dedup per symbol.
+ */
+export async function getBatchInsights(symbols) {
+    if (!symbols || symbols.length === 0) return { recommendations: {}, priceTargets: {}, profiles: {} };
+
+    const recommendations = {};
+    const priceTargets = {};
+    const profiles = {};
+
+    // Fetch all insights in parallel across all symbols
+    await Promise.all(symbols.map(async (symbol) => {
+        const [recs, target, profile] = await Promise.all([
+            getAnalystRecommendations(symbol).catch(() => []),
+            getPriceTarget(symbol).catch(() => null),
+            getCompanyProfile(symbol).catch(() => null)
+        ]);
+
+        if (recs && recs.length > 0) recommendations[symbol] = recs;
+        if (target) priceTargets[symbol] = target;
+        if (profile) profiles[symbol] = profile;
+    }));
+
+    return { recommendations, priceTargets, profiles };
 }

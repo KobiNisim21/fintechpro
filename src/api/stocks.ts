@@ -61,6 +61,13 @@ export const stocksAPI = {
         const response = await apiClient.get(`/stocks/${symbol}/profile`);
         return response.data;
     },
+
+    getBatchInsights: async (symbols: string[]): Promise<BatchInsightsResponse> => {
+        const response = await apiClient.get('/stocks/batch-insights', {
+            params: { symbols: symbols.join(',') }
+        });
+        return response.data;
+    },
 };
 
 export interface StockQuote {
@@ -148,4 +155,10 @@ export interface CompanyProfile {
     shareOutstanding: number;
     ticker: string;
     weburl: string;
+}
+
+export interface BatchInsightsResponse {
+    recommendations: Record<string, RecommendationTrend[]>;
+    priceTargets: Record<string, PriceTarget>;
+    profiles: Record<string, CompanyProfile>;
 }

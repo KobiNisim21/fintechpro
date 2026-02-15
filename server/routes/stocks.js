@@ -1,5 +1,5 @@
 import express from 'express';
-import { getQuote, getNews, getMarketNews, getForexRate, getStockCandles, getExtendedQuote, getBatchExtendedQuote, searchStocks, getAnalystRecommendations, getPriceTarget, getCompanyProfile } from '../controllers/stocksController.js';
+import { getQuote, getNews, getMarketNews, getForexRate, getStockCandles, getExtendedQuote, getBatchExtendedQuote, searchStocks, getAnalystRecommendations, getPriceTarget, getCompanyProfile, getBatchInsights } from '../controllers/stocksController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -7,8 +7,9 @@ const router = express.Router();
 // Protect all routes (require authentication)
 router.use(protect);
 
-// Batch endpoint MUST come before :symbol routes to avoid matching "batch-extended-quote" as a symbol
+// Batch endpoints MUST come before :symbol routes
 router.get('/batch-extended-quote', getBatchExtendedQuote);
+router.get('/batch-insights', getBatchInsights);
 router.get('/market/news', getMarketNews);
 router.get('/forex/usd-ils', getForexRate);
 router.get('/search', searchStocks); // Add Search Route
