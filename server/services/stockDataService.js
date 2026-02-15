@@ -486,44 +486,47 @@ export async function getPriceTarget(symbol) {
     if (cached) return cached;
 
     return dedupedFetch(cacheKey, async () => {
-        const apiKey = getApiKey();
-        if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
-
-        const url = `${FINNHUB_BASE_URL}/stock/price-target?symbol=${symbol}&token=${apiKey}`;
-        const response = await fetch(url);
-
-        if (response.ok) {
-            const data = await response.json();
-            return data;
+        // Try Finnhub first
+        try {
+            const apiKey = getApiKey();
+            if (apiKey) {
+                const url = `${FINNHUB_BASE_URL}/stock/price-target?symbol=${symbol}&token=${apiKey}`;
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    // Validate: Finnhub returns { targetMean: 0 } for invalid/missing data
+                    if (data && data.targetMean && data.targetMean > 0) {
+                        setCache(cacheKey, data);
+                        return data;
+                    }
+                }
+            }
+        } catch (e) {
+            console.log(`[INFO] Finnhub price-target failed for ${symbol}: ${e.message}`);
         }
 
-        // Fallback to Yahoo Finance if Finnhub fails (e.g. Premium required)
-        console.log(`[INFO] Falling back to Yahoo Finance for ${symbol} price target`);
+        // Fallback: yahoo-finance2 quoteSummary (handles auth/crumb automatically)
+        console.log(`[INFO] Falling back to yahoo-finance2 for ${symbol} price target`);
         try {
-            const yahooUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=financialData`;
-            const yahooResp = await fetch(yahooUrl);
-            const yahooData = await yahooResp.json();
-
-            const financials = yahooData?.quoteSummary?.result?.[0]?.financialData;
-            if (financials) {
+            const summary = await yahooFinance.quoteSummary(symbol, { modules: ['financialData'] });
+            const financials = summary?.financialData;
+            if (financials && financials.targetMeanPrice) {
                 const result = {
-                    targetHigh: financials.targetHighPrice?.raw || 0,
-                    targetLow: financials.targetLowPrice?.raw || 0,
-                    targetMean: financials.targetMeanPrice?.raw || 0,
-                    targetMedian: financials.targetMedianPrice?.raw || 0,
+                    targetHigh: financials.targetHighPrice || 0,
+                    targetLow: financials.targetLowPrice || 0,
+                    targetMean: financials.targetMeanPrice || 0,
+                    targetMedian: financials.targetMedianPrice || 0,
                     lastUpdated: new Date().toISOString()
                 };
-                // Cache the Yahoo fallback result too!
                 setCache(cacheKey, result);
                 return result;
             }
         } catch (yError) {
-            console.error(`Yahoo Finance fallback failed for ${symbol}`, yError);
+            console.error(`yahoo-finance2 fallback failed for ${symbol}:`, yError.message);
         }
 
         return null;
     });
-
 }
 
 /**
