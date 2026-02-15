@@ -146,11 +146,27 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
               marketStatus = getMarketStatus();
             }
 
-            // Generate sparkline data (simple simulation)
-            const sparklineData = Array.from({ length: 8 }, (_, i) => {
-              const variation = Math.random() * 5 - 2.5;
-              return currentPrice - (7 - i) * variation;
-            });
+            // Fetch real 30-day history for sparkline
+            let sparklineData: number[] = [];
+            try {
+              const to = Math.floor(Date.now() / 1000);
+              const from = to - (30 * 24 * 60 * 60); // 30 days ago
+              const history = await stocksAPI.getStockHistory(pos.symbol, from, to, 'D');
+
+              if (history && history.c && Array.isArray(history.c)) {
+                // Take the last 20-30 points to ensure it fits well
+                sparklineData = history.c;
+              }
+            } catch (err) {
+              console.warn(`Failed to fetch sparkline for ${pos.symbol}`, err);
+              // Fallback to a flat line of current price if history fails to avoid broken UI
+              sparklineData = Array(10).fill(currentPrice);
+            }
+
+            // Ensure we have at least some data to render
+            if (sparklineData.length === 0) {
+              sparklineData = Array(10).fill(currentPrice);
+            }
 
             return {
               _id: pos._id,
