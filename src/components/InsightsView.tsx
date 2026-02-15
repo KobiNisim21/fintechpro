@@ -1,50 +1,79 @@
 import { usePortfolio } from '@/context/PortfolioContext';
 import { useMemo, useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Treemap, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Treemap } from 'recharts';
 import { stocksAPI, RecommendationTrend, PriceTarget, CompanyProfile } from '@/api/stocks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target, Activity, PieChart as PieChartIcon } from 'lucide-react';
+import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown } from 'lucide-react';
 
-// Custom tooltip for Treemap
-const CustomTreemapContent = (props: any) => {
-    const { root, depth, x, y, width, height, index, name, value, colors } = props;
+// ─── Premium Color Palette ───────────────────────────────────────
+const COLORS = [
+    '#22d3ee', // Cyan-400
+    '#34d399', // Emerald-400
+    '#818cf8', // Indigo-400
+    '#f472b6', // Pink-400
+    '#fbbf24', // Amber-400
+    '#a78bfa', // Violet-400
+    '#fb923c', // Orange-400
+    '#38bdf8', // Sky-400
+    '#4ade80', // Green-400
+    '#e879f9', // Fuchsia-400
+];
+
+// ─── Custom Treemap Cell (Bento-box iOS style) ───────────────────
+const BentoTreemapContent = (props: any) => {
+    const { root, x, y, width, height, index, name, value, colors } = props;
+    const GAP = 3;
+    const RADIUS = 10;
+    const clampedX = x + GAP / 2;
+    const clampedY = y + GAP / 2;
+    const clampedW = Math.max(width - GAP, 0);
+    const clampedH = Math.max(height - GAP, 0);
+    const fillColor = colors[index % colors.length];
+
+    // Determine text visibility by actual cell size
+    const showName = clampedW > 65 && clampedH > 38;
+    const showPercent = clampedW > 65 && clampedH > 55;
 
     return (
         <g>
             <rect
-                x={x}
-                y={y}
-                width={width}
-                height={height}
+                x={clampedX}
+                y={clampedY}
+                width={clampedW}
+                height={clampedH}
+                rx={RADIUS}
+                ry={RADIUS}
                 style={{
-                    fill: colors[index % colors.length],
-                    stroke: '#18181b', // Dark border for better separation
-                    strokeWidth: 2,
-                    strokeOpacity: 1,
+                    fill: fillColor,
+                    fillOpacity: 0.82,
+                    stroke: 'none',
                 }}
             />
-            {width > 50 && height > 30 && (
+            {showName && (
                 <text
-                    x={x + width / 2}
-                    y={y + height / 2}
+                    x={clampedX + clampedW / 2}
+                    y={clampedY + clampedH / 2 - (showPercent ? 7 : 0)}
                     textAnchor="middle"
+                    dominantBaseline="central"
                     fill="#fff"
-                    fontSize={14} // Larger font
-                    fontWeight="600" // Semi-bold
-                    style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.5)' }} // Text shadow for contrast
+                    fontSize={clampedW > 100 ? 14 : 12}
+                    fontWeight="600"
+                    fontFamily="Inter, system-ui, -apple-system, sans-serif"
                 >
                     {name}
                 </text>
             )}
-            {width > 50 && height > 50 && (
+            {showPercent && root?.value > 0 && (
                 <text
-                    x={x + width / 2}
-                    y={y + height / 2 + 18}
+                    x={clampedX + clampedW / 2}
+                    y={clampedY + clampedH / 2 + 15}
                     textAnchor="middle"
-                    fill="rgba(255,255,255,0.9)"
-                    fontSize={12}
-                    style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.5)' }}
+                    dominantBaseline="central"
+                    fill="rgba(255,255,255,0.75)"
+                    fontSize={11}
+                    fontWeight="500"
+                    fontFamily="Inter, system-ui, -apple-system, sans-serif"
                 >
                     {((value / root.value) * 100).toFixed(1)}%
                 </text>
@@ -53,25 +82,20 @@ const CustomTreemapContent = (props: any) => {
     );
 };
 
-// Custom Tooltip for Charts
-const CustomTooltip = ({ active, payload, label }: any) => {
+// ─── Custom Tooltip ──────────────────────────────────────────────
+const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+        const data = payload[0];
         return (
-            <div className="bg-[#1a1a1a]/90 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-xl">
-                <p className="text-white font-medium mb-1">{payload[0].name}</p>
-                <div className="flex items-center gap-2 text-zinc-300 text-sm">
-                    <span>Value:</span>
-                    <span className="font-mono text-white">
-                        ${payload[0].value.toFixed(2)}
-                    </span>
-                </div>
-                {payload[0].payload.percent !== undefined && (
-                    <div className="flex items-center gap-2 text-zinc-300 text-sm">
-                        <span>Share:</span>
-                        <span className="font-mono text-cyan-400">
-                            {(payload[0].payload.percent * 100).toFixed(1)}%
-                        </span>
-                    </div>
+            <div className="bg-[#111]/95 backdrop-blur-xl border border-white/10 rounded-xl px-4 py-3 shadow-2xl">
+                <p className="text-white/90 font-semibold text-sm mb-1">{data.name}</p>
+                <p className="text-white font-mono text-base">
+                    ${Number(data.value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+                {data.payload?.percent !== undefined && (
+                    <p className="text-cyan-400 text-xs mt-1">
+                        {(data.payload.percent * 100).toFixed(1)}% of portfolio
+                    </p>
                 )}
             </div>
         );
@@ -79,6 +103,52 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
+// ─── Custom Pie Label with leader lines ──────────────────────────
+const renderCustomLabel = ({
+    cx, cy, midAngle, outerRadius, name, percent, index
+}: any) => {
+    if (percent < 0.04) return null; // Hide labels for slices < 4%
+
+    const RADIAN = Math.PI / 180;
+    const sin = Math.sin(-RADIAN * midAngle);
+    const cos = Math.cos(-RADIAN * midAngle);
+
+    const lineStart = outerRadius + 6;
+    const lineEnd = outerRadius + 22;
+    const textOffset = outerRadius + 28;
+
+    const sx = cx + lineStart * cos;
+    const sy = cy + lineStart * sin;
+    const ex = cx + lineEnd * cos;
+    const ey = cy + lineEnd * sin;
+    const tx = cx + textOffset * cos;
+    const ty = cy + textOffset * sin;
+
+    const textAnchor = cos >= 0 ? 'start' : 'end';
+
+    return (
+        <g>
+            <line x1={sx} y1={sy} x2={ex} y2={ey}
+                stroke="rgba(255,255,255,0.25)" strokeWidth={1} />
+            <text
+                x={tx} y={ty}
+                textAnchor={textAnchor}
+                dominantBaseline="central"
+                fill="rgba(255,255,255,0.8)"
+                fontSize={11}
+                fontWeight="500"
+                fontFamily="Inter, system-ui, -apple-system, sans-serif"
+            >
+                {name} {(percent * 100).toFixed(1)}%
+            </text>
+        </g>
+    );
+};
+
+
+// ═════════════════════════════════════════════════════════════════
+//  INSIGHTS VIEW
+// ═════════════════════════════════════════════════════════════════
 export function InsightsView() {
     const { positions } = usePortfolio();
     const [recommendations, setRecommendations] = useState<Record<string, RecommendationTrend[]>>({});
@@ -86,10 +156,7 @@ export function InsightsView() {
     const [profiles, setProfiles] = useState<Record<string, CompanyProfile>>({});
     const [loading, setLoading] = useState(false);
 
-    // Color palette for charts (Cyan/Green theme compatible)
-    const COLORS = ['#06b6d4', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#ef4444'];
-
-    // 1. Calculate Portfolio Distribution (Pie Chart)
+    // ── Portfolio Distribution (Pie Chart) ──
     const distributionData = useMemo(() => {
         return positions.map((pos) => ({
             name: pos.symbol,
@@ -97,7 +164,7 @@ export function InsightsView() {
         })).sort((a, b) => b.value - a.value);
     }, [positions]);
 
-    // 2. Fetch Insights Data (Recs, Targets, Profiles)
+    // ── Fetch Insights ──
     useEffect(() => {
         const fetchInsights = async () => {
             if (positions.length === 0) return;
@@ -108,7 +175,6 @@ export function InsightsView() {
             const profilesMap: Record<string, CompanyProfile> = {};
 
             try {
-                // Fetch in parallel for all positions
                 await Promise.all(positions.map(async (pos) => {
                     try {
                         const [recs, target, profile] = await Promise.all([
@@ -116,7 +182,6 @@ export function InsightsView() {
                             stocksAPI.getPriceTarget(pos.symbol).catch(() => null),
                             stocksAPI.getCompanyProfile(pos.symbol).catch(() => null)
                         ]);
-
                         if (recs) recsMap[pos.symbol] = recs;
                         if (target) targetsMap[pos.symbol] = target as PriceTarget;
                         if (profile) profilesMap[pos.symbol] = profile as CompanyProfile;
@@ -134,37 +199,29 @@ export function InsightsView() {
                 setLoading(false);
             }
         };
-
         fetchInsights();
     }, [positions]);
 
-    // 3. Prepare Sector Data (Treemap)
+    // ── Sector Data (Treemap) ──
     const sectorData = useMemo(() => {
         const sectors: Record<string, number> = {};
-        let totalValue = 0;
-
         positions.forEach(pos => {
             const value = pos.price * pos.quantity;
             const profile = profiles[pos.symbol];
             const sector = profile?.finnhubIndustry || 'Other';
-
             sectors[sector] = (sectors[sector] || 0) + value;
-            totalValue += value;
         });
-
-        return Object.entries(sectors).map(([name, value]) => ({
-            name,
-            value,
-        })).sort((a, b) => b.value - a.value);
+        return Object.entries(sectors)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value);
     }, [positions, profiles]);
 
-    // 4. Prepare Recommendations List (Sorted by consensus)
+    // ── Analyst Cards (filter out zero-rated ETFs) ──
     const analystCards = useMemo(() => {
         return positions.map(pos => {
             const recs = recommendations[pos.symbol];
             const target = priceTargets[pos.symbol];
-            const latestRec = recs?.[0]; // Assuming sorted by date descending from API? reliable? Finnhub sends array.
-            // Actually Finnhub /recommendation returns array of periods. [0] is usually latest.
+            const latestRec = recs?.[0];
 
             const buyVotes = latestRec ? (latestRec.buy + latestRec.strongBuy) : 0;
             const sellVotes = latestRec ? (latestRec.sell + latestRec.strongSell) : 0;
@@ -172,23 +229,23 @@ export function InsightsView() {
             const totalVotes = buyVotes + sellVotes + holdVotes;
 
             let consensus = 'Neutral';
-            let consensusColor = 'bg-zinc-500';
+            let consensusColor = 'bg-zinc-500/80';
 
             if (totalVotes > 0) {
                 if (buyVotes > sellVotes && buyVotes > holdVotes) {
                     consensus = 'Buy';
-                    consensusColor = 'bg-emerald-500';
+                    consensusColor = 'bg-emerald-500/90';
                 } else if (sellVotes > buyVotes && sellVotes > holdVotes) {
                     consensus = 'Sell';
-                    consensusColor = 'bg-rose-500';
+                    consensusColor = 'bg-rose-500/90';
                 } else {
                     consensus = 'Hold';
-                    consensusColor = 'bg-yellow-500';
+                    consensusColor = 'bg-amber-500/90';
                 }
             }
 
-            // Calculate Upside
-            const upside = target ? ((target.targetMean - pos.price) / pos.price) * 100 : 0;
+            const targetMean = target?.targetMean || 0;
+            const upside = targetMean > 0 ? ((targetMean / pos.price) - 1) * 100 : 0;
 
             return {
                 symbol: pos.symbol,
@@ -196,77 +253,80 @@ export function InsightsView() {
                 price: pos.price,
                 consensus,
                 consensusColor,
-                target: target?.targetMean,
+                target: targetMean > 0 ? targetMean : null,
                 upside,
                 buyVotes,
                 holdVotes,
-                sellVotes
+                sellVotes,
+                totalVotes,
             };
-        });
+        }).filter(card => card.totalVotes > 0); // ← Hide ETFs / unrated assets
     }, [positions, recommendations, priceTargets]);
 
 
+    // ═══════════════════════════  RENDER  ═══════════════════════════
     return (
         <div className="space-y-6 pb-20 animate-in fade-in duration-500">
-            {/* Top Row: Portfolio Allocation & Sectors */}
+
+            {/* ── Top Row: Allocation + Sectors ── */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                {/* Allocation Pie Chart */}
-                <Card className="bg-zinc-900/50 backdrop-blur-xl border-white/10">
-                    <CardHeader>
-                        <CardTitle className="text-xl md:text-2xl font-semibold text-white/90 flex items-center gap-2">
+                {/* Pie Chart */}
+                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
                             <PieChartIcon className="w-5 h-5 text-cyan-400" />
                             Portfolio Allocation
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[300px]">
+                    <CardContent className="h-[340px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={distributionData}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={90}
-                                    paddingAngle={5}
+                                    innerRadius={55}
+                                    outerRadius={95}
+                                    paddingAngle={2}
                                     dataKey="value"
-                                    label={false}
+                                    stroke="none"
+                                    minAngle={3}
+                                    label={renderCustomLabel}
+                                    labelLine={false}
+                                    isAnimationActive={true}
+                                    animationDuration={800}
                                 >
                                     {distributionData.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.2)" />
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={COLORS[index % COLORS.length]}
+                                        />
                                     ))}
                                 </Pie>
                                 <RechartsTooltip content={<CustomTooltip />} />
-                                <Legend
-                                    layout="vertical"
-                                    verticalAlign="middle"
-                                    align="right"
-                                    formatter={(value, _: any) => (
-                                        <span className="text-zinc-300 text-sm ml-2">{value}</span>
-                                    )}
-                                />
                             </PieChart>
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
 
-                {/* Sector Heatmap */}
-                <Card className="bg-zinc-900/50 backdrop-blur-xl border-white/10">
-                    <CardHeader>
-                        <CardTitle className="text-xl md:text-2xl font-semibold text-white/90 flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-purple-400" />
+                {/* Treemap – Bento Box */}
+                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-violet-400" />
                             Sector Distribution
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[300px]">
+                    <CardContent className="h-[340px]">
                         {sectorData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <Treemap
                                     data={sectorData}
                                     dataKey="value"
                                     aspectRatio={4 / 3}
-                                    stroke="#18181b"
-                                    content={<CustomTreemapContent colors={COLORS} />}
+                                    stroke="none"
+                                    content={<BentoTreemapContent colors={COLORS} />}
                                 >
                                     <RechartsTooltip content={<CustomTooltip />} />
                                 </Treemap>
@@ -280,67 +340,96 @@ export function InsightsView() {
                 </Card>
             </div>
 
-            {/* Analyst Recommendations Feed */}
+            {/* ── Analyst Recommendations ── */}
             <div>
-                <h3 className="text-xl md:text-2xl font-semibold text-white/90 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-white/90 mb-4 flex items-center gap-2">
                     <Target className="w-5 h-5 text-emerald-400" />
                     Analyst Recommendations & Price Targets
                 </h3>
 
+                {analystCards.length === 0 && !loading && (
+                    <p className="text-zinc-500 text-sm">No analyst-rated holdings in your portfolio.</p>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {analystCards.map((item) => (
-                        <div key={item.symbol} className="bg-zinc-900/40 border border-white/10 rounded-xl p-4 hover:bg-zinc-900/60 transition-colors">
+                        <div
+                            key={item.symbol}
+                            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/[0.08] transition-all duration-200"
+                        >
+                            {/* Header */}
                             <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <h4 className="font-bold text-lg text-white">{item.symbol}</h4>
-                                        <Badge className={`${item.consensusColor} text-white border-none`}>
+                                        <Badge className={`${item.consensusColor} text-white text-[10px] font-semibold border-none px-2 py-0.5`}>
                                             {item.consensus}
                                         </Badge>
                                     </div>
-                                    <p className="text-sm text-zinc-400 truncate max-w-[180px]">{item.name}</p>
+                                    <p className="text-sm text-zinc-500 truncate max-w-[180px]">{item.name}</p>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-sm text-zinc-400">Current</div>
-                                    <div className="font-mono text-white">${item.price.toFixed(2)}</div>
+                                    <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Current</div>
+                                    <div className="font-mono text-white font-semibold">${item.price.toFixed(2)}</div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div className="bg-white/5 rounded-lg p-3">
-                                    <div className="text-xs text-zinc-500 mb-1">Avg Target</div>
-                                    <div className="font-bold text-white">
-                                        {item.target ? `$${item.target.toFixed(2)}` : 'N/A'}
+                            {/* Target + Potential */}
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="bg-white/5 rounded-xl p-3">
+                                    <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Avg Target</div>
+                                    <div className="font-bold text-white text-sm">
+                                        {item.target ? `$${item.target.toFixed(2)}` : '—'}
                                     </div>
                                 </div>
-                                <div className="bg-white/5 rounded-lg p-3">
-                                    <div className="text-xs text-zinc-500 mb-1">Potential</div>
-                                    <div className={`font-bold ${item.upside >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                        {item.upside > 0 ? '+' : ''}{item.upside.toFixed(1)}%
+                                <div className="bg-white/5 rounded-xl p-3">
+                                    <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Potential</div>
+                                    <div className={`font-bold text-sm flex items-center gap-1 ${item.target
+                                            ? item.upside >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                                            : 'text-zinc-500'
+                                        }`}>
+                                        {item.target ? (
+                                            <>
+                                                {item.upside >= 0
+                                                    ? <TrendingUp className="w-3.5 h-3.5" />
+                                                    : <TrendingDown className="w-3.5 h-3.5" />
+                                                }
+                                                {item.upside > 0 ? '+' : ''}{item.upside.toFixed(1)}%
+                                            </>
+                                        ) : '—'}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Recommendation Bar */}
-                            <div className="space-y-1">
-                                <div className="flex justify-between text-xs text-zinc-400">
-                                    <span>Analyst Ratings ({item.buyVotes + item.holdVotes + item.sellVotes})</span>
+                            {/* Rating Bar */}
+                            <div className="space-y-1.5">
+                                <div className="flex justify-between text-[10px] text-zinc-500 uppercase tracking-wider">
+                                    <span>Ratings ({item.totalVotes})</span>
                                 </div>
-                                <div className="h-2 w-full flex rounded-full overflow-hidden bg-zinc-800">
+                                <div className="h-1.5 w-full flex rounded-full overflow-hidden bg-white/5">
                                     {item.buyVotes > 0 && (
-                                        <div style={{ width: `${(item.buyVotes / (item.buyVotes + item.holdVotes + item.sellVotes)) * 100}%` }} className="bg-emerald-500 h-full" />
+                                        <div
+                                            style={{ width: `${(item.buyVotes / item.totalVotes) * 100}%` }}
+                                            className="bg-emerald-500 h-full transition-all duration-500"
+                                        />
                                     )}
                                     {item.holdVotes > 0 && (
-                                        <div style={{ width: `${(item.holdVotes / (item.buyVotes + item.holdVotes + item.sellVotes)) * 100}%` }} className="bg-yellow-500 h-full" />
+                                        <div
+                                            style={{ width: `${(item.holdVotes / item.totalVotes) * 100}%` }}
+                                            className="bg-amber-500 h-full transition-all duration-500"
+                                        />
                                     )}
                                     {item.sellVotes > 0 && (
-                                        <div style={{ width: `${(item.sellVotes / (item.buyVotes + item.holdVotes + item.sellVotes)) * 100}%` }} className="bg-rose-500 h-full" />
+                                        <div
+                                            style={{ width: `${(item.sellVotes / item.totalVotes) * 100}%` }}
+                                            className="bg-rose-500 h-full transition-all duration-500"
+                                        />
                                     )}
                                 </div>
-                                <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
-                                    <span>Buy: {item.buyVotes}</span>
-                                    <span>Hold: {item.holdVotes}</span>
-                                    <span>Sell: {item.sellVotes}</span>
+                                <div className="flex justify-between text-[10px] text-zinc-500">
+                                    <span>Buy {item.buyVotes}</span>
+                                    <span>Hold {item.holdVotes}</span>
+                                    <span>Sell {item.sellVotes}</span>
                                 </div>
                             </div>
                         </div>
