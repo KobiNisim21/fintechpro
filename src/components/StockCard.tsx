@@ -1,5 +1,5 @@
 import { TrendingUp, TrendingDown, Trash2, Edit2 } from 'lucide-react';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 import { usePortfolio } from '@/context/PortfolioContext';
 import { useState } from 'react';
 import { SimpleDialog } from './SimpleDialog';
