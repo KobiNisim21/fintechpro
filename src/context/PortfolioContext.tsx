@@ -70,9 +70,43 @@ function isExtendedHours(): boolean {
   return status !== 'regular';
 }
 
+// ============================================
+// LOCAL STORAGE CACHE (stale-while-revalidate)
+// ============================================
+const CACHE_KEY = 'portfolio_positions_cache';
+
+function loadCachedPositions(): Position[] {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    // Validate structure — must be an array with symbols
+    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].symbol) {
+      return parsed;
+    }
+  } catch { /* corrupted cache, ignore */ }
+  return [];
+}
+
+function saveCachedPositions(positions: Position[]) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(positions));
+  } catch { /* storage full, ignore */ }
+}
+
+function clearCachedPositions() {
+  localStorage.removeItem(CACHE_KEY);
+}
+
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
-  const [positions, setPositions] = useState<Position[]>([]);
+
+  // Initialize from cache for instant render on refresh
+  const [positions, setPositions] = useState<Position[]>(() => {
+    if (!isAuthenticated) return [];
+    return loadCachedPositions();
+  });
+  // Only show loading if no cached data
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,11 +114,15 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const fetchPositions = async () => {
     if (!isAuthenticated) {
       setPositions([]);
+      clearCachedPositions();
       return;
     }
 
+    const hasCachedData = positions.length > 0;
+
     try {
-      setLoading(true);
+      // Only show loading spinner if we DON'T have cached data
+      if (!hasCachedData) setLoading(true);
       setError(null);
       const apiPositions = await positionsAPI.getAll();
 
@@ -169,6 +207,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       });
 
       setPositions(positionsWithPrices);
+      // Save fresh data to localStorage for next refresh
+      saveCachedPositions(positionsWithPrices);
     } catch (err: any) {
       setError(err.message || 'Failed to load positions');
       console.error('Error fetching positions:', err);
@@ -346,7 +386,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         color: change >= 0 ? '#10B981' : '#EF4444',
       };
 
-      setPositions((prev) => [...prev, positionWithPrice]);
+      setPositions((prev) => {
+        const updated = [...prev, positionWithPrice];
+        saveCachedPositions(updated);
+        return updated;
+      });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to add position');
       throw err;
@@ -359,13 +403,15 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       await positionsAPI.update(id, { quantity, averagePrice });
 
       // Update local state
-      setPositions((prev) =>
-        prev.map((pos) =>
+      setPositions((prev) => {
+        const updated = prev.map((pos) =>
           pos._id === id
             ? { ...pos, quantity: quantity ?? pos.quantity, averagePrice: averagePrice ?? pos.averagePrice }
             : pos
-        )
-      );
+        );
+        saveCachedPositions(updated);
+        return updated;
+      });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update position');
       throw err;
@@ -376,7 +422,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       await positionsAPI.delete(id);
-      setPositions((prev) => prev.filter((pos) => pos._id !== id));
+      setPositions((prev) => {
+        const updated = prev.filter((pos) => pos._id !== id);
+        saveCachedPositions(updated);
+        return updated;
+      });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to remove position');
       throw err;
