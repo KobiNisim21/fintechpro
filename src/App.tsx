@@ -11,12 +11,13 @@ import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
 
 import { useState } from 'react';
-import { LayoutGrid, PieChart } from 'lucide-react';
+import { LayoutGrid, PieChart, Eye } from 'lucide-react';
 import { AddPositionDialog } from './components/AddPositionDialog';
 import { InsightsView } from './components/InsightsView';
+import { WatchlistView } from './components/WatchlistView';
 
 function Dashboard() {
-  const [viewMode, setViewMode] = useState<'holdings' | 'insights'>('holdings');
+  const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist'>('holdings');
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#0f0f12]">
@@ -39,7 +40,7 @@ function Dashboard() {
         <section>
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <h2 className="text-xl md:text-2xl font-semibold text-white/90">
-              {viewMode === 'holdings' ? 'Portfolio Holdings' : 'Portfolio Insights'}
+              {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : 'Watchlist'}
             </h2>
 
             <div className="flex items-center gap-3">
@@ -65,6 +66,16 @@ function Dashboard() {
                   <PieChart className="w-4 h-4" />
                   Insights
                 </button>
+                <button
+                  onClick={() => setViewMode('watchlist')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'watchlist'
+                    ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <Eye className="w-4 h-4" />
+                  Watchlist
+                </button>
               </div>
 
               <AddPositionDialog />
@@ -73,8 +84,10 @@ function Dashboard() {
 
           {viewMode === 'holdings' ? (
             <StockGrid />
-          ) : (
+          ) : viewMode === 'insights' ? (
             <InsightsView />
+          ) : (
+            <WatchlistView />
           )}
         </section>
 

@@ -7,6 +7,7 @@ import connectDB from './config/database.js';
 import positionsRoutes from './routes/positions.js';
 import stocksRoutes from './routes/stocks.js';
 import authRoutes from './routes/auth.js';
+import watchlistRoutes from './routes/watchlist.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 // Get directory path for ES modules
@@ -48,6 +49,7 @@ const dbConnection = connectDB().catch(err => console.error('Initial MongoDB con
 app.use('/api/auth', authRoutes);
 app.use('/api/positions', positionsRoutes);
 app.use('/api/stocks', stocksRoutes);
+app.use('/api/watchlist', watchlistRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
