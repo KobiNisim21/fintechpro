@@ -10,11 +10,25 @@ export function SidebarContent() {
         <div className="flex flex-col h-full w-full">
             <div className="p-6 flex-1 overflow-y-auto min-h-0">
                 {/* Logo/Header */}
-                <div className="mb-8">
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                        Portfolio Pro
-                    </h1>
-                    <p className="text-sm text-white/50 mt-1">Real-time Portfolio Insights</p>
+
+                <div className="mb-8 text-center">
+                    <a href="/" className="inline-flex flex-col items-center gap-3 group">
+                        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 p-3 shadow-lg group-hover:shadow-emerald-500/20 transition-all duration-500 border border-white/5 backdrop-blur-sm group-hover:scale-105">
+                            <img
+                                src="/logo.png"
+                                alt="Portfolio Pro"
+                                className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                            />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">
+                                Portfolio Pro
+                            </h1>
+                            <p className="text-xs font-medium text-emerald-400/60 uppercase tracking-widest mt-1">
+                                Wealth Management
+                            </p>
+                        </div>
+                    </a>
                 </div>
 
                 {/* Live Alerts - Real-time from Socket.io */}
