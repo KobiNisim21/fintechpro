@@ -39,9 +39,15 @@ function Dashboard() {
         {/* Portfolio Content */}
         <section>
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-            <h2 className="text-xl md:text-2xl font-semibold text-white/90">
-              {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : 'Watchlist'}
-            </h2>
+            <div className="flex items-center justify-between w-full md:w-auto">
+              <h2 className="text-xl md:text-2xl font-semibold text-white/90">
+                {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : 'Watchlist'}
+              </h2>
+              {/* Mobile Add Button - Visible only on mobile */}
+              <div className="md:hidden">
+                <AddPositionDialog />
+              </div>
+            </div>
 
             <div className="flex items-center gap-3">
               {/* View Toggle */}
@@ -54,7 +60,7 @@ function Dashboard() {
                     }`}
                 >
                   <LayoutGrid className="w-4 h-4" />
-                  Holdings
+                  <span className="hidden sm:inline">Holdings</span>
                 </button>
                 <button
                   onClick={() => setViewMode('insights')}
@@ -64,7 +70,7 @@ function Dashboard() {
                     }`}
                 >
                   <PieChart className="w-4 h-4" />
-                  Insights
+                  <span className="hidden sm:inline">Insights</span>
                 </button>
                 <button
                   onClick={() => setViewMode('watchlist')}
@@ -74,11 +80,14 @@ function Dashboard() {
                     }`}
                 >
                   <Eye className="w-4 h-4" />
-                  Watchlist
+                  <span className="hidden sm:inline">Watchlist</span>
                 </button>
               </div>
 
-              <AddPositionDialog />
+              {/* Desktop Add Button - Hidden on mobile */}
+              <div className="hidden md:block">
+                <AddPositionDialog />
+              </div>
             </div>
           </div>
 
