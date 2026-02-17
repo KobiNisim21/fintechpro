@@ -6,10 +6,20 @@ export function StockGrid() {
   const { positions } = usePortfolio();
 
   return (
-    <div className="grid grid-cols-1 min-[1280px]:grid-cols-3 gap-4 pb-20">
-      {positions.map((stock) => (
-        <StockCard key={stock._id} stock={stock} className="w-full" />
-      ))}
-    </div>
+    <>
+      {/* Mobile/Tablet Grid (visible below 1280px) */}
+      <div className="grid grid-cols-1 gap-4 pb-20 min-[1280px]:hidden">
+        {positions.map((stock) => (
+          <StockCard key={stock._id} stock={stock} className="w-full" />
+        ))}
+      </div>
+
+      {/* Desktop Grid (visible above 1280px) - Restoring 3 column layout */}
+      <div className="hidden min-[1280px]:grid min-[1280px]:grid-cols-3 gap-4 pb-20">
+        {positions.map((stock) => (
+          <StockCard key={stock._id} stock={stock} className="w-full" />
+        ))}
+      </div>
+    </>
   );
 }
