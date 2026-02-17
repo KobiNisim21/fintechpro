@@ -16,11 +16,10 @@ export function StockGrid() {
         </div>
       </div>
 
-      {/* Desktop Grid (visible above 1280px) */}
       <div className="hidden xl:block">
         <div className="flex flex-wrap gap-4 pb-20">
           {positions.map((stock) => (
-            <StockCard key={stock._id} stock={stock} className="w-80 shrink-0" />
+            <StockCard key={stock._id} stock={stock} className="w-72 shrink-0" />
           ))}
         </div>
       </div>

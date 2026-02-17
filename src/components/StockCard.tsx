@@ -184,7 +184,7 @@ export function StockCard({ stock, className }: StockCardProps) {
 
           {/* Position Details */}
           {quantity > 0 && (
-            <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-white/5 rounded-xl border border-white/5">
+            <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-white/5 rounded-xl border border-white/5">
               <div>
                 <p className="text-xs text-white/40 mb-0.5">Holdings</p>
                 <p className="text-sm font-medium text-white">{quantity} Shares</p>
