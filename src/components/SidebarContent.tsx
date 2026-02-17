@@ -12,12 +12,12 @@ export function SidebarContent() {
                 {/* Logo/Header */}
 
                 <div className="mb-8 text-center">
-                    <a href="/" className="inline-flex flex-col items-center gap-3 group">
-                        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 p-3 shadow-lg group-hover:shadow-emerald-500/20 transition-all duration-500 border border-white/5 backdrop-blur-sm group-hover:scale-105">
+                    <a href="/" className="inline-flex flex-col items-center gap-4 group">
+                        <div className="relative w-40 h-40 transition-transform duration-500 group-hover:scale-105">
                             <img
                                 src="/logo.png"
                                 alt="Portfolio Pro"
-                                className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                                className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                             />
                         </div>
                         <div>
