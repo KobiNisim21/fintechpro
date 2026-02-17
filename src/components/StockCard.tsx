@@ -85,7 +85,7 @@ export function StockCard({ stock }: StockCardProps) {
     <>
       <div
         data-ticker={stock.symbol}
-        className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 p-4 pr-12 hover:border-white/20 hover:from-white/15 hover:to-white/10 transition-all cursor-pointer w-full xl:w-auto min-w-fit shrink-0"
+        className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 p-4 pr-12 hover:border-white/20 hover:from-white/15 hover:to-white/10 transition-all cursor-pointer w-full min-[1280px]:w-auto min-w-fit shrink-0"
       >
         {/* Glassmorphism overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
