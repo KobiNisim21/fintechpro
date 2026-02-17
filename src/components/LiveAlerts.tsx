@@ -73,7 +73,6 @@ export function LiveAlerts() {
                                             <span className="text-xs px-1.5 py-0.5 rounded bg-white/10 text-white/60 font-medium">
                                                 ${alert.ticker}
                                             </span>
-                                            <span className="text-xs text-white/40">{alert.relativeTime}</span>
                                         </div>
                                     </div>
                                 </div>
