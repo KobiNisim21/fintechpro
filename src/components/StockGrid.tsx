@@ -8,17 +8,21 @@ export function StockGrid() {
   return (
     <>
       {/* Mobile/Tablet Grid (visible below 1280px) */}
-      <div className="grid grid-cols-1 gap-4 pb-20 xl:hidden">
-        {positions.map((stock) => (
-          <StockCard key={stock._id} stock={stock} className="w-full" />
-        ))}
+      <div className="xl:hidden">
+        <div className="grid grid-cols-1 gap-4 pb-20">
+          {positions.map((stock) => (
+            <StockCard key={stock._id} stock={stock} className="w-full" />
+          ))}
+        </div>
       </div>
 
-      {/* Desktop Grid (visible above 1280px) - Restoring 3 column layout */}
-      <div className="hidden xl:grid xl:grid-cols-3 gap-4 pb-20">
-        {positions.map((stock) => (
-          <StockCard key={stock._id} stock={stock} className="w-full" />
-        ))}
+      {/* Desktop Grid (visible above 1280px) */}
+      <div className="hidden xl:block">
+        <div className="grid grid-cols-3 gap-4 pb-20">
+          {positions.map((stock) => (
+            <StockCard key={stock._id} stock={stock} className="w-full" />
+          ))}
+        </div>
       </div>
     </>
   );
