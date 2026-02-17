@@ -50,30 +50,29 @@ export function LiveAlerts() {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
                                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                                className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
+                                className="p-2 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
                             >
-                                <div className="flex items-start gap-3">
+                                <div className="flex items-center gap-3">
                                     {/* Icon based on alert type */}
                                     {alert.type === 'gain' && (
-                                        <TrendingUp className="w-4 h-4 text-emerald-400 mt-1 shrink-0" />
+                                        <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
                                     )}
                                     {alert.type === 'loss' && (
-                                        <TrendingDown className="w-4 h-4 text-rose-500 mt-1 shrink-0" />
+                                        <TrendingDown className="w-4 h-4 text-rose-500 shrink-0" />
                                     )}
                                     {alert.type === 'news' && (
-                                        <Bell className="w-4 h-4 text-cyan-400 mt-1 shrink-0" />
+                                        <Bell className="w-4 h-4 text-cyan-400 shrink-0" />
                                     )}
 
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm text-white/80 leading-relaxed">
+                                    <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                                        <p className="text-sm text-white/80 truncate">
                                             {alert.message}
                                         </p>
-                                        {/* Ticker & Time */}
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-xs px-1.5 py-0.5 rounded bg-white/10 text-white/60 font-medium">
-                                                ${alert.ticker}
-                                            </span>
-                                        </div>
+
+                                        {/* Ticker */}
+                                        <span className="text-xs px-1.5 py-0.5 rounded bg-white/10 text-white/60 font-medium shrink-0">
+                                            ${alert.ticker}
+                                        </span>
                                     </div>
                                 </div>
                             </motion.div>
