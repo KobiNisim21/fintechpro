@@ -4,7 +4,7 @@ import { initSocket, disconnectSocket } from '../services/socket';
 
 export interface LiveAlert {
     id: string;
-    type: 'gain' | 'loss' | 'news';
+    type: 'gain' | 'loss' | 'news' | '52w-low' | 'earnings';
     ticker: string;
     companyName: string;
     message: string;

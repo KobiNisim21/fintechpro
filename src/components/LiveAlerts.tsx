@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Bell } from 'lucide-react';
+import { TrendingUp, TrendingDown, Bell, Target, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLiveAlerts } from '@/context/LiveAlertsContext';
 
@@ -38,7 +38,7 @@ export function LiveAlerts() {
                     <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 text-center">
                         <Bell className="w-6 h-6 text-white/20 mx-auto mb-2" />
                         <p className="text-sm text-white/40">No alerts yet</p>
-                        <p className="text-xs text-white/30 mt-1">Alerts appear when prices move &gt;2%</p>
+                        <p className="text-xs text-white/30 mt-1">Price moves, 52-week lows &amp; earnings</p>
                     </div>
                 ) : (
                     // Alert cards with animation
@@ -62,6 +62,12 @@ export function LiveAlerts() {
                                     )}
                                     {alert.type === 'news' && (
                                         <Bell className="w-4 h-4 text-cyan-400 shrink-0" />
+                                    )}
+                                    {alert.type === '52w-low' && (
+                                        <Target className="w-4 h-4 text-amber-400 shrink-0" />
+                                    )}
+                                    {alert.type === 'earnings' && (
+                                        <Calendar className="w-4 h-4 text-blue-400 shrink-0" />
                                     )}
 
                                     <div className="flex-1 min-w-0 flex items-center justify-between gap-2">

@@ -586,3 +586,65 @@ export async function getBatchInsights(symbols) {
 
     return { recommendations, priceTargets, profiles };
 }
+
+// ============================================
+// 52-WEEK LOW (Basic Financials)
+// ============================================
+
+/**
+ * Get basic financials including 52-week high/low.
+ * Finnhub Endpoint: /stock/metric?symbol=AAPL&metric=all
+ */
+export async function getBasicFinancials(symbol) {
+    const cacheKey = `metrics_${symbol}`;
+    const cached = getCached(cacheKey, 6 * 60 * 60 * 1000); // 6 hours cache
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        const apiKey = getApiKey();
+        if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
+
+        const url = `${FINNHUB_BASE_URL}/stock/metric?symbol=${symbol}&metric=all&token=${apiKey}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            if (response.status === 403) return null;
+            throw new Error(`Finnhub metrics failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setCache(cacheKey, data);
+        return data;
+    });
+}
+
+// ============================================
+// EARNINGS CALENDAR
+// ============================================
+
+/**
+ * Get earnings calendar for a date range.
+ * Finnhub Endpoint: /calendar/earnings?from=YYYY-MM-DD&to=YYYY-MM-DD
+ */
+export async function getEarningsCalendar(from, to) {
+    const cacheKey = `earnings_${from}_${to}`;
+    const cached = getCached(cacheKey, 60 * 60 * 1000); // 1 hour cache
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        const apiKey = getApiKey();
+        if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
+
+        const url = `${FINNHUB_BASE_URL}/calendar/earnings?from=${from}&to=${to}&token=${apiKey}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Finnhub earnings calendar failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const result = data.earningsCalendar || [];
+        setCache(cacheKey, result);
+        return result;
+    });
+}

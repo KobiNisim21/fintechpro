@@ -4,7 +4,7 @@
  */
 
 import Position from '../models/Position.js';
-import { getQuote as fetchQuoteFromService } from './stockDataService.js';
+import { getQuote as fetchQuoteFromService, getBasicFinancials, getEarningsCalendar } from './stockDataService.js';
 
 // Configuration
 const PRICE_THRESHOLD_PERCENT = 2.0; // Alert when price moves more than 2%
@@ -342,6 +342,131 @@ async function pollPricesForAlerts(io) {
 // Price polling interval (60 seconds)
 const PRICE_POLL_INTERVAL = 60 * 1000;
 
+// Special alerts polling interval (5 minutes)
+const SPECIAL_POLL_INTERVAL = 5 * 60 * 1000;
+const WEEK_LOW_THRESHOLD = 0.02; // 2% proximity to 52-week low
+
+/**
+ * Poll for 52-week low proximity and upcoming earnings
+ */
+async function pollSpecialAlerts(io) {
+    try {
+        const userPortfolios = await getAllUserPortfolios();
+
+        const allTickers = new Set();
+        userPortfolios.forEach(tickers => {
+            tickers.forEach(ticker => allTickers.add(ticker));
+        });
+
+        if (allTickers.size === 0) return;
+
+        console.log(`🔔 [SPECIAL-ALERTS] Checking ${allTickers.size} tickers for 52-week low & earnings...`);
+
+        // ── 52-Week Low Check ─────────────────────────────────
+        for (const ticker of allTickers) {
+            try {
+                const [metrics, quote] = await Promise.all([
+                    getBasicFinancials(ticker),
+                    fetchQuoteFromService(ticker)
+                ]);
+
+                const low52w = metrics?.metric?.['52WeekLow'];
+                const currentPrice = quote?.c;
+
+                if (low52w && currentPrice && low52w > 0) {
+                    const proximity = (currentPrice - low52w) / low52w;
+                    if (proximity <= WEEK_LOW_THRESHOLD) {
+                        const companyName = getCompanyName(ticker);
+                        emitSpecialAlert(io, userPortfolios, ticker, {
+                            type: '52w-low',
+                            message: `${companyName} is near its 52-week low ($${low52w.toFixed(2)})`,
+                            value: currentPrice
+                        });
+                    }
+                }
+            } catch (err) {
+                // silently skip individual ticker errors
+            }
+
+            await new Promise(r => setTimeout(r, 200)); // rate-limit
+        }
+
+        // ── Earnings Calendar Check ──────────────────────────
+        try {
+            const today = new Date();
+            const from = today.toISOString().split('T')[0];
+            const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const to = nextWeek.toISOString().split('T')[0];
+
+            const earnings = await getEarningsCalendar(from, to);
+
+            if (earnings && earnings.length > 0) {
+                for (const entry of earnings) {
+                    const sym = entry.symbol;
+                    if (!sym || !allTickers.has(sym)) continue;
+
+                    const companyName = getCompanyName(sym);
+                    const reportDate = entry.date || 'soon';
+
+                    emitSpecialAlert(io, userPortfolios, sym, {
+                        type: 'earnings',
+                        message: `${companyName} reports earnings on ${reportDate}`,
+                        value: null
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('❌ Earnings calendar fetch failed:', err.message);
+        }
+
+        console.log(`🔔 [SPECIAL-ALERTS] Poll complete.`);
+    } catch (error) {
+        console.error('❌ Error in special alerts poll:', error.message);
+    }
+}
+
+/**
+ * Emit a special alert (52w-low or earnings) to relevant users
+ */
+function emitSpecialAlert(io, userPortfolios, ticker, alertData) {
+    io.fetchSockets().then(sockets => {
+        for (const socket of sockets) {
+            const userId = socket.userId;
+            if (!userId) continue;
+
+            const userTickers = userPortfolios.get(userId);
+            if (!userTickers || !userTickers.has(ticker)) continue;
+
+            const cooldownKey = `${alertData.type}-${ticker}`;
+            if (!canSendAlert(userId, cooldownKey)) continue;
+
+            const alert = {
+                id: generateAlertId(),
+                type: alertData.type,
+                ticker: ticker,
+                companyName: getCompanyName(ticker),
+                message: alertData.message,
+                value: alertData.value,
+                timestamp: new Date(),
+                relativeTime: 'just now'
+            };
+
+            const alerts = addAlert(userId, alert);
+            recordAlertSent(userId, cooldownKey);
+
+            socket.emit('live-alert', {
+                alert: alert,
+                allAlerts: alerts.map(a => ({
+                    ...a,
+                    relativeTime: formatRelativeTime(a.timestamp)
+                }))
+            });
+
+            console.log(`🔔 [SPECIAL] ${alertData.type} alert -> user ${userId}: ${alertData.message}`);
+        }
+    });
+}
+
 /**
  * Start the live alerts service
  */
@@ -381,5 +506,16 @@ export function startLiveAlertsService(io) {
         console.log('🔔 [ALERTS] Running scheduled price poll...');
         pollPricesForAlerts(io);
     }, PRICE_POLL_INTERVAL);
+
+    // Special alerts (52-week low + earnings) after 15 seconds, then every 5 min
+    console.log('🔔 [SPECIAL-ALERTS] First poll in 15 seconds...');
+    setTimeout(() => {
+        pollSpecialAlerts(io);
+    }, 15000);
+
+    setInterval(() => {
+        console.log('🔔 [SPECIAL-ALERTS] Running scheduled poll...');
+        pollSpecialAlerts(io);
+    }, SPECIAL_POLL_INTERVAL);
 }
 
