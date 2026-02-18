@@ -784,51 +784,92 @@ async function fetchDividendInfo(symbol) {
 export async function getPortfolioHealthAndBenchmark(positions) {
     // Extract basic arrays for health score logic (using aggregates)
     const symbols = positions.map(p => p.symbol);
-    const quantities = positions.map(p => p.quantity); // Total qty
-    const prices = positions.map(p => p.averagePrice); // Avg price (cost basis)
 
     // Build a stable cache key
+    // Note: We use positions.length in cache key, but maybe we should use something more specific if quantities change?
+    // But since we persist to DB, positions length + symbols is usually enough. 
+    // If quantities change in DB, user might need to refresh or we need a better key.
+    // For now, let's keep the key simple but maybe we should include lastUpdated?
+
     const sortedKey = symbols.slice().sort().join(',');
-    const cacheKey = `analytics_v2_${sortedKey}_${quantities.join(',')}_${positions.length}`;
+    // We can't easily use quantities in the key before calculating them! 
+    // So let's use a simpler key for now, or just symbols + length + latest update time if available?
+    // The original key used pre-calculated quantities. 
+    // Let's use `analytics_v2_${sortedKey}_${positions.length}` 
+    const cacheKey = `analytics_v3_${sortedKey}_${positions.length}`;
+
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached) return cached;
 
     return dedupedFetch(cacheKey, async () => {
         try {
-            // Calculate Portfolio Start Date (earliest lot date)
-            let earliestDate = new Date();
+            // 1. Calculate Aggregates (Quantities & Prices) from Lots or Fallback
+            const quantities = [];
+            const prices = [];
+
+            // 2. Determine Earliest Date (Initialize to far future)
+            // Use a far future date so any valid past date will be smaller
+            let earliestDate = new Date(8640000000000000);
+            let hasValidDate = false;
+
             const lotEvents = []; // { date, symbol, quantity, price }
 
             positions.forEach(pos => {
+                let qty = 0;
+                let cost = 0;
+
                 if (pos.lots && pos.lots.length > 0) {
                     pos.lots.forEach(lot => {
-                        const d = new Date(lot.date);
-                        // FIXED: Handle invalid dates to prevent .toISOString() crash
-                        if (isNaN(d.getTime())) return;
+                        qty += lot.quantity;
+                        cost += (lot.quantity * lot.price);
 
-                        if (d < earliestDate) earliestDate = d;
-                        lotEvents.push({
-                            date: d.toISOString().split('T')[0],
-                            symbol: pos.symbol,
-                            quantity: lot.quantity,
-                            price: lot.price
-                        });
+                        const d = new Date(lot.date);
+                        if (!isNaN(d.getTime())) {
+                            if (d < earliestDate) {
+                                earliestDate = d;
+                                hasValidDate = true;
+                            }
+                            lotEvents.push({
+                                date: d.toISOString().split('T')[0],
+                                symbol: pos.symbol,
+                                quantity: lot.quantity,
+                                price: lot.price
+                            });
+                        }
                     });
+
+                    quantities.push(qty);
+                    prices.push(qty > 0 ? cost / qty : 0);
+
                 } else {
                     // Fallback for migrated/legacy positions
+                    qty = pos.quantity;
+                    cost = pos.quantity * pos.averagePrice;
+
+                    quantities.push(qty);
+                    prices.push(pos.averagePrice);
+
                     const d = pos.createdAt ? new Date(pos.createdAt) : new Date();
-                    // FIXED: Handle invalid createdAt
                     if (!isNaN(d.getTime())) {
-                        if (d < earliestDate) earliestDate = d;
+                        if (d < earliestDate) {
+                            earliestDate = d;
+                            hasValidDate = true;
+                        }
                         lotEvents.push({
                             date: d.toISOString().split('T')[0],
                             symbol: pos.symbol,
-                            quantity: pos.quantity,
+                            quantity: qty,
                             price: pos.averagePrice
                         });
                     }
                 }
             });
+
+            // If no valid dates found, default to today
+            if (!hasValidDate) {
+                earliestDate = new Date();
+                console.warn('[TWR] No valid dates found in portfolio, defaulting to today.');
+            }
 
             // ג”€ג”€ Parallel fetch ג”€ג”€
             const [metricsResults, profilesResults, recsResults, spyChart, dividendResults, ...symbolCharts] =
@@ -1075,6 +1116,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
         } catch (error) {
             console.error('ג Œ Error in getPortfolioHealthAndBenchmark:', error);
             // Return safe fallback instead of 500
+            // DO NOT CACHE FALLBACK ERRORS
             return {
                 healthScore: 0,
                 components: { diversification: 0, volatility: 0, sentiment: 0 },
