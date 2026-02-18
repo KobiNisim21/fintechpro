@@ -1,5 +1,6 @@
 import { usePortfolio } from '@/context/PortfolioContext';
 import { useMemo, useState, useEffect, useRef } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Treemap } from 'recharts';
 import { stocksAPI, RecommendationTrend, PriceTarget, CompanyProfile } from '@/api/stocks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -145,6 +146,7 @@ const renderCustomLabel = ({ cx, cy, midAngle, outerRadius, name, percent }: any
 // ═════════════════════════════════════════════════════════════════
 export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     const { positions } = usePortfolio();
+    const isMobile = useIsMobile();
     const [recommendations, setRecommendations] = useState<Record<string, RecommendationTrend[]>>({});
     const [priceTargets, setPriceTargets] = useState<Record<string, PriceTarget>>({});
     const [profiles, setProfiles] = useState<Record<string, CompanyProfile>>({});
@@ -257,7 +259,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie data={distributionData} cx="50%" cy="50%"
-                                            innerRadius={55} outerRadius={95} paddingAngle={2}
+                                            innerRadius={isMobile ? 40 : 55}
+                                            outerRadius={isMobile ? 70 : 95}
+                                            paddingAngle={2}
                                             dataKey="value" stroke="none" minAngle={3}
                                             label={renderCustomLabel} labelLine={false}
                                             isAnimationActive={true} animationDuration={800}
@@ -283,8 +287,12 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             <CardContent className="h-[340px]">
                                 {sectorData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <Treemap data={sectorData} dataKey="value" aspectRatio={4 / 3}
-                                            stroke="none" content={<BentoTreemapContent colors={COLORS} />}
+                                        <Treemap
+                                            data={sectorData}
+                                            dataKey="value"
+                                            aspectRatio={isMobile ? 1 / 2 : 4 / 3}
+                                            stroke="none"
+                                            content={<BentoTreemapContent colors={COLORS} />}
                                         >
                                             <RechartsTooltip content={<CustomTooltip />} />
                                         </Treemap>
@@ -349,8 +357,8 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                         <div className="bg-white/5 rounded-xl p-3">
                                             <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Potential</div>
                                             <div className={`font-bold text-sm flex items-center gap-1 ${item.target
-                                                    ? item.upside >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                                                    : 'text-zinc-500'
+                                                ? item.upside >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                                                : 'text-zinc-500'
                                                 }`}>
                                                 {item.target ? (
                                                     <>
