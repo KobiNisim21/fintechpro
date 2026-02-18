@@ -730,40 +730,7 @@ async function fetchYahooChart(symbol, startDate = null) {
     });
 }
 
-/**
- * Fetch dividend info for a symbol using yahoo-finance2.
- * Returns { exDate, paymentDate, dividendRate } or null.
- */
-async function fetchDividendInfo(symbol) {
-    const cacheKey = `dividend_${symbol}`;
-    const cached = getCached(cacheKey, 6 * 60 * 60 * 1000); // 6 hours
-    if (cached) return cached;
 
-    return dedupedFetch(cacheKey, async () => {
-        try {
-            const result = await YahooFinance.quoteSummary(symbol, { modules: ['calendarEvents', 'summaryDetail'] });
-            const cal = result?.calendarEvents;
-            const detail = result?.summaryDetail;
-
-            // Try calendarEvents first, fall back to summaryDetail
-            const exDate = cal?.exDividendDate
-                ? new Date(cal.exDividendDate).toISOString().split('T')[0]
-                : (detail?.exDividendDate ? new Date(detail.exDividendDate).toISOString().split('T')[0] : null);
-
-            const dividendRate = detail?.dividendRate || cal?.dividendRate || 0;
-            const paymentDate = cal?.dividendDate
-                ? new Date(cal.dividendDate).toISOString().split('T')[0]
-                : null;
-
-            const data = { exDate, paymentDate, dividendRate };
-            if (exDate) setCache(cacheKey, data);
-            return data;
-        } catch (err) {
-            console.error(`[DIVIDEND] Failed for ${symbol}:`, err.message);
-            return null;
-        }
-    });
-}
 /**
  * Fetch dividend information with fallbacks
  */
@@ -827,273 +794,294 @@ export async function getPortfolioHealthAndBenchmark(positions) {
     if (cached) return cached;
 
     return dedupedFetch(cacheKey, async () => {
-        // Calculate Portfolio Start Date (earliest lot date)
-        let earliestDate = new Date();
-        const lotEvents = []; // { date, symbol, quantity, price }
+        try {
+            // Calculate Portfolio Start Date (earliest lot date)
+            let earliestDate = new Date();
+            const lotEvents = []; // { date, symbol, quantity, price }
 
-        positions.forEach(pos => {
-            if (pos.lots && pos.lots.length > 0) {
-                pos.lots.forEach(lot => {
-                    const d = new Date(lot.date);
-                    if (d < earliestDate) earliestDate = d;
-                    lotEvents.push({
-                        date: d.toISOString().split('T')[0],
-                        symbol: pos.symbol,
-                        quantity: lot.quantity,
-                        price: lot.price
+            positions.forEach(pos => {
+                if (pos.lots && pos.lots.length > 0) {
+                    pos.lots.forEach(lot => {
+                        const d = new Date(lot.date);
+                        // FIXED: Handle invalid dates to prevent .toISOString() crash
+                        if (isNaN(d.getTime())) return;
+
+                        if (d < earliestDate) earliestDate = d;
+                        lotEvents.push({
+                            date: d.toISOString().split('T')[0],
+                            symbol: pos.symbol,
+                            quantity: lot.quantity,
+                            price: lot.price
+                        });
                     });
-                });
-            } else {
-                // Fallback for migrated/legacy positions
-                const d = pos.createdAt ? new Date(pos.createdAt) : new Date();
-                if (d < earliestDate) earliestDate = d;
-                lotEvents.push({
-                    date: d.toISOString().split('T')[0],
-                    symbol: pos.symbol,
-                    quantity: pos.quantity,
-                    price: pos.averagePrice
-                });
-            }
-        });
-
-        // ג”€ג”€ Parallel fetch ג”€ג”€
-        const [metricsResults, profilesResults, recsResults, spyChart, dividendResults, ...symbolCharts] =
-            await Promise.all([
-                Promise.all(symbols.map(s => getBasicFinancials(s).catch(() => null))),
-                Promise.all(symbols.map(s => getCompanyProfile(s).catch(() => null))),
-                Promise.all(symbols.map(s => getAnalystRecommendations(s).catch(() => []))),
-                fetchYahooChart('SPY', earliestDate),
-                Promise.all(symbols.map(s => fetchDividendInfo(s).catch(() => null))),
-                ...symbols.map(s => fetchYahooChart(s, earliestDate).catch(() => ({ dates: [], closes: [] })))
-            ]);
-
-        // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-        // 1. HEALTH SCORE (Logic preserved)
-        // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-        const totalValue = quantities.reduce((acc, q, i) => acc + (q * prices[i]), 0);
-
-        // -- Diversification --
-        const sectorExposure = {};
-        let maxSectorPct = 0;
-        symbols.forEach((_, i) => {
-            const sector = profilesResults[i]?.finnhubIndustry || 'Unknown';
-            const val = quantities[i] * prices[i];
-            sectorExposure[sector] = (sectorExposure[sector] || 0) + val;
-        });
-        Object.values(sectorExposure).forEach(val => {
-            const pct = totalValue > 0 ? (val / totalValue) * 100 : 0;
-            if (pct > maxSectorPct) maxSectorPct = pct;
-        });
-        const diversificationScore = Math.max(0, 100 - Math.max(0, maxSectorPct - 30) * 2.5);
-
-        // -- Volatility --
-        let weightedBeta = 0;
-        let validBetaWeight = 0;
-        symbols.forEach((_, i) => {
-            const beta = metricsResults[i]?.metric?.beta || 1;
-            const weight = totalValue > 0 ? (quantities[i] * prices[i]) / totalValue : 0;
-            weightedBeta += beta * weight;
-            validBetaWeight += weight;
-        });
-        const portfolioBeta = validBetaWeight > 0 ? weightedBeta / validBetaWeight : 1;
-        const volatilityScore = Math.max(0, 100 - Math.max(0, portfolioBeta - 1.0) * 50);
-
-        // -- Sentiment --
-        let totalBuyRatio = 0;
-        let sentimentCount = 0;
-        symbols.forEach((_, i) => {
-            const isETF = profilesResults[i]?.finnhubIndustry === 'Exchange Traded Fund';
-            if (isETF) return;
-            const recs = recsResults[i];
-            if (recs && recs.length > 0) {
-                const latest = recs[0];
-                const total = latest.buy + latest.hold + latest.sell + latest.strongBuy + latest.strongSell;
-                if (total > 0) {
-                    const buyRatio = (latest.buy + latest.strongBuy) / total;
-                    totalBuyRatio += buyRatio;
-                    sentimentCount++;
-                }
-            }
-        });
-        const sentimentScore = sentimentCount > 0 ? (totalBuyRatio / sentimentCount) * 100 : 50;
-
-        const healthScore = Math.round(
-            (diversificationScore * 0.4) + (volatilityScore * 0.3) + (sentimentScore * 0.3)
-        );
-
-        // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-        // 2. BENCHMARK COMPARISON (TWR)
-        // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-        const benchmarkData = [];
-        const symbolCloseLookup = symbolCharts.map(chart => {
-            const map = {};
-            if (chart.dates) {
-                chart.dates.forEach((d, i) => map[d] = chart.closes[i]);
-            }
-            return map;
-        });
-
-        // Group inflows
-        const inflowsByDate = {};
-        lotEvents.forEach(e => {
-            if (!inflowsByDate[e.date]) inflowsByDate[e.date] = [];
-            inflowsByDate[e.date].push(e);
-        });
-
-        const allDates = spyChart.dates || [];
-        let cumulativeTWR = 0;
-        let spCumReturn = 0;
-        const currentQty = {};
-        symbols.forEach(s => currentQty[s] = 0);
-
-        let prevPortfolioValue = 0;
-        let prevSpyClose = null;
-
-        for (let i = 0; i < allDates.length; i++) {
-            const date = allDates[i];
-            const spyClose = spyChart.closes[i];
-
-            // 1. Process Inflows
-            let dailyInflowValue = 0;
-            const todaysInflows = inflowsByDate[date] || [];
-            todaysInflows.forEach(inf => {
-                currentQty[inf.symbol] = (currentQty[inf.symbol] || 0) + inf.quantity;
-                dailyInflowValue += (inf.quantity * inf.price);
-            });
-
-            // 2. Calculate End Value
-            let currentMarketValue = 0;
-            let hasPrice = false;
-
-            symbols.forEach((s, idx) => {
-                const qty = currentQty[s];
-                if (qty > 0) {
-                    const price = symbolCloseLookup[idx][date];
-                    if (price) {
-                        currentMarketValue += qty * price;
-                        hasPrice = true;
+                } else {
+                    // Fallback for migrated/legacy positions
+                    const d = pos.createdAt ? new Date(pos.createdAt) : new Date();
+                    // FIXED: Handle invalid createdAt
+                    if (!isNaN(d.getTime())) {
+                        if (d < earliestDate) earliestDate = d;
+                        lotEvents.push({
+                            date: d.toISOString().split('T')[0],
+                            symbol: pos.symbol,
+                            quantity: pos.quantity,
+                            price: pos.averagePrice
+                        });
                     }
                 }
             });
 
-            // 3. TWR Step
-            const startAdj = prevPortfolioValue + dailyInflowValue;
-            let dailyReturn = 0;
+            // ג”€ג”€ Parallel fetch ג”€ג”€
+            const [metricsResults, profilesResults, recsResults, spyChart, dividendResults, ...symbolCharts] =
+                await Promise.all([
+                    Promise.all(symbols.map(s => getBasicFinancials(s).catch(() => null))),
+                    Promise.all(symbols.map(s => getCompanyProfile(s).catch(() => null))),
+                    Promise.all(symbols.map(s => getAnalystRecommendations(s).catch(() => []))),
+                    fetchYahooChart('SPY', earliestDate),
+                    Promise.all(symbols.map(s => fetchDividendInfo(s).catch(() => null))),
+                    ...symbols.map(s => fetchYahooChart(s, earliestDate).catch(() => ({ dates: [], closes: [] })))
+                ]);
 
-            if (startAdj > 0) {
-                dailyReturn = (currentMarketValue - startAdj) / startAdj;
-            } else if (dailyInflowValue > 0) {
-                dailyReturn = (currentMarketValue - dailyInflowValue) / dailyInflowValue;
-            }
+            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+            // 1. HEALTH SCORE (Logic preserved)
+            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+            const totalValue = quantities.reduce((acc, q, i) => acc + (q * prices[i]), 0);
 
-            cumulativeTWR = ((1 + cumulativeTWR) * (1 + dailyReturn)) - 1;
-
-            // SPY Return
-            if (prevSpyClose === null) {
-                spCumReturn = 0;
-            } else {
-                const spyDaily = (spyClose - prevSpyClose) / prevSpyClose;
-                spCumReturn = ((1 + spCumReturn) * (1 + spyDaily)) - 1;
-            }
-
-            if (hasPrice || dailyInflowValue > 0) {
-                benchmarkData.push({
-                    date,
-                    portfolio: parseFloat((cumulativeTWR * 100).toFixed(2)),
-                    spy: parseFloat((spCumReturn * 100).toFixed(2))
-                });
-            }
-
-            prevPortfolioValue = currentMarketValue;
-            prevSpyClose = spyClose;
-        }
-
-        // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-        // 3. EXTRAS (Dividends, Correlation)
-        // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-        const dividends = [];
-        const sixtyDaysFromNow = new Date();
-        sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
-
-        symbols.forEach((sym, i) => {
-            const info = dividendResults[i];
-            if (!info || !info.exDate) return;
-
-            const exDate = new Date(info.exDate);
-
-            // Logic: Show if Upcoming (next 60 days) OR Current Month (even if passed)
-            const isUpcoming = exDate >= now && exDate <= sixtyDaysFromNow;
-            const isCurrentMonth = exDate.getMonth() === currentMonth && exDate.getFullYear() === currentYear;
-
-            if (!isUpcoming && !isCurrentMonth) return;
-
-            dividends.push({
-                symbol: sym,
-                exDate: info.exDate,
-                paymentDate: info.paymentDate || null,
-                amount: info.dividendRate || 0,
-                // Calculate Payout based on TOTAL Quantity (from DB aggregation)
-                estimatedPayout: Math.round(((info.dividendRate || 0) * quantities[i]) * 100) / 100,
+            // -- Diversification --
+            const sectorExposure = {};
+            let maxSectorPct = 0;
+            symbols.forEach((_, i) => {
+                const sector = profilesResults[i]?.finnhubIndustry || 'Unknown';
+                const val = quantities[i] * prices[i];
+                sectorExposure[sector] = (sectorExposure[sector] || 0) + val;
             });
-        });
-        dividends.sort((a, b) => new Date(a.exDate).getTime() - new Date(b.exDate).getTime());
+            Object.values(sectorExposure).forEach(val => {
+                const pct = totalValue > 0 ? (val / totalValue) * 100 : 0;
+                if (pct > maxSectorPct) maxSectorPct = pct;
+            });
+            const diversificationScore = Math.max(0, 100 - Math.max(0, maxSectorPct - 30) * 2.5);
 
-        // Correlation
-        const dailyReturns = symbols.map((_, i) => {
-            const chart = symbolCharts[i] || { dates: [], closes: [] };
-            const closes = chart.closes;
-            if (closes.length < 2) return [];
-            const recent = closes.slice(-31);
-            const returns = [];
-            for (let j = 1; j < recent.length; j++) {
-                if (recent[j - 1] > 0) returns.push((recent[j] - recent[j - 1]) / recent[j - 1]);
-            }
-            return returns;
-        });
+            // -- Volatility --
+            let weightedBeta = 0;
+            let validBetaWeight = 0;
+            symbols.forEach((_, i) => {
+                const beta = metricsResults[i]?.metric?.beta || 1;
+                const weight = totalValue > 0 ? (quantities[i] * prices[i]) / totalValue : 0;
+                weightedBeta += beta * weight;
+                validBetaWeight += weight;
+            });
+            const portfolioBeta = validBetaWeight > 0 ? weightedBeta / validBetaWeight : 1;
+            const volatilityScore = Math.max(0, 100 - Math.max(0, portfolioBeta - 1.0) * 50);
 
-        function pearson(a, b) {
-            const n = Math.min(a.length, b.length);
-            if (n < 5) return null;
-            const ax = a.slice(0, n), bx = b.slice(0, n);
-            const meanA = ax.reduce((s, v) => s + v, 0) / n;
-            const meanB = bx.reduce((s, v) => s + v, 0) / n;
-            let num = 0, denA = 0, denB = 0;
-            for (let j = 0; j < n; j++) {
-                const da = ax[j] - meanA, db = bx[j] - meanB;
-                num += da * db;
-                denA += da * da;
-                denB += db * db;
+            // -- Sentiment --
+            let totalBuyRatio = 0;
+            let sentimentCount = 0;
+            symbols.forEach((_, i) => {
+                const isETF = profilesResults[i]?.finnhubIndustry === 'Exchange Traded Fund';
+                if (isETF) return;
+                const recs = recsResults[i];
+                if (recs && recs.length > 0) {
+                    const latest = recs[0];
+                    const total = latest.buy + latest.hold + latest.sell + latest.strongBuy + latest.strongSell;
+                    if (total > 0) {
+                        const buyRatio = (latest.buy + latest.strongBuy) / total;
+                        totalBuyRatio += buyRatio;
+                        sentimentCount++;
+                    }
+                }
+            });
+            const sentimentScore = sentimentCount > 0 ? (totalBuyRatio / sentimentCount) * 100 : 50;
+
+            const healthScore = Math.round(
+                (diversificationScore * 0.4) + (volatilityScore * 0.3) + (sentimentScore * 0.3)
+            );
+
+            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+            // 2. BENCHMARK COMPARISON (TWR)
+            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+            const benchmarkData = [];
+            const symbolCloseLookup = symbolCharts.map(chart => {
+                const map = {};
+                if (chart.dates) {
+                    chart.dates.forEach((d, i) => map[d] = chart.closes[i]);
+                }
+                return map;
+            });
+
+            // Group inflows
+            const inflowsByDate = {};
+            lotEvents.forEach(e => {
+                if (!inflowsByDate[e.date]) inflowsByDate[e.date] = [];
+                inflowsByDate[e.date].push(e);
+            });
+
+            const allDates = spyChart.dates || [];
+            let cumulativeTWR = 0;
+            let spCumReturn = 0;
+            const currentQty = {};
+            symbols.forEach(s => currentQty[s] = 0);
+
+            let prevPortfolioValue = 0;
+            let prevSpyClose = null;
+
+            for (let i = 0; i < allDates.length; i++) {
+                const date = allDates[i];
+                const spyClose = spyChart.closes[i];
+
+                // 1. Process Inflows
+                let dailyInflowValue = 0;
+                const todaysInflows = inflowsByDate[date] || [];
+                todaysInflows.forEach(inf => {
+                    currentQty[inf.symbol] = (currentQty[inf.symbol] || 0) + inf.quantity;
+                    dailyInflowValue += (inf.quantity * inf.price);
+                });
+
+                // 2. Calculate End Value
+                let currentMarketValue = 0;
+                let hasPrice = false;
+
+                symbols.forEach((s, idx) => {
+                    const qty = currentQty[s];
+                    if (qty > 0) {
+                        const price = symbolCloseLookup[idx][date];
+                        if (price) {
+                            currentMarketValue += qty * price;
+                            hasPrice = true;
+                        }
+                    }
+                });
+
+                // 3. TWR Step
+                const startAdj = prevPortfolioValue + dailyInflowValue;
+                let dailyReturn = 0;
+
+                if (startAdj > 0) {
+                    dailyReturn = (currentMarketValue - startAdj) / startAdj;
+                } else if (dailyInflowValue > 0) {
+                    dailyReturn = (currentMarketValue - dailyInflowValue) / dailyInflowValue;
+                }
+
+                cumulativeTWR = ((1 + cumulativeTWR) * (1 + dailyReturn)) - 1;
+
+                // SPY Return
+                if (prevSpyClose === null) {
+                    spCumReturn = 0;
+                } else {
+                    const spyDaily = (spyClose - prevSpyClose) / prevSpyClose;
+                    spCumReturn = ((1 + spCumReturn) * (1 + spyDaily)) - 1;
+                }
+
+                if (hasPrice || dailyInflowValue > 0) {
+                    benchmarkData.push({
+                        date,
+                        portfolio: parseFloat((cumulativeTWR * 100).toFixed(2)),
+                        spy: parseFloat((spCumReturn * 100).toFixed(2))
+                    });
+                }
+
+                prevPortfolioValue = currentMarketValue;
+                prevSpyClose = spyClose;
             }
-            const den = Math.sqrt(denA * denB);
-            return den === 0 ? 0 : Math.round((num / den) * 100) / 100;
+
+            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+            // 3. EXTRAS (Dividends, Correlation)
+            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const dividends = [];
+            const sixtyDaysFromNow = new Date();
+            sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
+
+            symbols.forEach((sym, i) => {
+                const info = dividendResults[i];
+                if (!info || !info.exDate) return;
+
+                const exDate = new Date(info.exDate);
+
+                // Logic: Show if Upcoming (next 60 days) OR Current Month (even if passed)
+                const isUpcoming = exDate >= now && exDate <= sixtyDaysFromNow;
+                const isCurrentMonth = exDate.getMonth() === currentMonth && exDate.getFullYear() === currentYear;
+
+                if (!isUpcoming && !isCurrentMonth) return;
+
+                dividends.push({
+                    symbol: sym,
+                    exDate: info.exDate,
+                    paymentDate: info.paymentDate || null,
+                    amount: info.dividendRate || 0,
+                    // Calculate Payout based on TOTAL Quantity (from DB aggregation)
+                    estimatedPayout: Math.round(((info.dividendRate || 0) * quantities[i]) * 100) / 100,
+                });
+            });
+            dividends.sort((a, b) => new Date(a.exDate).getTime() - new Date(b.exDate).getTime());
+
+            // Correlation
+            const dailyReturns = symbols.map((_, i) => {
+                const chart = symbolCharts[i] || { dates: [], closes: [] };
+                const closes = chart.closes;
+                if (closes.length < 2) return [];
+                const recent = closes.slice(-31);
+                const returns = [];
+                for (let j = 1; j < recent.length; j++) {
+                    if (recent[j - 1] > 0) returns.push((recent[j] - recent[j - 1]) / recent[j - 1]);
+                }
+                return returns;
+            });
+
+            function pearson(a, b) {
+                const n = Math.min(a.length, b.length);
+                if (n < 5) return null;
+                const ax = a.slice(0, n), bx = b.slice(0, n);
+                const meanA = ax.reduce((s, v) => s + v, 0) / n;
+                const meanB = bx.reduce((s, v) => s + v, 0) / n;
+                let num = 0, denA = 0, denB = 0;
+                for (let j = 0; j < n; j++) {
+                    const da = ax[j] - meanA, db = bx[j] - meanB;
+                    num += da * db;
+                    denA += da * da;
+                    denB += db * db;
+                }
+                const den = Math.sqrt(denA * denB);
+                return den === 0 ? 0 : Math.round((num / den) * 100) / 100;
+            }
+
+            const correlationMatrix = {
+                symbols: symbols.slice(),
+                matrix: symbols.map((_, i) =>
+                    symbols.map((_, j) => (i === j ? 1 : pearson(dailyReturns[i], dailyReturns[j])))
+                ),
+            };
+
+            const result = {
+                healthScore,
+                components: {
+                    diversification: Math.round(diversificationScore),
+                    volatility: Math.round(volatilityScore),
+                    sentiment: Math.round(sentimentScore),
+                },
+                portfolioBeta: Math.round(portfolioBeta * 100) / 100,
+                maxSectorPct: Math.round(maxSectorPct),
+                benchmarkData,
+                dividends,
+                correlationMatrix,
+                lastUpdated: new Date().toISOString()
+            };
+
+            setCache(cacheKey, result);
+            return result;
+        } catch (error) {
+            console.error('ג Œ Error in getPortfolioHealthAndBenchmark:', error);
+            // Return safe fallback instead of 500
+            return {
+                healthScore: 0,
+                components: { diversification: 0, volatility: 0, sentiment: 0 },
+                portfolioBeta: 0,
+                maxSectorPct: 0,
+                benchmarkData: [],
+                dividends: [],
+                correlationMatrix: { symbols: [], matrix: [] },
+                error: error.message
+            };
         }
-
-        const correlationMatrix = {
-            symbols: symbols.slice(),
-            matrix: symbols.map((_, i) =>
-                symbols.map((_, j) => (i === j ? 1 : pearson(dailyReturns[i], dailyReturns[j])))
-            ),
-        };
-
-        const result = {
-            healthScore,
-            components: {
-                diversification: Math.round(diversificationScore),
-                volatility: Math.round(volatilityScore),
-                sentiment: Math.round(sentimentScore),
-            },
-            portfolioBeta: Math.round(portfolioBeta * 100) / 100,
-            maxSectorPct: Math.round(maxSectorPct),
-            benchmarkData,
-            dividends,
-            correlationMatrix,
-            lastUpdated: new Date().toISOString()
-        };
-
-        setCache(cacheKey, result);
-        return result;
     });
 }
