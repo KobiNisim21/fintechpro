@@ -190,4 +190,15 @@ export interface PortfolioAnalytics {
         portfolio: number;
         spy: number;
     }>;
+    dividends: Array<{
+        symbol: string;
+        exDate: string;
+        paymentDate: string | null;
+        amount: number;
+        estimatedPayout: number;
+    }>;
+    correlationMatrix: {
+        symbols: string[];
+        matrix: (number | null)[][];
+    };
 }

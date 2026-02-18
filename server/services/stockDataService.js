@@ -709,6 +709,41 @@ async function fetchYahooChart(symbol) {
 }
 
 /**
+ * Fetch dividend info for a symbol using yahoo-finance2.
+ * Returns { exDate, paymentDate, dividendRate } or null.
+ */
+async function fetchDividendInfo(symbol) {
+    const cacheKey = `dividend_${symbol}`;
+    const cached = getCached(cacheKey, 6 * 60 * 60 * 1000); // 6 hours
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        try {
+            const result = await YahooFinance.quoteSummary(symbol, { modules: ['calendarEvents', 'summaryDetail'] });
+            const cal = result?.calendarEvents;
+            const detail = result?.summaryDetail;
+
+            // Try calendarEvents first, fall back to summaryDetail
+            const exDate = cal?.exDividendDate
+                ? new Date(cal.exDividendDate).toISOString().split('T')[0]
+                : (detail?.exDividendDate ? new Date(detail.exDividendDate).toISOString().split('T')[0] : null);
+
+            const dividendRate = detail?.dividendRate || cal?.dividendRate || 0;
+            const paymentDate = cal?.dividendDate
+                ? new Date(cal.dividendDate).toISOString().split('T')[0]
+                : null;
+
+            const data = { exDate, paymentDate, dividendRate };
+            if (exDate) setCache(cacheKey, data);
+            return data;
+        } catch (err) {
+            console.error(`[DIVIDEND] Failed for ${symbol}:`, err.message);
+            return null;
+        }
+    });
+}
+
+/**
  * Get Portfolio Health Score and Benchmark data.
  * All data fetched in parallel. Result cached 1 hour.
  *
@@ -726,8 +761,8 @@ export async function getPortfolioHealthAndBenchmark(symbols, quantities, prices
     return dedupedFetch(cacheKey, async () => {
         const totalValue = symbols.reduce((sum, _, i) => sum + prices[i] * quantities[i], 0);
 
-        // ── Parallel fetch: metrics, profiles, recs, SPY chart, per-symbol charts ──
-        const [metricsResults, profilesResults, recsResults, spyChart, ...symbolCharts] =
+        // ── Parallel fetch: metrics, profiles, recs, SPY chart, dividends, per-symbol charts ──
+        const [metricsResults, profilesResults, recsResults, spyChart, dividendResults, ...symbolCharts] =
             await Promise.all([
                 // Beta / financials for each symbol
                 Promise.all(symbols.map(s => getBasicFinancials(s).catch(() => null))),
@@ -737,6 +772,8 @@ export async function getPortfolioHealthAndBenchmark(symbols, quantities, prices
                 Promise.all(symbols.map(s => getAnalystRecommendations(s).catch(() => []))),
                 // SPY benchmark
                 fetchYahooChart('SPY'),
+                // Dividend calendar events
+                Promise.all(symbols.map(s => fetchDividendInfo(s).catch(() => null))),
                 // Each symbol's 1Y chart
                 ...symbols.map(s => fetchYahooChart(s).catch(() => ({ dates: [], closes: [] })))
             ]);
@@ -880,6 +917,83 @@ export async function getPortfolioHealthAndBenchmark(symbols, quantities, prices
             });
         }
 
+        // ────────────────────────────────────────────────────
+        // DIVIDEND CALENDAR
+        // ────────────────────────────────────────────────────
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const dividends = [];
+
+        symbols.forEach((sym, i) => {
+            const info = dividendResults[i];
+            if (!info || !info.exDate) return;
+
+            const exDate = new Date(info.exDate);
+            // Include if ex-date is in the future or current month
+            const isUpcoming = exDate >= now;
+            const isCurrentMonth = exDate.getMonth() === currentMonth && exDate.getFullYear() === currentYear;
+            if (!isUpcoming && !isCurrentMonth) return;
+
+            dividends.push({
+                symbol: sym,
+                exDate: info.exDate,
+                paymentDate: info.paymentDate || null,
+                amount: info.dividendRate || 0,
+                estimatedPayout: Math.round(((info.dividendRate || 0) * quantities[i]) * 100) / 100,
+            });
+        });
+
+        // Sort by ex-date ascending
+        dividends.sort((a, b) => new Date(a.exDate).getTime() - new Date(b.exDate).getTime());
+
+        // ────────────────────────────────────────────────────
+        // CORRELATION MATRIX (Pearson, last 30 trading days)
+        // ────────────────────────────────────────────────────
+        // Convert closes to daily returns (last 30 days)
+        const dailyReturns = symbols.map((_, i) => {
+            const chart = symbolCharts[i] || { dates: [], closes: [] };
+            const closes = chart.closes;
+            if (closes.length < 2) return [];
+            // Take last 31 closes to get 30 returns
+            const recent = closes.slice(-31);
+            const returns = [];
+            for (let j = 1; j < recent.length; j++) {
+                if (recent[j - 1] > 0) {
+                    returns.push((recent[j] - recent[j - 1]) / recent[j - 1]);
+                }
+            }
+            return returns;
+        });
+
+        // Pearson correlation function
+        function pearson(a, b) {
+            const n = Math.min(a.length, b.length);
+            if (n < 5) return null;
+            const ax = a.slice(0, n), bx = b.slice(0, n);
+            const meanA = ax.reduce((s, v) => s + v, 0) / n;
+            const meanB = bx.reduce((s, v) => s + v, 0) / n;
+            let num = 0, denA = 0, denB = 0;
+            for (let j = 0; j < n; j++) {
+                const da = ax[j] - meanA, db = bx[j] - meanB;
+                num += da * db;
+                denA += da * da;
+                denB += db * db;
+            }
+            const den = Math.sqrt(denA * denB);
+            return den === 0 ? 0 : Math.round((num / den) * 100) / 100;
+        }
+
+        const correlationMatrix = {
+            symbols: symbols.slice(),
+            matrix: symbols.map((_, i) =>
+                symbols.map((_, j) => {
+                    if (i === j) return 1;
+                    return pearson(dailyReturns[i], dailyReturns[j]);
+                })
+            ),
+        };
+
         const result = {
             healthScore,
             components: {
@@ -890,6 +1004,8 @@ export async function getPortfolioHealthAndBenchmark(symbols, quantities, prices
             portfolioBeta: Math.round(portfolioBeta * 100) / 100,
             maxSectorPct: Math.round(maxSectorPct),
             benchmarkData,
+            dividends,
+            correlationMatrix,
         };
 
         setCache(cacheKey, result);

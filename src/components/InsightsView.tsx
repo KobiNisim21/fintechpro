@@ -8,7 +8,8 @@ import {
 import { stocksAPI, RecommendationTrend, PriceTarget, CompanyProfile, PortfolioAnalytics } from '@/api/stocks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown, ShieldCheck } from 'lucide-react';
+import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown, ShieldCheck, DollarSign, CalendarDays } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // ─── Premium Color Palette ───────────────────────────────────────
 const COLORS = [
@@ -378,8 +379,8 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                     key={range}
                                     onClick={() => setBenchmarkRange(range)}
                                     className={`px-3 py-1 text-xs font-medium rounded-lg transition-all ${benchmarkRange === range
-                                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                                            : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+                                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                        : 'text-white/40 hover:text-white/60 hover:bg-white/5'
                                         }`}
                                 >
                                     {range}
@@ -431,6 +432,145 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     <img src="/logo.png" alt="" className="absolute bottom-3 right-3 w-8 h-8 opacity-10 pointer-events-none" />
                 </Card>
             </div>
+
+            {/* ══ Dividend Calendar + Correlation Matrix Row ══ */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: analytics ? 1 : 0, y: analytics ? 0 : 20 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+            >
+                {/* ── Dividend Calendar ── */}
+                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                            <CalendarDays className="w-5 h-5 text-emerald-400" />
+                            Upcoming Dividends
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {analyticsLoading || !analytics ? (
+                            <div className="space-y-3">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="h-10 bg-white/5 rounded-lg animate-pulse" />
+                                ))}
+                            </div>
+                        ) : analytics.dividends?.length > 0 ? (
+                            <div className="overflow-hidden">
+                                {/* Header Row */}
+                                <div className="grid grid-cols-4 gap-2 text-[10px] text-white/40 uppercase tracking-wider pb-2 border-b border-white/5">
+                                    <span>Symbol</span>
+                                    <span>Ex-Date</span>
+                                    <span className="text-right">Amount</span>
+                                    <span className="text-right">Est. Payout</span>
+                                </div>
+                                {/* Data rows */}
+                                {analytics.dividends.map((div, i) => (
+                                    <div key={i} className="grid grid-cols-4 gap-2 items-center py-2.5 border-b border-white/5 last:border-0">
+                                        <span className="text-sm font-semibold text-white">{div.symbol}</span>
+                                        <span className="text-xs text-white/60">
+                                            {new Date(div.exDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                        </span>
+                                        <span className="text-sm text-white/70 text-right font-mono">${div.amount.toFixed(2)}</span>
+                                        <span className="text-sm text-cyan-400 text-right font-bold font-mono">${div.estimatedPayout.toFixed(2)}</span>
+                                    </div>
+                                ))}
+                                {/* Total row */}
+                                <div className="grid grid-cols-4 gap-2 items-center pt-3 mt-1 border-t border-white/10">
+                                    <span className="text-xs text-white/50 col-span-3">Total Estimated Payout</span>
+                                    <span className="text-sm text-cyan-400 text-right font-bold font-mono">
+                                        ${analytics.dividends.reduce((s, d) => s + d.estimatedPayout, 0).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-8 text-zinc-500">
+                                <DollarSign className="w-8 h-8 mb-2 opacity-30" />
+                                <p className="text-sm">No upcoming dividends</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* ── Correlation Matrix Heatmap ── */}
+                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg relative overflow-hidden">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-violet-400" />
+                            Correlation Matrix
+                            <span className="text-[10px] text-white/30 ml-auto">30-day Pearson</span>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {analyticsLoading || !analytics?.correlationMatrix ? (
+                            <div className="w-full aspect-square max-w-[400px] mx-auto bg-white/5 rounded-xl animate-pulse" />
+                        ) : (() => {
+                            const { symbols: corrSymbols, matrix } = analytics.correlationMatrix;
+                            const cellSize = corrSymbols.length <= 5 ? 48 : corrSymbols.length <= 8 ? 36 : 28;
+                            const labelSize = corrSymbols.length <= 5 ? 40 : corrSymbols.length <= 8 ? 32 : 24;
+
+                            const getColor = (val: number | null) => {
+                                if (val === null) return 'rgba(255,255,255,0.05)';
+                                if (val >= 0) {
+                                    const g = Math.round(120 + val * 135); // 120 → 255
+                                    return `rgba(${Math.round(34 + (1 - val) * 100)}, ${g}, ${Math.round(100 - val * 40)}, ${0.15 + val * 0.5})`;
+                                } else {
+                                    const r = Math.round(180 + Math.abs(val) * 75);
+                                    return `rgba(${r}, ${Math.round(100 - Math.abs(val) * 50)}, ${Math.round(100 - Math.abs(val) * 30)}, ${0.15 + Math.abs(val) * 0.5})`;
+                                }
+                            };
+
+                            return (
+                                <div className="overflow-x-auto">
+                                    <div className="inline-block">
+                                        {/* Header row with symbols */}
+                                        <div className="flex" style={{ paddingLeft: labelSize }}>
+                                            {corrSymbols.map(sym => (
+                                                <div key={sym} style={{ width: cellSize, minWidth: cellSize }}
+                                                    className="text-[9px] text-white/40 text-center font-mono truncate">
+                                                    {sym}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {/* Matrix rows */}
+                                        {matrix.map((row, i) => (
+                                            <div key={i} className="flex items-center">
+                                                <div style={{ width: labelSize, minWidth: labelSize }}
+                                                    className="text-[9px] text-white/40 font-mono truncate pr-1 text-right">
+                                                    {corrSymbols[i]}
+                                                </div>
+                                                {row.map((val, j) => (
+                                                    <div
+                                                        key={j}
+                                                        className="relative group cursor-pointer transition-all duration-200 hover:scale-110 hover:z-10 rounded-sm"
+                                                        style={{
+                                                            width: cellSize - 2, height: cellSize - 2, margin: 1,
+                                                            background: getColor(val),
+                                                        }}
+                                                    >
+                                                        {/* Value inside cell (only if big enough) */}
+                                                        {cellSize >= 36 && val !== null && (
+                                                            <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono text-white/60">
+                                                                {val.toFixed(2)}
+                                                            </span>
+                                                        )}
+                                                        {/* Tooltip */}
+                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 text-white text-xs font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                                                            {corrSymbols[i]} vs {corrSymbols[j]}: {val !== null ? val.toFixed(2) : 'N/A'}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </CardContent>
+                    {/* Watermark */}
+                    <img src="/logo.png" alt="" className="absolute bottom-3 right-3 w-8 h-8 opacity-10 pointer-events-none" />
+                </Card>
+            </motion.div>
 
             {/* ── Top Row: Allocation + Sectors ── */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
