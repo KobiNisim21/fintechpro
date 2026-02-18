@@ -69,8 +69,7 @@ const BentoTreemapContent = (props: any) => {
     const clampedW = Math.max(width - GAP, 0);
     const clampedH = Math.max(height - GAP, 0);
     const fillColor = colors[index % colors.length];
-    const showName = clampedW > 65 && clampedH > 38;
-    const showPercent = clampedW > 65 && clampedH > 55;
+
 
     return (
         <g>
@@ -78,19 +77,21 @@ const BentoTreemapContent = (props: any) => {
                 rx={RADIUS} ry={RADIUS}
                 style={{ fill: fillColor, fillOpacity: 0.82, stroke: 'none' }}
             />
-            {showName && (
-                <text x={clampedX + clampedW / 2} y={clampedY + clampedH / 2 - (showPercent ? 7 : 0)}
-                    textAnchor="middle" dominantBaseline="central"
-                    fill="#fff" fontSize={clampedW > 100 ? 14 : 12} fontWeight="600"
-                    fontFamily="Inter, system-ui, -apple-system, sans-serif"
-                >{name}</text>
-            )}
-            {showPercent && root?.value > 0 && (
-                <text x={clampedX + clampedW / 2} y={clampedY + clampedH / 2 + 15}
-                    textAnchor="middle" dominantBaseline="central"
-                    fill="rgba(255,255,255,0.75)" fontSize={11} fontWeight="500"
-                    fontFamily="Inter, system-ui, -apple-system, sans-serif"
-                >{((value / root.value) * 100).toFixed(1)}%</text>
+            {clampedW > 30 && clampedH > 30 && (
+                <foreignObject x={clampedX} y={clampedY} width={clampedW} height={clampedH}>
+                    <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center overflow-hidden">
+                        <span className="text-white font-semibold leading-tight break-words w-full"
+                            style={{ fontSize: clampedW < 60 ? '9px' : '11px' }}>
+                            {name}
+                        </span>
+                        {clampedH > 50 && root?.value > 0 && (
+                            <span className="text-white/75 font-medium mt-0.5"
+                                style={{ fontSize: clampedW < 60 ? '8px' : '10px' }}>
+                                {((value / root.value) * 100).toFixed(1)}%
+                            </span>
+                        )}
+                    </div>
+                </foreignObject>
             )}
         </g>
     );
