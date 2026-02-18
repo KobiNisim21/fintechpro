@@ -1,47 +1,50 @@
-import { TrendingUp, TrendingDown, Trash2, Edit2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Trash2, Edit2, Plus, X } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
-import { usePortfolio } from '@/context/PortfolioContext';
-import { useState } from 'react';
+import { usePortfolio, Position, Lot } from '@/context/PortfolioContext';
+import { useState, useEffect } from 'react';
 import { SimpleDialog } from './SimpleDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
 interface StockCardProps {
-  stock: {
-    _id?: string;
-    symbol: string;
-    name: string;
-    price: number;
-    change: number;
-    changePercent: number;
-    sparklineData: number[];
-    color: string;
-    quantity?: number;
-    averagePrice?: number;
-
-    // Extended hours data (pre-market or after-hours)
-    extendedPrice?: number;
-    extendedChange?: number;
-    extendedChangePercent?: number;
-    marketStatus?: 'regular' | 'pre-market' | 'after-hours' | 'closed';
-  };
+  stock: Position;
   className?: string;
 }
 
 export function StockCard({ stock, className }: StockCardProps) {
   const { removePosition, updatePosition } = usePortfolio();
   const [editOpen, setEditOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    quantity: stock.quantity?.toString() || '',
-    averagePrice: stock.averagePrice?.toString() || '',
-  });
   const [loading, setLoading] = useState(false);
+
+  // Edit State
+  const [lots, setLots] = useState<Lot[]>([]);
+  const [newLot, setNewLot] = useState<Lot>({
+    date: new Date().toISOString().split('T')[0],
+    quantity: 0,
+    price: 0
+  });
+  const [showAddLot, setShowAddLot] = useState(false);
+
+  // Initialize lots when opening edit dialog
+  useEffect(() => {
+    if (editOpen) {
+      if (stock.lots && stock.lots.length > 0) {
+        setLots(stock.lots);
+      } else {
+        // Fallback for legacy positions without lots: Create a single lot from current aggregates
+        setLots([{
+          date: new Date().toISOString().split('T')[0], // Default to today/now if unknown
+          quantity: stock.quantity,
+          price: stock.averagePrice
+        }]);
+      }
+    }
+  }, [editOpen, stock]);
 
   const isPositive = stock.change >= 0;
   const chartData = stock.sparklineData.map((value) => ({ value }));
 
-  // Calculate position metrics if available
   const quantity = stock.quantity || 0;
   const avgPrice = stock.averagePrice || 0;
   const totalValue = quantity * stock.price;
@@ -50,7 +53,7 @@ export function StockCard({ stock, className }: StockCardProps) {
   const istotalReturnPositive = totalReturn >= 0;
 
   const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation();
     if (stock._id) {
       if (confirm(`Are you sure you want to delete ${stock.symbol}?`)) {
         removePosition(stock._id);
@@ -63,17 +66,45 @@ export function StockCard({ stock, className }: StockCardProps) {
     setEditOpen(true);
   };
 
+  const handleAddLot = () => {
+    if (newLot.quantity > 0 && newLot.price >= 0) {
+      setLots([...lots, { ...newLot }]);
+      setNewLot({
+        date: new Date().toISOString().split('T')[0],
+        quantity: 0,
+        price: 0
+      });
+      setShowAddLot(false);
+    }
+  };
+
+  const removeLot = (index: number) => {
+    const updated = lots.filter((_, i) => i !== index);
+    setLots(updated);
+  };
+
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stock._id) return;
 
     setLoading(true);
     try {
-      await updatePosition(
-        stock._id,
-        Number(editForm.quantity),
-        Number(editForm.averagePrice)
-      );
+      // If all lots removed, delete position? Or just save empty lots? 
+      // Backend might behave weirdly with empty lots. 
+      // Let's assume user wants to save the lots.
+      if (lots.length === 0) {
+        if (confirm("Removing all lots will delete the position. Continue?")) {
+          await removePosition(stock._id);
+        }
+      } else {
+        // Calculate expected totals for immediate UI feedback (optional, backend does it)
+        await updatePosition(
+          stock._id,
+          undefined, // quantity calculated by backend
+          undefined, // avgPrice calculated by backend
+          lots
+        );
+      }
       setEditOpen(false);
     } catch (error) {
       console.error('Failed to update position:', error);
@@ -81,6 +112,11 @@ export function StockCard({ stock, className }: StockCardProps) {
       setLoading(false);
     }
   };
+
+  // Calculate projected totals for Edit UI
+  const projectTotalQty = lots.reduce((acc, lot) => acc + Number(lot.quantity), 0);
+  const projectTotalCost = lots.reduce((acc, lot) => acc + (Number(lot.quantity) * Number(lot.price)), 0);
+  const projectAvgPrice = projectTotalQty > 0 ? projectTotalCost / projectTotalQty : 0;
 
   return (
     <>
@@ -137,7 +173,7 @@ export function StockCard({ stock, className }: StockCardProps) {
             <div>
               <div className="text-2xl font-bold text-white mb-1 flex items-baseline gap-2">
                 <span>${stock.price.toFixed(2)}</span>
-                {/* Extended hours price from Yahoo Finance */}
+                {/* Extended hours price */}
                 {stock.marketStatus && stock.marketStatus !== 'regular' && stock.extendedPrice && (
                   <span className="text-sm font-medium" style={{ color: '#fb923c' }}>
                     {stock.marketStatus === 'pre-market' && 'PM'}
@@ -146,7 +182,7 @@ export function StockCard({ stock, className }: StockCardProps) {
                     {' $'}{stock.extendedPrice.toFixed(2)}
                   </span>
                 )}
-                {/* Market status badge when no extended price available */}
+                {/* Market status badge */}
                 {stock.marketStatus && stock.marketStatus !== 'regular' && !stock.extendedPrice && (
                   <span className="text-xs font-medium px-1.5 py-0.5 rounded" style={{
                     backgroundColor: stock.marketStatus === 'closed' ? 'rgba(107, 114, 128, 0.3)' : 'rgba(251, 146, 60, 0.2)',
@@ -158,7 +194,7 @@ export function StockCard({ stock, className }: StockCardProps) {
                   </span>
                 )}
               </div>
-              {/* Regular market change */}
+
               <div className={`flex items-center gap-2 text-xs font-semibold ${isPositive ? 'text-emerald-400' : 'text-rose-500'}`}>
                 <span>{isPositive ? '+' : ''}${stock.change.toFixed(2)}</span>
                 <span>({isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%)</span>
@@ -167,7 +203,7 @@ export function StockCard({ stock, className }: StockCardProps) {
                 )}
               </div>
 
-              {/* Extended hours change from Yahoo Finance */}
+              {/* Extended hours change */}
               {stock.marketStatus && stock.marketStatus !== 'regular' && stock.extendedPrice && stock.extendedChange !== undefined && (
                 <div className="flex items-center gap-1.5 mt-1" style={{ fontSize: '11px', color: 'rgba(251, 146, 60, 0.9)' }}>
                   <span style={{ color: 'rgba(251, 146, 60, 0.6)' }}>
@@ -219,39 +255,98 @@ export function StockCard({ stock, className }: StockCardProps) {
         </div>
       </div>
 
-      {/* Edit Dialog */}
+      {/* Edit Dialog - Multi-Lot Support */}
       <SimpleDialog open={editOpen} onClose={() => setEditOpen(false)}>
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Edit Position</h2>
-          <p className="text-sm text-white/60 mb-4">Update your holdings for {stock.symbol}</p>
+        <div className="max-h-[80vh] overflow-y-auto">
+          <h2 className="text-xl font-bold mb-4">Edit {stock.symbol} Holdings</h2>
 
-          <form onSubmit={handleEditSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="edit-quantity" className="text-white/70 mb-2">Quantity</Label>
-              <Input
-                id="edit-quantity"
-                type="number"
-                step="any"
-                className="bg-white/5 border-white/10 text-white"
-                value={editForm.quantity}
-                onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
-                required
-              />
+          <div className="space-y-4">
+            {/* Lots List */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs text-white/50 px-2">
+                <span className="w-24">Date</span>
+                <span className="w-20 text-right">Qty</span>
+                <span className="w-20 text-right">Price</span>
+                <span className="w-8"></span>
+              </div>
+              {lots.map((lot, index) => (
+                <div key={index} className="flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/5 text-sm">
+                  <span className="w-24 text-white/70">{new Date(lot.date).toLocaleDateString()}</span>
+                  <span className="w-20 text-right font-medium">{lot.quantity}</span>
+                  <span className="w-20 text-right text-white/70">${Number(lot.price).toFixed(2)}</span>
+                  <button
+                    onClick={() => removeLot(index)}
+                    className="w-8 flex justify-center text-white/30 hover:text-rose-500 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
             </div>
 
-            <div>
-              <Label htmlFor="edit-avgPrice" className="text-white/70 mb-2">Average Price</Label>
-              <Input
-                id="edit-avgPrice"
-                type="number"
-                step="any"
-                className="bg-white/5 border-white/10 text-white"
-                value={editForm.averagePrice}
-                onChange={(e) => setEditForm({ ...editForm, averagePrice: e.target.value })}
-                required
-              />
+            {/* Add Lot Form */}
+            {showAddLot ? (
+              <div className="bg-white/5 p-3 rounded-xl border border-white/10 space-y-3 animation-fade-in">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-white/50">Date</Label>
+                    <Input
+                      type="date"
+                      value={typeof newLot.date === 'string' ? newLot.date : new Date(newLot.date).toISOString().split('T')[0]}
+                      onChange={(e) => setNewLot({ ...newLot, date: e.target.value })}
+                      className="h-8 text-xs bg-white/5 border-white/10 dark:scheme-dark"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-white/50">Quantity</Label>
+                    <Input
+                      type="number"
+                      value={newLot.quantity || ''}
+                      onChange={(e) => setNewLot({ ...newLot, quantity: Number(e.target.value) })}
+                      className="h-8 text-xs bg-white/5 border-white/10"
+                      placeholder="Qty"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs text-white/50">Price per Share</Label>
+                    <Input
+                      type="number"
+                      value={newLot.price || ''}
+                      onChange={(e) => setNewLot({ ...newLot, price: Number(e.target.value) })}
+                      className="h-8 text-xs bg-white/5 border-white/10"
+                      placeholder="Price"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => setShowAddLot(false)} className="h-7 text-xs">Cancel</Button>
+                  <Button size="sm" onClick={handleAddLot} className="h-7 text-xs bg-emerald-500 hover:bg-emerald-600 text-white">Add Lot</Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                onClick={() => setShowAddLot(true)}
+                variant="outline"
+                className="w-full bg-white/5 border-dashed border-white/20 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/30"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Another Lot
+              </Button>
+            )}
+
+            {/* Summary */}
+            <div className="pt-4 border-t border-white/10 mt-4">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-white/50">Total Shares</span>
+                <span className="font-bold text-white">{projectTotalQty}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-white/50">Avg Price</span>
+                <span className="font-bold text-white">${projectAvgPrice.toFixed(2)}</span>
+              </div>
             </div>
 
+            {/* Actions */}
             <div className="flex justify-end gap-2 mt-6">
               <Button
                 type="button"
@@ -261,14 +356,15 @@ export function StockCard({ stock, className }: StockCardProps) {
                 Cancel
               </Button>
               <Button
-                type="submit"
+                type="button"
+                onClick={handleEditSubmit}
                 disabled={loading}
                 className="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50"
               >
                 {loading ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
-          </form>
+          </div>
         </div>
       </SimpleDialog>
     </>

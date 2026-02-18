@@ -1,8 +1,4 @@
-/**
- * Stock Controller
- * All data fetching is delegated to stockDataService for shared cache & dedup.
- */
-
+import Position from '../models/Position.js';
 import * as stockData from '../services/stockDataService.js';
 
 // ============================================
@@ -23,6 +19,37 @@ export const searchStocks = async (req, res) => {
         const data = await stockData.searchStocks(q);
         res.json(data);
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ... (other exports) ...
+
+// @desc    Get portfolio health score & benchmark comparison
+// @route   GET /api/stocks/portfolio-analytics
+// @access  Private
+export const getPortfolioAnalytics = async (req, res) => {
+    try {
+        // Fetch positions from DB to ensure TWR accuracy with lots
+        const positions = await Position.find({ user: req.user._id }).lean(); // .lean() for plain objects
+
+        if (!positions || positions.length === 0) {
+            // Return empty/default structure if no positions
+            return res.json({
+                healthScore: 0,
+                components: { diversification: 0, volatility: 0, sentiment: 0 },
+                portfolioBeta: 0,
+                maxSectorPct: 0,
+                benchmarkData: [],
+                dividends: [],
+                correlationMatrix: { symbols: [], matrix: [] }
+            });
+        }
+
+        const data = await stockData.getPortfolioHealthAndBenchmark(positions);
+        res.json(data);
+    } catch (error) {
+        console.error('❌ Error in getPortfolioAnalytics:', error.message);
         res.status(500).json({ message: error.message });
     }
 };
@@ -237,28 +264,4 @@ export const getBatchInsights = async (req, res) => {
     }
 };
 
-// @desc    Get portfolio health score & benchmark comparison
-// @route   GET /api/stocks/portfolio-analytics?symbols=NVDA,AAPL&quantities=10,5&prices=130,175
-// @access  Private
-export const getPortfolioAnalytics = async (req, res) => {
-    try {
-        const { symbols, quantities, prices } = req.query;
-        if (!symbols || !quantities || !prices) {
-            return res.status(400).json({ message: 'Missing symbols, quantities, or prices' });
-        }
 
-        const symbolList = symbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-        const quantityList = quantities.split(',').map(Number);
-        const priceList = prices.split(',').map(Number);
-
-        if (symbolList.length === 0 || symbolList.length !== quantityList.length || symbolList.length !== priceList.length) {
-            return res.status(400).json({ message: 'symbols, quantities, and prices must have equal length' });
-        }
-
-        const data = await stockData.getPortfolioHealthAndBenchmark(symbolList, quantityList, priceList);
-        res.json(data);
-    } catch (error) {
-        console.error('❌ Error in getPortfolioAnalytics:', error.message);
-        res.status(500).json({ message: error.message });
-    }
-};

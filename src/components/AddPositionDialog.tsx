@@ -31,6 +31,7 @@ export function AddPositionDialog() {
         name: '',
         quantity: '',
         averagePrice: '',
+        date: new Date().toISOString().split('T')[0], // Default to today
     });
 
     // Search state
@@ -71,10 +72,17 @@ export function AddPositionDialog() {
                 formData.symbol,
                 formData.name || `${formData.symbol.toUpperCase()} Inc.`,
                 Number(formData.quantity),
-                Number(formData.averagePrice)
+                Number(formData.averagePrice),
+                new Date(formData.date) // Pass the date
             );
 
-            setFormData({ symbol: '', name: '', quantity: '', averagePrice: '' });
+            setFormData({
+                symbol: '',
+                name: '',
+                quantity: '',
+                averagePrice: '',
+                date: new Date().toISOString().split('T')[0]
+            });
             setSearchValue('');
             setOpen(false);
         } catch (err: any) {
@@ -172,7 +180,7 @@ export function AddPositionDialog() {
                                                     <CommandItem
                                                         key={stock.symbol}
                                                         value={stock.symbol}
-                                                        onSelect={(currentValue) => {
+                                                        onSelect={(_) => {
                                                             setFormData({
                                                                 ...formData,
                                                                 symbol: stock.symbol, // Use exact symbol from API
@@ -199,6 +207,18 @@ export function AddPositionDialog() {
                                     </Command>
                                 </PopoverContent>
                             </Popover>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center', gap: '16px' }}>
+                            <Label htmlFor="date" className="text-right text-white/70">Date</Label>
+                            <Input
+                                id="date"
+                                type="date"
+                                className="bg-white/5 border-white/10 text-white dark:scheme-dark"
+                                value={formData.date}
+                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                required
+                            />
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center', gap: '16px' }}>

@@ -489,6 +489,12 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                 <p className="text-sm">No upcoming dividends</p>
                             </div>
                         )}
+                        {analytics?.lastUpdated && (
+                            <div className="mt-3 text-[10px] text-white/20 text-right flex items-center justify-end gap-1">
+                                <Activity className="w-3 h-3" />
+                                Updated: {new Date(analytics.lastUpdated).toLocaleTimeString()}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 

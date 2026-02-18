@@ -4,6 +4,12 @@ import { stocksAPI } from '../api/stocks';
 import { useAuth } from './AuthContext';
 import { getFinnhubWebSocket, PriceUpdateCallback } from '../services/websocket';
 
+export interface Lot {
+  quantity: number;
+  price: number;
+  date: string | Date; // Date of purchase
+}
+
 export interface Position {
   _id: string;
   symbol: string;
@@ -20,6 +26,7 @@ export interface Position {
 
   quantity: number;
   averagePrice: number;
+  lots?: Lot[]; // Array of purchase lots
   sparklineData: number[];
   color: string;
 }
@@ -28,8 +35,8 @@ interface PortfolioContextType {
   positions: Position[];
   loading: boolean;
   error: string | null;
-  addPosition: (symbol: string, name: string, quantity: number, averagePrice: number) => Promise<void>;
-  updatePosition: (id: string, quantity?: number, averagePrice?: number) => Promise<void>;
+  addPosition: (symbol: string, name: string, quantity: number, averagePrice: number, date?: string | Date) => Promise<void>;
+  updatePosition: (id: string, quantity?: number, averagePrice?: number, lots?: Lot[]) => Promise<void>;
   removePosition: (id: string) => Promise<void>;
 }
 
@@ -64,11 +71,7 @@ function getMarketStatus(): MarketStatus {
   return 'closed';
 }
 
-// Check if we're in extended hours (pre-market or after-hours)
-function isExtendedHours(): boolean {
-  const status = getMarketStatus();
-  return status !== 'regular';
-}
+
 
 // ============================================
 // LOCAL STORAGE CACHE (stale-while-revalidate)
@@ -337,7 +340,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, positions.length]);
 
-  const addPosition = async (symbol: string, name: string, quantity: number, averagePrice: number) => {
+  const addPosition = async (symbol: string, name: string, quantity: number, averagePrice: number, date?: string | Date) => {
     try {
       setError(null);
       const newPosition = await positionsAPI.create({
@@ -345,6 +348,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         name,
         quantity,
         averagePrice, // Ensure this field is sent
+        date: date || new Date(),
       });
 
       // Try to fetch current price, but don't fail if it doesn't work
@@ -397,16 +401,21 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updatePosition = async (id: string, quantity?: number, averagePrice?: number) => {
+  const updatePosition = async (id: string, quantity?: number, averagePrice?: number, lots?: Lot[]) => {
     try {
       setError(null);
-      await positionsAPI.update(id, { quantity, averagePrice });
+      await positionsAPI.update(id, { quantity, averagePrice, lots });
 
       // Update local state
       setPositions((prev) => {
         const updated = prev.map((pos) =>
           pos._id === id
-            ? { ...pos, quantity: quantity ?? pos.quantity, averagePrice: averagePrice ?? pos.averagePrice }
+            ? {
+              ...pos,
+              quantity: quantity ?? pos.quantity,
+              averagePrice: averagePrice ?? pos.averagePrice,
+              lots: lots ?? pos.lots
+            }
             : pos
         );
         saveCachedPositions(updated);

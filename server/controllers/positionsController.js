@@ -17,9 +17,12 @@ export const getPositions = async (req, res) => {
 // @route   POST /api/positions
 // @access  Private
 
+// @desc    Add new position
+// @route   POST /api/positions
+// @access  Private
 export const addPosition = async (req, res) => {
     try {
-        const { symbol, name, quantity, averagePrice } = req.body;
+        const { symbol, name, quantity, averagePrice, date } = req.body;
 
         // 1. Validate symbol existence
         try {
@@ -33,10 +36,15 @@ export const addPosition = async (req, res) => {
 
         const position = await Position.create({
             user: req.user._id,
-            symbol: symbol.toUpperCase(), // Ensure uppercase
+            symbol: symbol.toUpperCase(),
             name,
             quantity,
-            averagePrice
+            averagePrice,
+            lots: [{
+                quantity,
+                price: averagePrice,
+                date: date || Date.now()
+            }]
         });
 
         res.status(201).json(position);
@@ -61,10 +69,16 @@ export const updatePosition = async (req, res) => {
             return res.status(401).json({ message: 'Not authorized' });
         }
 
-        const { quantity, averagePrice } = req.body;
+        const { quantity, averagePrice, lots } = req.body;
 
-        if (quantity !== undefined) position.quantity = quantity;
-        if (averagePrice !== undefined) position.averagePrice = averagePrice;
+        // If 'lots' are provided, they take precedence and will trigger auto-calc
+        if (lots && Array.isArray(lots)) {
+            position.lots = lots;
+        } else {
+            // Fallback for legacy updates (though UI should send lots)
+            if (quantity !== undefined) position.quantity = quantity;
+            if (averagePrice !== undefined) position.averagePrice = averagePrice;
+        }
 
         const updatedPosition = await position.save();
         res.json(updatedPosition);

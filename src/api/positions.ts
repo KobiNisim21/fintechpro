@@ -1,5 +1,11 @@
 import api from './client';
 
+export interface Lot {
+    quantity: number;
+    price: number;
+    date: string | Date;
+}
+
 export interface Position {
     _id: string;
     user: string;
@@ -7,6 +13,7 @@ export interface Position {
     name: string;
     quantity: number;
     averagePrice: number;
+    lots?: Lot[];
     createdAt: string;
     updatedAt: string;
 }
@@ -16,11 +23,13 @@ export interface CreatePositionData {
     name: string;
     quantity: number;
     averagePrice: number;
+    date?: string | Date;
 }
 
 export interface UpdatePositionData {
     quantity?: number;
     averagePrice?: number;
+    lots?: Lot[];
 }
 
 export const positionsAPI = {

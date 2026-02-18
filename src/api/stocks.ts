@@ -201,4 +201,5 @@ export interface PortfolioAnalytics {
         symbols: string[];
         matrix: (number | null)[][];
     };
+    lastUpdated?: string;
 }
