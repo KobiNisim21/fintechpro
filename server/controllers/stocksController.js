@@ -236,3 +236,29 @@ export const getBatchInsights = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Get portfolio health score & benchmark comparison
+// @route   GET /api/stocks/portfolio-analytics?symbols=NVDA,AAPL&quantities=10,5&prices=130,175
+// @access  Private
+export const getPortfolioAnalytics = async (req, res) => {
+    try {
+        const { symbols, quantities, prices } = req.query;
+        if (!symbols || !quantities || !prices) {
+            return res.status(400).json({ message: 'Missing symbols, quantities, or prices' });
+        }
+
+        const symbolList = symbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+        const quantityList = quantities.split(',').map(Number);
+        const priceList = prices.split(',').map(Number);
+
+        if (symbolList.length === 0 || symbolList.length !== quantityList.length || symbolList.length !== priceList.length) {
+            return res.status(400).json({ message: 'symbols, quantities, and prices must have equal length' });
+        }
+
+        const data = await stockData.getPortfolioHealthAndBenchmark(symbolList, quantityList, priceList);
+        res.json(data);
+    } catch (error) {
+        console.error('❌ Error in getPortfolioAnalytics:', error.message);
+        res.status(500).json({ message: error.message });
+    }
+};

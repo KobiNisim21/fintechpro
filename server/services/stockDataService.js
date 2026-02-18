@@ -648,3 +648,252 @@ export async function getEarningsCalendar(from, to) {
         return result;
     });
 }
+
+// ============================================
+// PORTFOLIO ANALYTICS (Health Score + Benchmark)
+// ============================================
+
+// Known ETF symbols to exclude from analyst sentiment
+const ETF_SYMBOLS = new Set([
+    'GLD', 'TLT', 'IVV', 'VTV', 'XBI', 'SPY', 'QQQ', 'VOO', 'VTI',
+    'ARKK', 'VGT', 'XLK', 'XLF', 'XLE', 'IWM', 'DIA', 'EEM', 'HYG',
+    'AGG', 'BND', 'LQD', 'IEFA', 'VEA', 'VWO', 'SCHD', 'JEPI',
+]);
+
+/**
+ * Fetch Yahoo Finance chart data for a symbol (1Y daily).
+ * Returns { dates: string[], closes: number[] }
+ */
+async function fetchYahooChart(symbol) {
+    const cacheKey = `chart_1y_${symbol}`;
+    const cached = getCached(cacheKey, 60 * 60 * 1000); // 1 hour
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        const now = Math.floor(Date.now() / 1000);
+        const oneYearAgo = now - 365 * 24 * 60 * 60;
+
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${oneYearAgo}&period2=${now}&interval=1d&includePrePost=false`;
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Yahoo chart failed for ${symbol}: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const chart = data?.chart?.result?.[0];
+        if (!chart?.timestamp || !chart?.indicators?.quote?.[0]?.close) {
+            return { dates: [], closes: [] };
+        }
+
+        const timestamps = chart.timestamp;
+        const rawCloses = chart.indicators.quote[0].close;
+        const dates = [];
+        const closes = [];
+
+        for (let i = 0; i < timestamps.length; i++) {
+            if (rawCloses[i] !== null && rawCloses[i] !== undefined) {
+                dates.push(new Date(timestamps[i] * 1000).toISOString().split('T')[0]);
+                closes.push(rawCloses[i]);
+            }
+        }
+
+        const result = { dates, closes };
+        setCache(cacheKey, result);
+        return result;
+    });
+}
+
+/**
+ * Get Portfolio Health Score and Benchmark data.
+ * All data fetched in parallel. Result cached 1 hour.
+ *
+ * @param {string[]} symbols - tickers
+ * @param {number[]} quantities - share count per ticker
+ * @param {number[]} prices - current price per ticker
+ */
+export async function getPortfolioHealthAndBenchmark(symbols, quantities, prices) {
+    // Build a stable cache key from sorted symbols
+    const sortedKey = symbols.slice().sort().join(',');
+    const cacheKey = `analytics_${sortedKey}`;
+    const cached = getCached(cacheKey, 60 * 60 * 1000);
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        const totalValue = symbols.reduce((sum, _, i) => sum + prices[i] * quantities[i], 0);
+
+        // ── Parallel fetch: metrics, profiles, recs, SPY chart, per-symbol charts ──
+        const [metricsResults, profilesResults, recsResults, spyChart, ...symbolCharts] =
+            await Promise.all([
+                // Beta / financials for each symbol
+                Promise.all(symbols.map(s => getBasicFinancials(s).catch(() => null))),
+                // Company profiles (for sector)
+                Promise.all(symbols.map(s => getCompanyProfile(s).catch(() => null))),
+                // Analyst recommendations
+                Promise.all(symbols.map(s => getAnalystRecommendations(s).catch(() => []))),
+                // SPY benchmark
+                fetchYahooChart('SPY'),
+                // Each symbol's 1Y chart
+                ...symbols.map(s => fetchYahooChart(s).catch(() => ({ dates: [], closes: [] })))
+            ]);
+
+        // ────────────────────────────────────────────────────
+        // 1. DIVERSIFICATION SCORE (40%)
+        // ────────────────────────────────────────────────────
+        const sectorWeights = {};
+        symbols.forEach((sym, i) => {
+            const value = prices[i] * quantities[i];
+            const sector = profilesResults[i]?.finnhubIndustry || 'Other';
+            sectorWeights[sector] = (sectorWeights[sector] || 0) + value;
+        });
+
+        let maxSectorPct = 0;
+        Object.values(sectorWeights).forEach(v => {
+            const pct = totalValue > 0 ? (v / totalValue) * 100 : 0;
+            if (pct > maxSectorPct) maxSectorPct = pct;
+        });
+
+        // Score: 100 if max sector <= 20%, down to 0 if one sector = 100%
+        let diversificationScore = 100;
+        if (maxSectorPct > 30) {
+            diversificationScore = Math.max(0, 100 - (maxSectorPct - 30) * (100 / 70));
+        } else if (maxSectorPct > 20) {
+            diversificationScore = 100 - (maxSectorPct - 20) * 1; // mild penalty
+        }
+
+        // ────────────────────────────────────────────────────
+        // 2. VOLATILITY / BETA SCORE (30%)
+        // ────────────────────────────────────────────────────
+        let weightedBeta = 0;
+        let betaWeightSum = 0;
+        symbols.forEach((sym, i) => {
+            const beta = metricsResults[i]?.metric?.beta;
+            if (beta && beta > 0) {
+                const w = prices[i] * quantities[i];
+                weightedBeta += beta * w;
+                betaWeightSum += w;
+            }
+        });
+        const portfolioBeta = betaWeightSum > 0 ? weightedBeta / betaWeightSum : 1.0;
+
+        let volatilityScore = 100;
+        if (portfolioBeta > 2.0) {
+            volatilityScore = 10;
+        } else if (portfolioBeta > 1.5) {
+            volatilityScore = 10 + (2.0 - portfolioBeta) * 180; // 10–100 range
+        } else if (portfolioBeta > 1.0) {
+            volatilityScore = 70 + (1.5 - portfolioBeta) * 60; // 70–100
+        }
+        volatilityScore = Math.min(100, Math.max(0, volatilityScore));
+
+        // ────────────────────────────────────────────────────
+        // 3. ANALYST SENTIMENT SCORE (30%)
+        // ────────────────────────────────────────────────────
+        let totalBuyRatio = 0;
+        let sentimentCount = 0;
+
+        symbols.forEach((sym, i) => {
+            // Skip ETFs
+            if (ETF_SYMBOLS.has(sym.toUpperCase())) return;
+
+            const recs = recsResults[i];
+            const latest = recs?.[0];
+            if (!latest) return;
+
+            const total = (latest.buy || 0) + (latest.strongBuy || 0) +
+                (latest.hold || 0) + (latest.sell || 0) + (latest.strongSell || 0);
+            if (total === 0) return;
+
+            const buyRatio = ((latest.buy || 0) + (latest.strongBuy || 0)) / total;
+            totalBuyRatio += buyRatio;
+            sentimentCount++;
+        });
+
+        const avgBuyRatio = sentimentCount > 0 ? totalBuyRatio / sentimentCount : 0.5;
+        const sentimentScore = Math.min(100, Math.max(0, avgBuyRatio * 100));
+
+        // ────────────────────────────────────────────────────
+        // FINAL HEALTH SCORE
+        // ────────────────────────────────────────────────────
+        const healthScore = Math.round(
+            diversificationScore * 0.4 +
+            volatilityScore * 0.3 +
+            sentimentScore * 0.3
+        );
+
+        // ────────────────────────────────────────────────────
+        // BENCHMARK DATA (normalised % return)
+        // ────────────────────────────────────────────────────
+        // Build a combined portfolio daily value
+        // Strategy: find common dates from SPY, then for each date sum portfolio value
+        const spyDates = new Set(spyChart.dates);
+
+        // Build per-symbol lookup: date -> close
+        const symbolCloseLookup = symbols.map((_, i) => {
+            const chart = symbolCharts[i] || { dates: [], closes: [] };
+            const lookup = {};
+            chart.dates.forEach((d, j) => { lookup[d] = chart.closes[j]; });
+            return lookup;
+        });
+
+        // Use SPY dates as the canonical timeline
+        const benchmarkData = [];
+        let portfolioBase = null;
+        let spyBase = null;
+
+        for (let di = 0; di < spyChart.dates.length; di++) {
+            const date = spyChart.dates[di];
+            const spyClose = spyChart.closes[di];
+
+            // Calculate portfolio value on this date
+            let portfolioValue = 0;
+            let missingSymbols = 0;
+            for (let si = 0; si < symbols.length; si++) {
+                const close = symbolCloseLookup[si][date];
+                if (close !== undefined) {
+                    portfolioValue += close * quantities[si];
+                } else {
+                    missingSymbols++;
+                }
+            }
+
+            // Skip dates where too many symbols are missing
+            if (missingSymbols > symbols.length * 0.3) continue;
+
+            if (portfolioBase === null) {
+                portfolioBase = portfolioValue;
+                spyBase = spyClose;
+            }
+
+            benchmarkData.push({
+                date,
+                portfolio: portfolioBase > 0
+                    ? ((portfolioValue - portfolioBase) / portfolioBase) * 100
+                    : 0,
+                spy: spyBase > 0
+                    ? ((spyClose - spyBase) / spyBase) * 100
+                    : 0,
+            });
+        }
+
+        const result = {
+            healthScore,
+            components: {
+                diversification: Math.round(diversificationScore),
+                volatility: Math.round(volatilityScore),
+                sentiment: Math.round(sentimentScore),
+            },
+            portfolioBeta: Math.round(portfolioBeta * 100) / 100,
+            maxSectorPct: Math.round(maxSectorPct),
+            benchmarkData,
+        };
+
+        setCache(cacheKey, result);
+        return result;
+    });
+}
+

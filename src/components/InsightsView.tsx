@@ -1,11 +1,14 @@
 import { usePortfolio } from '@/context/PortfolioContext';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Treemap } from 'recharts';
-import { stocksAPI, RecommendationTrend, PriceTarget, CompanyProfile } from '@/api/stocks';
+import {
+    PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Treemap,
+    AreaChart, Area, XAxis, YAxis, CartesianGrid,
+} from 'recharts';
+import { stocksAPI, RecommendationTrend, PriceTarget, CompanyProfile, PortfolioAnalytics } from '@/api/stocks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown } from 'lucide-react';
+import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown, ShieldCheck } from 'lucide-react';
 
 // ─── Premium Color Palette ───────────────────────────────────────
 const COLORS = [
@@ -154,6 +157,12 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     const [loading, setLoading] = useState(false);
     const hasFetchedRef = useRef(false);
 
+    // ── Analytics (Health Score + Benchmark) ──
+    const [analytics, setAnalytics] = useState<PortfolioAnalytics | null>(null);
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
+    const analyticsRef = useRef(false);
+    const [benchmarkRange, setBenchmarkRange] = useState<'1M' | '6M' | '1Y'>('1Y');
+
     // ── Portfolio Distribution (Pie Chart) ──
     const distributionData = useMemo(() => {
         return positions.map((pos) => ({
@@ -187,7 +196,46 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     // Reset fetch flag when positions change
     useEffect(() => {
         hasFetchedRef.current = false;
+        analyticsRef.current = false;
     }, [positions.length]);
+
+    // ── Fetch analytics (health score + benchmark) ──
+    useEffect(() => {
+        if (!isActive || positions.length === 0 || analyticsRef.current) return;
+        const fetchAnalytics = async () => {
+            setAnalyticsLoading(true);
+            try {
+                const symbols = positions.map(p => p.symbol);
+                const quantities = positions.map(p => p.quantity);
+                const prices = positions.map(p => p.price);
+                const data = await stocksAPI.getPortfolioAnalytics(symbols, quantities, prices);
+                setAnalytics(data);
+                analyticsRef.current = true;
+            } catch (e) {
+                console.error('Failed to fetch analytics', e);
+            } finally {
+                setAnalyticsLoading(false);
+            }
+        };
+        fetchAnalytics();
+    }, [isActive, positions]);
+
+    // ── Slice benchmark data by range (no re-fetch) ──
+    const slicedBenchmark = useMemo(() => {
+        if (!analytics?.benchmarkData?.length) return [];
+        const data = analytics.benchmarkData;
+        const daysMap = { '1M': 22, '6M': 130, '1Y': 365 };
+        const days = daysMap[benchmarkRange];
+        const sliced = data.slice(Math.max(0, data.length - days));
+        // Re-normalise so both start at 0%
+        if (sliced.length === 0) return [];
+        const base = sliced[0];
+        return sliced.map(d => ({
+            date: d.date,
+            portfolio: +(d.portfolio - base.portfolio).toFixed(2),
+            spy: +(d.spy - base.spy).toFixed(2),
+        }));
+    }, [analytics, benchmarkRange]);
 
     // ── Sector Data (Treemap) ──
     const sectorData = useMemo(() => {
@@ -238,6 +286,151 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     // ═══════════════════════════  RENDER  ═══════════════════════════
     return (
         <div className="space-y-6 pb-20 animate-in fade-in duration-500">
+
+            {/* ══ Analytics Row: Health Score + Benchmark ══ */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* ── Health Score Gauge ── */}
+                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg lg:col-span-1">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                            <ShieldCheck className="w-5 h-5 text-cyan-400" />
+                            Portfolio Health
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center justify-center py-4">
+                        {analyticsLoading || !analytics ? (
+                            <div className="w-48 h-48 rounded-full bg-white/5 animate-pulse" />
+                        ) : (() => {
+                            const score = analytics.healthScore;
+                            const radius = 80;
+                            const stroke = 12;
+                            const circumference = Math.PI * radius; // half circle
+                            const progress = (score / 100) * circumference;
+                            const riskLabel = score > 80 ? 'Low Risk' : score > 50 ? 'Moderate' : 'High Risk';
+                            const riskColor = score > 80 ? 'text-emerald-400' : score > 50 ? 'text-amber-400' : 'text-rose-400';
+                            return (
+                                <div className="relative">
+                                    <svg width={2 * (radius + stroke)} height={radius + stroke + 24} className="overflow-visible">
+                                        <defs>
+                                            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" stopColor="#22d3ee" />
+                                                <stop offset="100%" stopColor="#34d399" />
+                                            </linearGradient>
+                                        </defs>
+                                        {/* Track */}
+                                        <path
+                                            d={`M ${stroke / 2}, ${radius + stroke / 2} A ${radius},${radius} 0 0,1 ${2 * radius + stroke * 1.5},${radius + stroke / 2}`}
+                                            fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={stroke} strokeLinecap="round"
+                                        />
+                                        {/* Progress */}
+                                        <path
+                                            d={`M ${stroke / 2}, ${radius + stroke / 2} A ${radius},${radius} 0 0,1 ${2 * radius + stroke * 1.5},${radius + stroke / 2}`}
+                                            fill="none" stroke="url(#gaugeGrad)" strokeWidth={stroke} strokeLinecap="round"
+                                            strokeDasharray={`${progress} ${circumference}`}
+                                            className="transition-all duration-1000"
+                                        />
+                                        {/* Score number */}
+                                        <text x={radius + stroke} y={radius - 4} textAnchor="middle" fill="white" fontSize="36" fontWeight="700" fontFamily="Inter, system-ui, sans-serif">
+                                            {score}
+                                        </text>
+                                        <text x={radius + stroke} y={radius + 18} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="12" fontFamily="Inter, system-ui, sans-serif">
+                                            / 100
+                                        </text>
+                                    </svg>
+                                    {/* Risk label */}
+                                    <div className="text-center mt-1">
+                                        <span className={`text-sm font-semibold ${riskColor}`}>{riskLabel}</span>
+                                    </div>
+                                    {/* Component breakdown */}
+                                    <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+                                        <div>
+                                            <div className="text-xs text-white/40 mb-0.5">Diversity</div>
+                                            <div className="text-sm font-bold text-white/80">{analytics.components.diversification}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-white/40 mb-0.5">Volatility</div>
+                                            <div className="text-sm font-bold text-white/80">{analytics.components.volatility}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-white/40 mb-0.5">Sentiment</div>
+                                            <div className="text-sm font-bold text-white/80">{analytics.components.sentiment}</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-center mt-3">
+                                        <span className="text-xs text-white/30">β = {analytics.portfolioBeta}</span>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </CardContent>
+                </Card>
+
+                {/* ── Benchmark Comparison Chart ── */}
+                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg lg:col-span-2 relative overflow-hidden">
+                    <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-emerald-400" />
+                            Portfolio vs S&P 500
+                        </CardTitle>
+                        <div className="flex gap-1">
+                            {(['1M', '6M', '1Y'] as const).map(range => (
+                                <button
+                                    key={range}
+                                    onClick={() => setBenchmarkRange(range)}
+                                    className={`px-3 py-1 text-xs font-medium rounded-lg transition-all ${benchmarkRange === range
+                                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                            : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+                                        }`}
+                                >
+                                    {range}
+                                </button>
+                            ))}
+                        </div>
+                    </CardHeader>
+                    <CardContent className="h-[280px]">
+                        {analyticsLoading || !analytics ? (
+                            <div className="w-full h-full bg-white/5 animate-pulse rounded-xl" />
+                        ) : slicedBenchmark.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={slicedBenchmark} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="portfolioFill" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.3} />
+                                            <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                    <XAxis
+                                        dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
+                                        tickFormatter={(d: string) => { const m = d.split('-'); return `${m[1]}/${m[2]}`; }}
+                                        interval={Math.max(1, Math.floor(slicedBenchmark.length / 6))}
+                                        axisLine={false} tickLine={false}
+                                    />
+                                    <YAxis
+                                        tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
+                                        tickFormatter={(v: number) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`}
+                                        axisLine={false} tickLine={false}
+                                    />
+                                    <RechartsTooltip
+                                        contentStyle={{ background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: 12 }}
+                                        labelStyle={{ color: 'rgba(255,255,255,0.5)' }}
+                                        formatter={(value: number, name: string) => [
+                                            `${value > 0 ? '+' : ''}${value.toFixed(2)}%`,
+                                            name === 'portfolio' ? 'My Portfolio' : 'S&P 500'
+                                        ]}
+                                    />
+                                    <Area type="monotone" dataKey="portfolio" stroke="#22d3ee" strokeWidth={2} fill="url(#portfolioFill)" />
+                                    <Area type="monotone" dataKey="spy" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} strokeDasharray="6 3" fill="none" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-zinc-500 text-sm">No benchmark data</div>
+                        )}
+                    </CardContent>
+                    {/* Watermark */}
+                    <img src="/logo.png" alt="" className="absolute bottom-3 right-3 w-8 h-8 opacity-10 pointer-events-none" />
+                </Card>
+            </div>
 
             {/* ── Top Row: Allocation + Sectors ── */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

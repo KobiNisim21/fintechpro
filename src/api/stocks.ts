@@ -68,6 +68,19 @@ export const stocksAPI = {
         });
         return response.data;
     },
+
+    getPortfolioAnalytics: async (
+        symbols: string[], quantities: number[], prices: number[]
+    ): Promise<PortfolioAnalytics> => {
+        const response = await apiClient.get('/stocks/portfolio-analytics', {
+            params: {
+                symbols: symbols.join(','),
+                quantities: quantities.join(','),
+                prices: prices.join(',')
+            }
+        });
+        return response.data;
+    },
 };
 
 export interface StockQuote {
@@ -161,4 +174,20 @@ export interface BatchInsightsResponse {
     recommendations: Record<string, RecommendationTrend[]>;
     priceTargets: Record<string, PriceTarget>;
     profiles: Record<string, CompanyProfile>;
+}
+
+export interface PortfolioAnalytics {
+    healthScore: number;
+    components: {
+        diversification: number;
+        volatility: number;
+        sentiment: number;
+    };
+    portfolioBeta: number;
+    maxSectorPct: number;
+    benchmarkData: Array<{
+        date: string;
+        portfolio: number;
+        spy: number;
+    }>;
 }
