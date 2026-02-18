@@ -922,18 +922,21 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
             let prevPortfolioValue = 0;
             let prevSpyClose = null;
+            let lotIndex = 0;
+
 
             for (let i = 0; i < allDates.length; i++) {
                 const date = allDates[i];
                 const spyClose = spyChart.closes[i];
 
-                // 1. Process Inflows
+                // 1. Process Inflows (Catch up on all lots <= current date)
                 let dailyInflowValue = 0;
-                const todaysInflows = inflowsByDate[date] || [];
-                todaysInflows.forEach(inf => {
+                while (lotIndex < lotEvents.length && lotEvents[lotIndex].date <= date) {
+                    const inf = lotEvents[lotIndex];
                     currentQty[inf.symbol] = (currentQty[inf.symbol] || 0) + inf.quantity;
                     dailyInflowValue += (inf.quantity * inf.price);
-                });
+                    lotIndex++;
+                }
 
                 // 2. Calculate End Value
                 let currentMarketValue = 0;
