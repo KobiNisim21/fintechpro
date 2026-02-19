@@ -784,7 +784,7 @@ async function fetchDividendInfo(symbol) {
 export async function getPortfolioHealthAndBenchmark(positions) {
     const symbols = positions.map(p => p.symbol);
     const sortedKey = symbols.slice().sort().join(',');
-    const cacheKey = `analytics_v6_${sortedKey}_${positions.length}`;
+    const cacheKey = `analytics_v7_${sortedKey}_${positions.length}`;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached) return cached;
 
@@ -982,6 +982,9 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 const currentQty = {};
                 symbols.forEach(s => currentQty[s] = 0);
 
+                // Keep track of last known prices (Forward Fill)
+                const lastKnownPrices = {};
+
                 let lotIndex = 0;
 
                 for (let i = 0; i < allDates.length; i++) {
@@ -999,26 +1002,24 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
                     // Value at end of day
                     let currentMarketValue = 0;
-                    let hasPrice = false;
 
                     symbols.forEach((s, idx) => {
                         const qty = currentQty[s];
                         if (qty > 0) {
-                            const price = symbolCloseLookup[idx][date];
-                            if (price) {
-                                currentMarketValue += qty * price;
-                                hasPrice = true;
+                            let price = symbolCloseLookup[idx][date];
+
+                            // Forward Fill Logic
+                            if (price !== undefined && price !== null) {
+                                lastKnownPrices[s] = price;
                             } else {
-                                // Forward fill price if missing? Or assume previous?
-                                // For now, if price missing, try to use price from previous available day?
-                                // Too complex for now, just skip value contribution (conservative)
+                                price = lastKnownPrices[s] || 0; // Use last known, or 0 if never seen
+                            }
+
+                            if (price > 0) {
+                                currentMarketValue += qty * price;
                             }
                         }
                     });
-
-                    // Update TWR 
-                    // TWR = (EndValue - Inflows) / StartValue
-                    // StartValue = PrevEndValue
 
                     // Update TWR 
                     // Formula: Rt = (Vt - (Vt-1 + Inflow)) / (Vt-1 + Inflow) = Vt / (Vt-1 + Inflow) - 1
