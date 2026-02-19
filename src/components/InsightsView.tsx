@@ -151,7 +151,7 @@ const renderCustomLabel = ({ cx, cy, midAngle, outerRadius, name, percent }: any
 //  INSIGHTS VIEW
 // ═════════════════════════════════════════════════════════════════
 export function InsightsView({ isActive = true }: { isActive?: boolean }) {
-    const { positions } = usePortfolio();
+    const { positions, portfolioAnalytics, analyticsLoading, fetchAnalytics } = usePortfolio();
     const isMobile = useIsMobile();
     const [recommendations, setRecommendations] = useState<Record<string, RecommendationTrend[]>>({});
     const [priceTargets, setPriceTargets] = useState<Record<string, PriceTarget>>({});
@@ -160,9 +160,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     const hasFetchedRef = useRef(false);
 
     // ── Analytics (Health Score + Benchmark) ──
-    const [analytics, setAnalytics] = useState<PortfolioAnalytics | null>(null);
-    const [analyticsLoading, setAnalyticsLoading] = useState(false);
-    const analyticsRef = useRef(false);
+    // NOW USING CONTEXT STATE
+    const analytics = portfolioAnalytics;
+    // Loading state from context is used directly
 
     // ── Portfolio Distribution (Pie Chart) ──
     const distributionData = useMemo(() => {
@@ -197,29 +197,15 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     // Reset fetch flag when positions change
     useEffect(() => {
         hasFetchedRef.current = false;
-        analyticsRef.current = false;
+        // fetchAnalytics handles its own invalidation via context/timestamp
     }, [positions.length]);
 
     // ── Fetch analytics (health score + benchmark) ──
     useEffect(() => {
-        if (!isActive || positions.length === 0 || analyticsRef.current) return;
-        const fetchAnalytics = async () => {
-            setAnalyticsLoading(true);
-            try {
-                const symbols = positions.map(p => p.symbol);
-                const quantities = positions.map(p => p.quantity);
-                const prices = positions.map(p => p.price);
-                const data = await stocksAPI.getPortfolioAnalytics(symbols, quantities, prices);
-                setAnalytics(data);
-                analyticsRef.current = true;
-            } catch (e) {
-                console.error('Failed to fetch analytics', e);
-            } finally {
-                setAnalyticsLoading(false);
-            }
-        };
+        if (!isActive || positions.length === 0) return;
+        // Trigger fetch if missing or stale (handled internally by context)
         fetchAnalytics();
-    }, [isActive, positions]);
+    }, [isActive, positions.length, fetchAnalytics]);
 
     // ── Slice benchmark data by range (no re-fetch) ──
     // MOVED TO PortfolioBenchmarkChart COMPONENT

@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { positionsAPI } from '../api/positions';
-import { stocksAPI } from '../api/stocks';
+import { stocksAPI, PortfolioAnalytics } from '../api/stocks';
 import { useAuth } from './AuthContext';
 import { getFinnhubWebSocket, PriceUpdateCallback } from '../services/websocket';
 
@@ -38,6 +38,11 @@ interface PortfolioContextType {
   addPosition: (symbol: string, name: string, quantity: number, averagePrice: number, date?: string | Date) => Promise<void>;
   updatePosition: (id: string, quantity?: number, averagePrice?: number, lots?: Lot[]) => Promise<void>;
   removePosition: (id: string) => Promise<void>;
+
+  // Analytics State
+  portfolioAnalytics: PortfolioAnalytics | null;
+  analyticsLoading: boolean;
+  fetchAnalytics: (force?: boolean) => Promise<void>;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
@@ -112,6 +117,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   // Only show loading if no cached data
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Analytics State
+  const [portfolioAnalytics, setPortfolioAnalytics] = useState<PortfolioAnalytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [lastAnalyticsFetch, setLastAnalyticsFetch] = useState<number>(0);
 
   // Fetch positions from backend — FAST: uses batch extended quotes for prices
   const fetchPositions = async () => {
@@ -220,11 +230,53 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Fetch Analytics (Health Score, TWR, etc.)
+  // Memoized to prevent excessive re-renders/calls
+  const fetchAnalytics = useCallback(async (force = false) => {
+    // Prevent fetching if no positions
+    if (positions.length === 0) return;
+
+    // Throttle: Don't fetch if fetched < 10 minutes ago, unless forced
+    // Also don't fetch if already loading
+    const now = Date.now();
+    if (!force && analyticsLoading) return;
+    if (!force && portfolioAnalytics && (now - lastAnalyticsFetch < 10 * 60 * 1000)) {
+      console.log('Skipping analytics fetch (fresh enough)');
+      return;
+    }
+
+    try {
+      setAnalyticsLoading(true);
+      console.log('Fetching portfolio analytics...');
+      const symbols = positions.map(p => p.symbol);
+      const quantities = positions.map(p => p.quantity);
+      const prices = positions.map(p => p.price);
+
+      const data = await stocksAPI.getPortfolioAnalytics(symbols, quantities, prices);
+      setPortfolioAnalytics(data);
+      setLastAnalyticsFetch(Date.now());
+    } catch (err: any) {
+      console.error('Failed to fetch analytics:', err);
+      // Don't set error state globally as this is secondary data
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, [positions, analyticsLoading, portfolioAnalytics, lastAnalyticsFetch]);
+
   // Load positions on mount and when auth status changes
   useEffect(() => {
     fetchPositions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
+
+  // Clear analytics when positions change efficiently
+  // Actually, we should probably invalidate logic. 
+  // If positions change significantly (add/remove), we should reset stored analytics 
+  // so next view fetches fresh data.
+  useEffect(() => {
+    // If positions count changes, invalidate cache timestamp
+    setLastAnalyticsFetch(0);
+  }, [positions.length]);
 
   // Background sparkline enrichment — runs AFTER positions are rendered
   useEffect(() => {
@@ -395,6 +447,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         saveCachedPositions(updated);
         return updated;
       });
+      // Invalidate analytics
+      setLastAnalyticsFetch(0);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to add position');
       throw err;
@@ -434,6 +488,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         saveCachedPositions(updated);
         return updated;
       });
+      // Invalidate analytics
+      setLastAnalyticsFetch(0);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update position');
       throw err;
@@ -449,13 +505,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         saveCachedPositions(updated);
         return updated;
       });
+      // Invalidate analytics
+      setLastAnalyticsFetch(0);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to remove position');
       throw err;
     }
   };
-
-
 
   return (
     <PortfolioContext.Provider
@@ -466,6 +522,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         addPosition,
         updatePosition,
         removePosition,
+        // Analytics
+        portfolioAnalytics,
+        analyticsLoading,
+        fetchAnalytics
       }}
     >
       {children}

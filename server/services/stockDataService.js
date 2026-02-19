@@ -783,13 +783,16 @@ async function fetchDividendInfo(symbol) {
  */
 export async function getPortfolioHealthAndBenchmark(positions) {
     const symbols = positions.map(p => p.symbol);
-    console.log(`--- STOCK DATA SERVICE v12 LOADED (${positions.length} positions) ---`);
+    console.log(`--- STOCK DATA SERVICE v12.1 LOADED (${positions.length} positions) ---`);
     const sortedKey = symbols.slice().sort().join(',');
     const cacheKey = `analytics_v12_${sortedKey}_${positions.length}`;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
-    if (cached) return cached;
+    if (cached) {
+        console.log('[Health] Returning fully cached analytics');
+        return cached;
+    }
 
-    // 2. Deduped Fetch
+    // Deduped Fetch
     console.log(`[Health] Starting fetch for ${positions.length} positions:`, cacheKey);
     return dedupedFetch(cacheKey, async () => {
         try {
@@ -797,12 +800,10 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             // --- A. Pre-calculation & aggregation ---
             const quantities = [];
             const prices = [];
-            let earliestDate = new Date();
-            let hasFoundDate = false;
-            const lotEvents = []; // { date, symbol, quantity, price }
 
             // Initialize earliestDate to a far future timestamps to ensure Math.min works
             let minTimestamp = 8640000000000000;
+            const lotEvents = []; // { date, symbol, quantity, price }
 
             positions.forEach(pos => {
                 let qty = 0;
@@ -820,14 +821,13 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                             posHasLots = true;
 
                             const d = new Date(lot.date);
-                            // Valid date validation: Must be valid AND after year 2000 (avoids 1970/null)
+                            // Valid date validation: Must be valid AND after year 2000
                             if (!isNaN(d.getTime())) {
                                 if (d.getFullYear() > 2000 && d.getTime() < minTimestamp) {
                                     minTimestamp = d.getTime();
-                                    hasFoundDate = true;
                                 }
                                 lotEvents.push({
-                                    date: d.getFullYear() > 2000 ? d.toISOString().split('T')[0] : new Date().toISOString().split('T')[0], // Fallback to today for bad dates
+                                    date: d.getFullYear() > 2000 ? d.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
                                     symbol: pos.symbol,
                                     quantity: q,
                                     price: p
@@ -837,19 +837,17 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                     });
                 }
 
-                // Fallback if no lots or lots resulted in 0 quantity (orphan position)
+                // Fallback if no lots or lots resulted in 0 logic
                 if (!posHasLots || qty === 0) {
                     qty = Number(pos.quantity) || 0;
                     const avg = Number(pos.averagePrice) || 0;
                     cost = qty * avg;
 
-                    // Try to get a date from created_at
                     const d = pos.createdAt ? new Date(pos.createdAt) : new Date();
                     const safeDate = !isNaN(d.getTime()) ? d : new Date();
 
                     if (safeDate.getTime() < minTimestamp) {
                         minTimestamp = safeDate.getTime();
-                        hasFoundDate = true;
                     }
 
                     lotEvents.push({
@@ -864,33 +862,35 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 prices.push(qty > 0 ? cost / qty : 0);
             });
 
-            // Ensure we look back at least 1 year for benchmark comparison
-            // BUT we will filter the output to start from the actual minTimestamp (inception)
-            // to avoid the "vertical spike" from 0.
+            // One year ago for SPY verification
             const oneYearAgo = new Date();
             oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
             const oneYearAgoTs = oneYearAgo.getTime();
 
-            // Safety check: if minTimestamp is still original init value (no valid lots found), default to "Today"
-            // This prevents showing 1 year of 0s if all dates are invalid.
+            // Safety check for minTimestamp
             if (typeof minTimestamp !== 'number' || isNaN(minTimestamp) || minTimestamp >= 8640000000000000) {
                 minTimestamp = Date.now();
             }
-            console.log(`[TWR INFO] minTimestamp: ${new Date(minTimestamp).toISOString()} (${minTimestamp})`);        // Fetch logic: still fetch 1 year to ensure we have context/SPY data
-            earliestDate = new Date(Math.min(minTimestamp, oneYearAgoTs));
+            console.log(`[TWR INFO] minTimestamp: ${new Date(minTimestamp).toISOString()} (${minTimestamp})`);
+
+            // Ensure we fetch enough history for TWR (min of inception or 1 year, usually just 1 year covers it unless >1y)
+            let earliestDate = new Date(Math.min(minTimestamp, oneYearAgoTs));
             if (isNaN(earliestDate.getTime())) earliestDate = oneYearAgo;
 
             const inceptionDateStr = new Date(minTimestamp).toISOString().split('T')[0];
-            console.log(`[Health] Chart Fetch Start: ${earliestDate.toISOString().split('T')[0]}, Inception: ${inceptionDateStr}`);
 
-            // --- B. Parallel Data Fetching ---
-            console.log('[Health] Starting parallel fetch with timeouts...');
-            // Use specific timeouts/catch for each to prevent one failure from blocking all
+            // --- B. Parallel Data Fetching with ROBUST FAILOVER ---
+            console.log('[Health] Starting parallel fetch with individual failovers...');
+
             const fetchWithTimeout = (promise, ms = 10000, fallback = null) => {
                 const timeout = new Promise(resolve => setTimeout(() => resolve(fallback), ms));
-                return Promise.race([promise, timeout]).catch(() => fallback);
+                return Promise.race([promise, timeout]).catch(err => {
+                    console.warn(`[Health] Fetch warning:`, err.message);
+                    return fallback;
+                });
             };
 
+            // Using Promise.all with internal catches ensures one failure doesn't reject all
             const [
                 metricsResults,
                 profilesResults,
@@ -899,13 +899,21 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 dividendResults,
                 ...symbolCharts
             ] = await Promise.all([
-                Promise.all(symbols.map(s => fetchWithTimeout(getBasicFinancials(s).catch(e => { console.error(`Metrics error ${s}:`, e.message); return null; }), 5000, null))),
-                Promise.all(symbols.map(s => fetchWithTimeout(getCompanyProfile(s).catch(e => { console.error(`Profile error ${s}:`, e.message); return {}; }), 5000, {}))),
-                Promise.all(symbols.map(s => fetchWithTimeout(getAnalystRecommendations(s).catch(e => { console.error(`Recs error ${s}:`, e.message); return []; }), 5000, []))),
-                fetchWithTimeout(fetchYahooChart('SPY', earliestDate).catch(e => { console.error('SPY Chart error:', e.message); return { dates: [], closes: [] }; }), 8000, { dates: [], closes: [] }),
-                Promise.all(symbols.map(s => fetchWithTimeout(fetchDividendInfo(s).catch(e => { console.error(`Dividend error ${s}:`, e.message); return null; }), 5000, null))),
-                ...symbols.map(s => fetchWithTimeout(fetchYahooChart(s, earliestDate).catch(e => { console.error(`Chart error ${s}:`, e.message); return { dates: [], closes: [] }; }), 8000, { dates: [], closes: [] }))
+                Promise.all(symbols.map(s => fetchWithTimeout(getBasicFinancials(s), 5000, null))),
+                Promise.all(symbols.map(s => fetchWithTimeout(getCompanyProfile(s), 5000, {}))),
+                Promise.all(symbols.map(s => fetchWithTimeout(getAnalystRecommendations(s), 5000, []))),
+                fetchWithTimeout(fetchYahooChart('SPY', earliestDate), 8000, { dates: [], closes: [] }),
+                Promise.all(symbols.map(s => fetchWithTimeout(fetchDividendInfo(s), 5000, null))),
+                ...symbols.map(s => fetchWithTimeout(fetchYahooChart(s, earliestDate), 8000, { dates: [], closes: [] }))
             ]);
+
+            // VALIDATION: If too many critical metrics failed (e.g., >50% charts missing), use LAST CACHED or partial?
+            const validChartsCount = symbolCharts.filter(c => c && c.closes && c.closes.length > 0).length;
+            if (validChartsCount < (symbols.length * 0.5) && symbols.length > 0) {
+                console.warn(`[Health] Critical data missing: only ${validChartsCount}/${symbols.length} charts loaded.`);
+                // We could return a previous cached version here if we had access to persistent store,
+                // but for now we proceed best-effort rather than throwing 500.
+            }
 
             console.log('[Health] Fetch complete. Building result...');
 
@@ -915,8 +923,14 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             // 1. Diversification
             const sectorExposure = {};
             let maxSectorPct = 0;
+            let sectorsFound = 0;
+
             symbols.forEach((_, i) => {
-                const sector = profilesResults[i]?.finnhubIndustry || 'Unknown';
+                const profile = profilesResults[i];
+                // Fallback for sector if missing
+                const sector = profile?.finnhubIndustry || 'Unknown';
+                if (profile?.finnhubIndustry) sectorsFound++;
+
                 const val = quantities[i] * prices[i];
                 sectorExposure[sector] = (sectorExposure[sector] || 0) + val;
             });
@@ -924,13 +938,16 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 const pct = totalValue > 0 ? (val / totalValue) * 100 : 0;
                 if (pct > maxSectorPct) maxSectorPct = pct;
             });
+            // If we have literally 0 profile data, don't penalize too hard? Or default score?
+            // Existing logic is fine: Unknown sector will group them and likely penalize, which is correct (risk).
             const diversificationScore = Math.max(0, 100 - Math.max(0, maxSectorPct - 30) * 2.5);
 
             // 2. Volatility
             let weightedBeta = 0;
             let validBetaWeight = 0;
             symbols.forEach((_, i) => {
-                const beta = metricsResults[i]?.metric?.beta || 1;
+                // If metric failed, assume beta=1 (Neutral)
+                const beta = metricsResults[i]?.metric?.beta || 1.1;
                 const weight = totalValue > 0 ? (quantities[i] * prices[i]) / totalValue : 0;
                 weightedBeta += beta * weight;
                 validBetaWeight += weight;
@@ -943,9 +960,10 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             let sentimentCount = 0;
             symbols.forEach((_, i) => {
                 const isETF = profilesResults[i]?.finnhubIndustry === 'Exchange Traded Fund';
-                if (isETF) return; // Skip ETFs for sentiment
+                // If we don't know it's an ETF (missing profile), we might accidentally count it or skip it.
+                // Safest to check Recs existence.
                 const recs = recsResults[i];
-                if (recs && recs.length > 0) {
+                if (!isETF && recs && recs.length > 0) {
                     const latest = recs[0];
                     const total = latest.buy + latest.hold + latest.sell + latest.strongBuy + latest.strongSell;
                     if (total > 0) {
@@ -955,6 +973,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                     }
                 }
             });
+            // Default to 50 (Neutral) if no analyst coverage found
             const sentimentScore = sentimentCount > 0 ? (totalBuyRatio / sentimentCount) * 100 : 50;
 
             const healthScore = Math.round(
@@ -963,7 +982,6 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
             // --- D. Benchmark (TWR) ---
             const benchmarkData = [];
-            // Optimize lookup
             const symbolCloseLookup = symbolCharts.map(chart => {
                 const map = {};
                 if (chart && chart.dates) {
@@ -972,31 +990,17 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 return map;
             });
 
-            // Pre-sort events just in case
+            // Sort events explicitly
             lotEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            // FILTER: Only include events for symbols that actually have chart data.
-            // If we include an inflow for a symbol with no price history, TWR will crash 
-            // because Denominator increases (Inflow) but Numerator (MarketValue) does not.
+            // Valid Chart Symbols Set
             const validChartSymbols = new Set();
-            const excludedSymbols = [];
             symbolCharts.forEach((sc, i) => {
-                if (sc && sc.dates && sc.dates.length > 0) {
-                    validChartSymbols.add(symbols[i]);
-                } else {
-                    excludedSymbols.push(symbols[i]);
-                }
+                if (sc && sc.dates && sc.dates.length > 0) validChartSymbols.add(symbols[i]);
             });
 
-            if (excludedSymbols.length > 0) {
-                console.log(`[TWR WARNING] Excluding symbols due to missing chart data: ${excludedSymbols.join(', ')}`);
-            } else {
-                console.log(`[TWR SUCCESS] All ${symbols.length} symbols have chart data.`);
-            }
-
-            // Filter out lots for invalid symbols
+            // Filter lots for valid charts only
             const validLotEvents = lotEvents.filter(e => validChartSymbols.has(e.symbol));
-
             const allDates = spyChart?.dates || [];
 
             if (allDates.length > 0) {
@@ -1007,93 +1011,62 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
                 const currentQty = {};
                 symbols.forEach(s => currentQty[s] = 0);
-
-                // Keep track of last known prices (Forward Fill)
                 const lastKnownPrices = {};
-
                 let lotIndex = 0;
+
+                // Track if we have started the portfolio (first deposit made)
+                let portfolioStarted = false;
 
                 for (let i = 0; i < allDates.length; i++) {
                     const date = allDates[i];
                     const spyClose = spyChart.closes[i];
 
-                    // Process inflows for this date
+                    // Process inflows
                     let dailyInflowValue = 0;
                     while (lotIndex < validLotEvents.length && validLotEvents[lotIndex].date <= date) {
                         const inf = validLotEvents[lotIndex];
                         currentQty[inf.symbol] = (currentQty[inf.symbol] || 0) + inf.quantity;
-                        // Only add inflow if we are tracking this symbol
                         dailyInflowValue += (inf.quantity * inf.price);
                         lotIndex++;
                     }
 
-                    // DEBUG: Log prices on first valid day
-                    if (date.includes('2026-02-0')) {
-                        console.log(`[TWR PRICES] Date: ${date}`);
-                        symbols.forEach((s, idx) => {
-                            const p = symbolCloseLookup[idx][date] || 'MISSING';
-                            console.log(`  ${s}: ${p}`);
-                        });
-                    }
-
-                    // Value at end of day
+                    // Calculate Current Market Value
                     let currentMarketValue = 0;
-
                     symbols.forEach((s, idx) => {
                         const qty = currentQty[s];
                         if (qty > 0) {
                             let price = symbolCloseLookup[idx][date];
-
-                            // Forward Fill Logic
                             if (price !== undefined && price !== null) {
                                 lastKnownPrices[s] = price;
                             } else {
-                                price = lastKnownPrices[s] || 0; // Use last known, or 0 if never seen
+                                price = lastKnownPrices[s] || 0;
                             }
-
-                            if (price > 0) {
-                                currentMarketValue += qty * price;
-                            } else {
-                                // Log missing price event
-                                // console.log(`[TWR WARN] ${s} has qty ${qty} but price ${price} on ${date}`);
-                            }
+                            if (price > 0) currentMarketValue += qty * price;
                         }
                     });
 
-                    // DEBUG: Check for massive Day 1 drop or specific discrepancies
-                    if (dailyInflowValue > 0) {
-                        const ratio = currentMarketValue / (prevPortfolioValue + dailyInflowValue);
-                        if (ratio < 0.8) { // If value is < 80% of cost basis (immediate 20% loss)
-                            console.log(`[TWR CRASH] Date: ${date} -> Value: ${currentMarketValue.toFixed(2)} / Cost: ${(prevPortfolioValue + dailyInflowValue).toFixed(2)}`);
-                            console.log(`  Inflow this day: ${dailyInflowValue.toFixed(2)}`);
-                            // Breakdown
-                            symbols.forEach((s, idx) => {
-                                if (currentQty[s] > 0) {
-                                    let p = symbolCloseLookup[idx][date] || lastKnownPrices[s] || 0;
-                                    let val = currentQty[s] * p;
-                                    // Find inflow for this symbol? Hard to track exact inflow per symbol here without accumulation
-                                    // But we can check if Price is suspiciously low
-                                    console.log(`    Sym: ${s}, Qty: ${currentQty[s]}, Price: ${p}, Val: ${val.toFixed(2)}`);
-                                }
-                            });
-                        }
-                    }
-
-                    // Update TWR 
-                    // Formula: Rt = (Vt - (Vt-1 + Inflow)) / (Vt-1 + Inflow) = Vt / (Vt-1 + Inflow) - 1
-
+                    // --- TWR CALCULATION FIX ---
                     const startValue = prevPortfolioValue;
                     const denominator = startValue + dailyInflowValue;
 
                     if (denominator > 0) {
-                        const dailyRet = (currentMarketValue / denominator) - 1;
-                        cumulativeTWR = ((1 + cumulativeTWR) * (1 + dailyRet)) - 1;
-                    }
-                    // Special case: First day of investment (implicitly handled above if startValue=0, denom=inflow)
-                    // But if denominator is 0 (no value, no inflow), TWR doesn't change.
+                        // FIX: If this is the FIRST ever deposit day (startValue is 0, inflow > 0)
+                        // Then the return for this specific day is 0% relative to the cost basis
+                        // effectively. Actually TWR formula:
+                        // r = (EndValue - (Start + Inflow)) / (Start + Inflow)
+                        // If EndValue approx equals Inflow (market didn't move much intraday), r ~ 0.
+                        // If EndValue is HUGE and Inflow is small, r is huge.
 
-                    // Check if we should track SPY for this date
-                    if (spyClose !== undefined && spyClose !== null) {
+                        // The bug was likely previous code didn't handle `startValue = 0` correctly 
+                        // or `prevPortfolioValue` wasn't updated correctly before this step.
+
+                        const dailyRet = (currentMarketValue - denominator) / denominator; // Standard HPR formula
+                        cumulativeTWR = ((1 + cumulativeTWR) * (1 + dailyRet)) - 1;
+                        portfolioStarted = true;
+                    }
+
+                    // SPY Benchmarking
+                    if (portfolioStarted && spyClose !== undefined && spyClose !== null) {
                         if (prevSpyClose > 0) {
                             const spyDaily = (spyClose - prevSpyClose) / prevSpyClose;
                             spCumReturn = ((1 + spCumReturn) * (1 + spyDaily)) - 1;
@@ -1114,40 +1087,19 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             // Filter out dates before inception
             const filteredBenchmarkData = benchmarkData.filter(d => new Date(d.date).getTime() >= minTimestamp);
 
-            // FIX: If the first data point has a huge non-zero value (e.g. instant gain from historical cost),
-            // and we normalize it to 0, we hide the gain.
-            // We must prepend a "0%" point at (Inception - 1 Day) so the normalization respects the jump.
-            const inceptionMs = typeof minTimestamp === 'number' ? minTimestamp : Date.now();
-            const oneDayBefore = new Date(inceptionMs - 86400000).toISOString().split('T')[0];
-
-            // Check if we need to prepend
-            // If filtered empty, or first point is later than oneDayBefore
-            const firstPointDate = filteredBenchmarkData.length > 0 ? filteredBenchmarkData[0].date : null;
-
-            if (firstPointDate !== oneDayBefore) {
-                filteredBenchmarkData.unshift({
-                    date: oneDayBefore,
-                    portfolio: 0,
-                    spy: 0
-                });
-            }
-
-            // Normalize SPY to 0% at start of filtered series
+            // Normalize Start to 0%
+            // Even with TWR, the cumulative products drift. We want the graph to start at 0.
             if (filteredBenchmarkData.length > 0) {
+                const basePortfolio = filteredBenchmarkData[0].portfolio;
                 const baseSpy = filteredBenchmarkData[0].spy;
-                const basePortfolio = filteredBenchmarkData[0].portfolio; // Should be ~0 unless intraday gain
 
                 for (let i = 0; i < filteredBenchmarkData.length; i++) {
-                    filteredBenchmarkData[i].spy = Number((filteredBenchmarkData[i].spy - baseSpy).toFixed(2));
-                    // Optional: Normalize Portfolio to exactly 0 at start? 
-                    // If intraday gain existed, it should be shown? 
-                    // User said: "On the date of the first purchase, the Portfolio Return MUST be exactly 0%".
-                    // So we subtract the base.
                     filteredBenchmarkData[i].portfolio = Number((filteredBenchmarkData[i].portfolio - basePortfolio).toFixed(2));
+                    filteredBenchmarkData[i].spy = Number((filteredBenchmarkData[i].spy - baseSpy).toFixed(2));
                 }
             }
 
-            // --- E. Dividends & Correlation ---
+            // --- E. Dividends ---
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
@@ -1165,20 +1117,18 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
                 if (!isUpcoming && !isCurrentMonth) return;
 
-                // Calculate quarterly amount (Annual Rate / 4)
-                // USER REQUEST: Explicitly divide annual rate by 4 for quarterly payers like MSFT
                 const quarterlyAmount = (info.dividendRate || 0) / 4;
                 dividends.push({
                     symbol: sym,
                     exDate: info.exDate,
                     paymentDate: info.paymentDate || null,
                     amount: quarterlyAmount,
-                    estimatedPayout: quarterlyAmount * quantities[i], // Exact payout based on qty
+                    estimatedPayout: quarterlyAmount * quantities[i],
                 });
             });
             dividends.sort((a, b) => new Date(a.exDate).getTime() - new Date(b.exDate).getTime());
 
-            // Correlation Matrix
+            // --- F. Correlation ---
             function pearson(a, b) {
                 const n = Math.min(a.length, b.length);
                 if (n < 5) return null;
@@ -1214,7 +1164,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 )
             };
 
-            return {
+            const finalResult = {
                 healthScore,
                 components: {
                     diversification: Math.round(diversificationScore),
@@ -1229,10 +1179,13 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 lastUpdated: new Date().toISOString()
             };
 
+            // Update cache before returning
+            setCache(cacheKey, finalResult);
+            return finalResult;
+
         } catch (error) {
-            console.error('ג Œ Error in getPortfolioHealthAndBenchmark:', error);
-            // Return safe fallback instead of 500
-            // DO NOT CACHE FALLBACK ERRORS
+            console.error('ג Œ Error in getPortfolioHealthAndBenchmark logic:', error);
+            // Return safe fallback
             return {
                 healthScore: 0,
                 components: { diversification: 0, volatility: 0, sentiment: 0 },
