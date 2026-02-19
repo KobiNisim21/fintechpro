@@ -785,7 +785,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
     const symbols = positions.map(p => p.symbol);
     console.log(`--- STOCK DATA SERVICE v8 LOADED (${positions.length} positions) ---`);
     const sortedKey = symbols.slice().sort().join(',');
-    const cacheKey = `analytics_v8_${sortedKey}_${positions.length}`;
+    const cacheKey = `analytics_v9_${sortedKey}_${positions.length}`;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached) return cached;
 
@@ -820,13 +820,14 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                             posHasLots = true;
 
                             const d = new Date(lot.date);
+                            // Valid date validation: Must be valid AND after year 2000 (avoids 1970/null)
                             if (!isNaN(d.getTime())) {
-                                if (d.getTime() < minTimestamp) {
+                                if (d.getFullYear() > 2000 && d.getTime() < minTimestamp) {
                                     minTimestamp = d.getTime();
                                     hasFoundDate = true;
                                 }
                                 lotEvents.push({
-                                    date: d.toISOString().split('T')[0],
+                                    date: d.getFullYear() > 2000 ? d.toISOString().split('T')[0] : new Date().toISOString().split('T')[0], // Fallback to today for bad dates
                                     symbol: pos.symbol,
                                     quantity: q,
                                     price: p
@@ -870,9 +871,10 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
             const oneYearAgoTs = oneYearAgo.getTime();
 
-            // Safety check
-            if (typeof minTimestamp !== 'number' || isNaN(minTimestamp) || minTimestamp > 8640000000000000) {
-                minTimestamp = oneYearAgoTs;
+            // Safety check: if minTimestamp is still original init value (no valid lots found), default to "Today"
+            // This prevents showing 1 year of 0s if all dates are invalid.
+            if (typeof minTimestamp !== 'number' || isNaN(minTimestamp) || minTimestamp >= 8640000000000000) {
+                minTimestamp = Date.now();
             }
             // Fetch logic: still fetch 1 year to ensure we have context/SPY data
             earliestDate = new Date(Math.min(minTimestamp, oneYearAgoTs));
