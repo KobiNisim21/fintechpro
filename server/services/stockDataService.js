@@ -783,7 +783,7 @@ async function fetchDividendInfo(symbol) {
  */
 export async function getPortfolioHealthAndBenchmark(positions) {
     const symbols = positions.map(p => p.symbol);
-    console.log(`--- STOCK DATA SERVICE v8 LOADED (User: ${req.user._id}) ---`);
+    console.log(`--- STOCK DATA SERVICE v8 LOADED (${positions.length} positions) ---`);
     const sortedKey = symbols.slice().sort().join(',');
     const cacheKey = `analytics_v8_${sortedKey}_${positions.length}`;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
