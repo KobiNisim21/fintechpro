@@ -783,6 +783,7 @@ async function fetchDividendInfo(symbol) {
  */
 export async function getPortfolioHealthAndBenchmark(positions) {
     const symbols = positions.map(p => p.symbol);
+    const sortedKey = symbols.slice().sort().join(',');
     const cacheKey = `analytics_v5_${sortedKey}_${positions.length}`;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached) return cached;
@@ -867,9 +868,13 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             const oneYearAgoTs = oneYearAgo.getTime();
 
             // Correct Logic: Use EARLIEST date between (First Purchase) AND (1 Year Ago)
-            // This ensures we always fetch at least 1y of data, but go back further if needed.
-            // If minTimestamp is huge (no lots), it will default to oneYearAgoTs due to Math.min
+            // Safety check: ensure minTimestamp is a valid number
+            if (typeof minTimestamp !== 'number' || isNaN(minTimestamp) || minTimestamp > 8640000000000000) {
+                minTimestamp = oneYearAgoTs;
+            }
             earliestDate = new Date(Math.min(minTimestamp, oneYearAgoTs));
+            if (isNaN(earliestDate.getTime())) earliestDate = oneYearAgo;
+
             console.log(`[Health] Chart Range Start: ${earliestDate.toISOString().split('T')[0]}`);
 
             // --- B. Parallel Data Fetching ---
@@ -888,12 +893,12 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 dividendResults,
                 ...symbolCharts
             ] = await Promise.all([
-                Promise.all(symbols.map(s => fetchWithTimeout(getBasicFinancials(s), 5000, null))),
-                Promise.all(symbols.map(s => fetchWithTimeout(getCompanyProfile(s), 5000, {}))),
-                Promise.all(symbols.map(s => fetchWithTimeout(getAnalystRecommendations(s), 5000, []))),
-                fetchWithTimeout(fetchYahooChart('SPY', earliestDate), 8000, { dates: [], closes: [] }),
-                Promise.all(symbols.map(s => fetchWithTimeout(fetchDividendInfo(s), 5000, null))),
-                ...symbols.map(s => fetchWithTimeout(fetchYahooChart(s, earliestDate), 8000, { dates: [], closes: [] }))
+                Promise.all(symbols.map(s => fetchWithTimeout(getBasicFinancials(s).catch(e => { console.error(`Metrics error ${s}:`, e.message); return null; }), 5000, null))),
+                Promise.all(symbols.map(s => fetchWithTimeout(getCompanyProfile(s).catch(e => { console.error(`Profile error ${s}:`, e.message); return {}; }), 5000, {}))),
+                Promise.all(symbols.map(s => fetchWithTimeout(getAnalystRecommendations(s).catch(e => { console.error(`Recs error ${s}:`, e.message); return []; }), 5000, []))),
+                fetchWithTimeout(fetchYahooChart('SPY', earliestDate).catch(e => { console.error('SPY Chart error:', e.message); return { dates: [], closes: [] }; }), 8000, { dates: [], closes: [] }),
+                Promise.all(symbols.map(s => fetchWithTimeout(fetchDividendInfo(s).catch(e => { console.error(`Dividend error ${s}:`, e.message); return null; }), 5000, null))),
+                ...symbols.map(s => fetchWithTimeout(fetchYahooChart(s, earliestDate).catch(e => { console.error(`Chart error ${s}:`, e.message); return { dates: [], closes: [] }; }), 8000, { dates: [], closes: [] }))
             ]);
 
             console.log('[Health] Fetch complete. Building result...');
