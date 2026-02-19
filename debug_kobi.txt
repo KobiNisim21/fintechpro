@@ -1,0 +1,21 @@
+--- Debugging User: 697e647a21d918a32d80be4f ---
+Loaded 16 positions.
+
+--- Position Cost Analysis ---
+SYM: TSLA   | Qty: 3 | Cost: $247.69 | Curr: $411.32 | Gain: 66.06%
+SYM: IVV    | Qty: 4 | Cost: $591.09 | Curr: $689.35 | Gain: 16.62%
+SYM: MSFT   | Qty: 6 | Cost: $366.32 | Curr: $399.60 | Gain: 9.08%
+SYM: GOOG   | Qty: 24 | Cost: $131.55 | Curr: $303.94 | Gain: 131.05%
+SYM: VTV    | Qty: 1 | Cost: $169.78 | Curr: $206.54 | Gain: 21.65%
+SYM: WIX    | Qty: 4 | Cost: $165.01 | Curr: $68.77 | Gain: -58.32%
+    ⚠️ CRITICAL LOSS: -58.32% (Checking for data entry error?)
+SYM: GLD    | Qty: 4 | Cost: $198.52 | Curr: $458.28 | Gain: 130.85%
+SYM: TLT    | Qty: 5 | Cost: $95.69 | Curr: $89.53 | Gain: -6.44%
+SYM: MA     | Qty: 2 | Cost: $374.39 | Curr: $527.98 | Gain: 41.02%
+SYM: XBI    | Qty: 5 | Cost: $96.31 | Curr: $125.60 | Gain: 30.41%
+SYM: BA     | Qty: 6 | Cost: $198.35 | Curr: $238.93 | Gain: 20.46%
+SYM: MU     | Qty: 9 | Cost: $76.53 | Curr: $420.95 | Gain: 450.05%
+SYM: QCOM   | Qty: 6 | Cost: $153.91 | Curr: $143.24 | Gain: -6.93%
+SYM: META   | Qty: 8 | Cost: $248.82 | Curr: $643.22 | Gain: 158.51%
+SYM: AMZN   | Qty: 13 | Cost: $165.94 | Curr: $204.79 | Gain: 23.41%
+SYM: NVDA   | Qty: 20 | Cost: $23.53 | Curr: $187.98 | Gain: 698.90%

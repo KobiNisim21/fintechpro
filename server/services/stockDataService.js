@@ -783,9 +783,9 @@ async function fetchDividendInfo(symbol) {
  */
 export async function getPortfolioHealthAndBenchmark(positions) {
     const symbols = positions.map(p => p.symbol);
-    console.log(`--- STOCK DATA SERVICE v10 LOADED (${positions.length} positions) ---`);
+    console.log(`--- STOCK DATA SERVICE v11 LOADED (${positions.length} positions) ---`);
     const sortedKey = symbols.slice().sort().join(',');
-    const cacheKey = `analytics_v10_${sortedKey}_${positions.length}`;
+    const cacheKey = `analytics_v11_${sortedKey}_${positions.length}`;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached) return cached;
 
@@ -876,7 +876,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             if (typeof minTimestamp !== 'number' || isNaN(minTimestamp) || minTimestamp >= 8640000000000000) {
                 minTimestamp = Date.now();
             }
-            // Fetch logic: still fetch 1 year to ensure we have context/SPY data
+            console.log(`[TWR INFO] minTimestamp: ${new Date(minTimestamp).toISOString()} (${minTimestamp})`);        // Fetch logic: still fetch 1 year to ensure we have context/SPY data
             earliestDate = new Date(Math.min(minTimestamp, oneYearAgoTs));
             if (isNaN(earliestDate.getTime())) earliestDate = oneYearAgo;
 
@@ -979,11 +979,20 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             // If we include an inflow for a symbol with no price history, TWR will crash 
             // because Denominator increases (Inflow) but Numerator (MarketValue) does not.
             const validChartSymbols = new Set();
+            const excludedSymbols = [];
             symbolCharts.forEach((sc, i) => {
                 if (sc && sc.dates && sc.dates.length > 0) {
                     validChartSymbols.add(symbols[i]);
+                } else {
+                    excludedSymbols.push(symbols[i]);
                 }
             });
+
+            if (excludedSymbols.length > 0) {
+                console.log(`[TWR WARNING] Excluding symbols due to missing chart data: ${excludedSymbols.join(', ')}`);
+            } else {
+                console.log(`[TWR SUCCESS] All ${symbols.length} symbols have chart data.`);
+            }
 
             // Filter out lots for invalid symbols
             const validLotEvents = lotEvents.filter(e => validChartSymbols.has(e.symbol));
@@ -1017,6 +1026,15 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                         lotIndex++;
                     }
 
+                    // DEBUG: Log prices on first valid day
+                    if (date.includes('2026-02-0')) {
+                        console.log(`[TWR PRICES] Date: ${date}`);
+                        symbols.forEach((s, idx) => {
+                            const p = symbolCloseLookup[idx][date] || 'MISSING';
+                            console.log(`  ${s}: ${p}`);
+                        });
+                    }
+
                     // Value at end of day
                     let currentMarketValue = 0;
 
@@ -1034,9 +1052,31 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
                             if (price > 0) {
                                 currentMarketValue += qty * price;
+                            } else {
+                                // Log missing price event
+                                // console.log(`[TWR WARN] ${s} has qty ${qty} but price ${price} on ${date}`);
                             }
                         }
                     });
+
+                    // DEBUG: Check for massive Day 1 drop or specific discrepancies
+                    if (dailyInflowValue > 0) {
+                        const ratio = currentMarketValue / (prevPortfolioValue + dailyInflowValue);
+                        if (ratio < 0.8) { // If value is < 80% of cost basis (immediate 20% loss)
+                            console.log(`[TWR CRASH] Date: ${date} -> Value: ${currentMarketValue.toFixed(2)} / Cost: ${(prevPortfolioValue + dailyInflowValue).toFixed(2)}`);
+                            console.log(`  Inflow this day: ${dailyInflowValue.toFixed(2)}`);
+                            // Breakdown
+                            symbols.forEach((s, idx) => {
+                                if (currentQty[s] > 0) {
+                                    let p = symbolCloseLookup[idx][date] || lastKnownPrices[s] || 0;
+                                    let val = currentQty[s] * p;
+                                    // Find inflow for this symbol? Hard to track exact inflow per symbol here without accumulation
+                                    // But we can check if Price is suspiciously low
+                                    console.log(`    Sym: ${s}, Qty: ${currentQty[s]}, Price: ${p}, Val: ${val.toFixed(2)}`);
+                                }
+                            });
+                        }
+                    }
 
                     // Update TWR 
                     // Formula: Rt = (Vt - (Vt-1 + Inflow)) / (Vt-1 + Inflow) = Vt / (Vt-1 + Inflow) - 1
@@ -1051,35 +1091,47 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                     // Special case: First day of investment (implicitly handled above if startValue=0, denom=inflow)
                     // But if denominator is 0 (no value, no inflow), TWR doesn't change.
 
-                    // SPY Return
-                    // Normalize SPY: Calculate return relative to SPY price ON INCEPTION DATE?
-                    // The loop calculates cumulative return from the START of the fetch period.
-                    // The user wants SPY normalized to 0% at Inception.
-                    // We will handle this by filtering the output array. The accumulated value will be "correct" 
-                    // relative to the start of the series.
-                    // Ideally, we should reset SPY return at Inception Date.
-
-                    if (prevSpyClose > 0 && spyClose > 0) {
-                        const spRet = (spyClose - prevSpyClose) / prevSpyClose;
-                        spCumReturn = ((1 + spCumReturn) * (1 + spRet)) - 1;
+                    // Check if we should track SPY for this date
+                    if (spyClose !== undefined && spyClose !== null) {
+                        if (spCumReturn === 0 && prevSpyClose > 0) {
+                            // First valid point
+                        } else if (prevSpyClose > 0) {
+                            const spyDaily = (spyClose - prevSpyClose) / prevSpyClose;
+                            spCumReturn = ((1 + spCumReturn) * (1 + spyDaily)) - 1;
+                        }
                     }
 
-                    // Store data point (we will filter later)
                     benchmarkData.push({
-                        date,
-                        portfolio: parseFloat((cumulativeTWR * 100).toFixed(2)),
-                        spy: parseFloat((spCumReturn * 100).toFixed(2))
+                        date: date,
+                        portfolio: cumulativeTWR * 100,
+                        spy: spCumReturn * 100
                     });
 
                     prevPortfolioValue = currentMarketValue;
-                    prevSpyClose = spyClose;
+                    if (spyClose) prevSpyClose = spyClose;
                 }
             }
 
-            // --- FILTER: Remove dates before Inception ---
-            // This eliminates the 0-value lead-up and ensures the graph starts exactly when the user started investing.
-            // Also Re-Normalize SPY to 0% at the start of the filtered series.
-            const filteredBenchmarkData = benchmarkData.filter(d => d.date >= inceptionDateStr);
+            // Filter out dates before inception
+            const filteredBenchmarkData = benchmarkData.filter(d => new Date(d.date).getTime() >= minTimestamp);
+
+            // FIX: If the first data point has a huge non-zero value (e.g. instant gain from historical cost),
+            // and we normalize it to 0, we hide the gain.
+            // We must prepend a "0%" point at (Inception - 1 Day) so the normalization respects the jump.
+            const inceptionMs = typeof minTimestamp === 'number' ? minTimestamp : Date.now();
+            const oneDayBefore = new Date(inceptionMs - 86400000).toISOString().split('T')[0];
+
+            // Check if we need to prepend
+            // If filtered empty, or first point is later than oneDayBefore
+            const firstPointDate = filteredBenchmarkData.length > 0 ? filteredBenchmarkData[0].date : null;
+
+            if (firstPointDate !== oneDayBefore) {
+                filteredBenchmarkData.unshift({
+                    date: oneDayBefore,
+                    portfolio: 0,
+                    spy: 0
+                });
+            }
 
             // Normalize SPY to 0% at start of filtered series
             if (filteredBenchmarkData.length > 0) {
