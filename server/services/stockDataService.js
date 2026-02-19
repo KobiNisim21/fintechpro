@@ -783,9 +783,9 @@ async function fetchDividendInfo(symbol) {
  */
 export async function getPortfolioHealthAndBenchmark(positions) {
     const symbols = positions.map(p => p.symbol);
-    console.log(`--- STOCK DATA SERVICE v8 LOADED (${positions.length} positions) ---`);
+    console.log(`--- STOCK DATA SERVICE v10 LOADED (${positions.length} positions) ---`);
     const sortedKey = symbols.slice().sort().join(',');
-    const cacheKey = `analytics_v9_${sortedKey}_${positions.length}`;
+    const cacheKey = `analytics_v10_${sortedKey}_${positions.length}`;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached) return cached;
 
@@ -975,6 +975,19 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             // Pre-sort events just in case
             lotEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
 
+            // FILTER: Only include events for symbols that actually have chart data.
+            // If we include an inflow for a symbol with no price history, TWR will crash 
+            // because Denominator increases (Inflow) but Numerator (MarketValue) does not.
+            const validChartSymbols = new Set();
+            symbolCharts.forEach((sc, i) => {
+                if (sc && sc.dates && sc.dates.length > 0) {
+                    validChartSymbols.add(symbols[i]);
+                }
+            });
+
+            // Filter out lots for invalid symbols
+            const validLotEvents = lotEvents.filter(e => validChartSymbols.has(e.symbol));
+
             const allDates = spyChart?.dates || [];
             if (allDates.length > 0) {
                 let prevPortfolioValue = 0;
@@ -996,9 +1009,10 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
                     // Process inflows for this date
                     let dailyInflowValue = 0;
-                    while (lotIndex < lotEvents.length && lotEvents[lotIndex].date <= date) {
-                        const inf = lotEvents[lotIndex];
+                    while (lotIndex < validLotEvents.length && validLotEvents[lotIndex].date <= date) {
+                        const inf = validLotEvents[lotIndex];
                         currentQty[inf.symbol] = (currentQty[inf.symbol] || 0) + inf.quantity;
+                        // Only add inflow if we are tracking this symbol
                         dailyInflowValue += (inf.quantity * inf.price);
                         lotIndex++;
                     }
