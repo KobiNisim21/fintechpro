@@ -784,7 +784,7 @@ async function fetchDividendInfo(symbol) {
 export async function getPortfolioHealthAndBenchmark(positions) {
     const symbols = positions.map(p => p.symbol);
     const sortedKey = symbols.slice().sort().join(',');
-    const cacheKey = `analytics_v5_${sortedKey}_${positions.length}`;
+    const cacheKey = `analytics_v6_${sortedKey}_${positions.length}`;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached) return cached;
 
@@ -863,19 +863,22 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             });
 
             // Ensure we look back at least 1 year for benchmark comparison
+            // BUT we will filter the output to start from the actual minTimestamp (inception)
+            // to avoid the "vertical spike" from 0.
             const oneYearAgo = new Date();
             oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
             const oneYearAgoTs = oneYearAgo.getTime();
 
-            // Correct Logic: Use EARLIEST date between (First Purchase) AND (1 Year Ago)
-            // Safety check: ensure minTimestamp is a valid number
+            // Safety check
             if (typeof minTimestamp !== 'number' || isNaN(minTimestamp) || minTimestamp > 8640000000000000) {
                 minTimestamp = oneYearAgoTs;
             }
+            // Fetch logic: still fetch 1 year to ensure we have context/SPY data
             earliestDate = new Date(Math.min(minTimestamp, oneYearAgoTs));
             if (isNaN(earliestDate.getTime())) earliestDate = oneYearAgo;
 
-            console.log(`[Health] Chart Range Start: ${earliestDate.toISOString().split('T')[0]}`);
+            const inceptionDateStr = new Date(minTimestamp).toISOString().split('T')[0];
+            console.log(`[Health] Chart Fetch Start: ${earliestDate.toISOString().split('T')[0]}, Inception: ${inceptionDateStr}`);
 
             // --- B. Parallel Data Fetching ---
             console.log('[Health] Starting parallel fetch with timeouts...');
@@ -1017,25 +1020,33 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                     // TWR = (EndValue - Inflows) / StartValue
                     // StartValue = PrevEndValue
 
-                    const startValue = prevPortfolioValue;
+                    // Update TWR 
+                    // Formula: Rt = (Vt - (Vt-1 + Inflow)) / (Vt-1 + Inflow) = Vt / (Vt-1 + Inflow) - 1
 
-                    if (startValue > 0) {
-                        const dailyRet = (currentMarketValue - dailyInflowValue - startValue) / startValue;
+                    const startValue = prevPortfolioValue;
+                    const denominator = startValue + dailyInflowValue;
+
+                    if (denominator > 0) {
+                        const dailyRet = (currentMarketValue / denominator) - 1;
                         cumulativeTWR = ((1 + cumulativeTWR) * (1 + dailyRet)) - 1;
                     }
-                    // Special case: Initial investment established today
-                    else if (dailyInflowValue > 0 && currentMarketValue > 0) {
-                        // First day performance
-                        const dailyRet = (currentMarketValue - dailyInflowValue) / dailyInflowValue;
-                        cumulativeTWR = dailyRet;
-                    }
+                    // Special case: First day of investment (implicitly handled above if startValue=0, denom=inflow)
+                    // But if denominator is 0 (no value, no inflow), TWR doesn't change.
 
                     // SPY Return
+                    // Normalize SPY: Calculate return relative to SPY price ON INCEPTION DATE?
+                    // The loop calculates cumulative return from the START of the fetch period.
+                    // The user wants SPY normalized to 0% at Inception.
+                    // We will handle this by filtering the output array. The accumulated value will be "correct" 
+                    // relative to the start of the series.
+                    // Ideally, we should reset SPY return at Inception Date.
+
                     if (prevSpyClose > 0 && spyClose > 0) {
                         const spRet = (spyClose - prevSpyClose) / prevSpyClose;
                         spCumReturn = ((1 + spCumReturn) * (1 + spRet)) - 1;
                     }
 
+                    // Store data point (we will filter later)
                     benchmarkData.push({
                         date,
                         portfolio: parseFloat((cumulativeTWR * 100).toFixed(2)),
@@ -1044,6 +1055,26 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
                     prevPortfolioValue = currentMarketValue;
                     prevSpyClose = spyClose;
+                }
+            }
+
+            // --- FILTER: Remove dates before Inception ---
+            // This eliminates the 0-value lead-up and ensures the graph starts exactly when the user started investing.
+            // Also Re-Normalize SPY to 0% at the start of the filtered series.
+            const filteredBenchmarkData = benchmarkData.filter(d => d.date >= inceptionDateStr);
+
+            // Normalize SPY to 0% at start of filtered series
+            if (filteredBenchmarkData.length > 0) {
+                const baseSpy = filteredBenchmarkData[0].spy;
+                const basePortfolio = filteredBenchmarkData[0].portfolio; // Should be ~0 unless intraday gain
+
+                for (let i = 0; i < filteredBenchmarkData.length; i++) {
+                    filteredBenchmarkData[i].spy = Number((filteredBenchmarkData[i].spy - baseSpy).toFixed(2));
+                    // Optional: Normalize Portfolio to exactly 0 at start? 
+                    // If intraday gain existed, it should be shown? 
+                    // User said: "On the date of the first purchase, the Portfolio Return MUST be exactly 0%".
+                    // So we subtract the base.
+                    filteredBenchmarkData[i].portfolio = Number((filteredBenchmarkData[i].portfolio - basePortfolio).toFixed(2));
                 }
             }
 
@@ -1123,7 +1154,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 },
                 portfolioBeta: Number(portfolioBeta.toFixed(2)),
                 maxSectorPct: Number(maxSectorPct.toFixed(1)),
-                benchmarkData,
+                benchmarkData: filteredBenchmarkData,
                 dividends,
                 correlationMatrix,
                 lastUpdated: new Date().toISOString()
