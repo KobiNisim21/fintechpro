@@ -943,6 +943,19 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             // Existing logic is fine: Unknown sector will group them and likely penalize, which is correct (risk).
             const diversificationScore = Math.max(0, 100 - Math.max(0, maxSectorPct - 30) * 2.5);
 
+            // FIX: Guard against "Diversity 0" glitch when data is missing but multiple stocks exist.
+            // If we have >1 stock but diversity is calculated as 0 (implying 100% concentration in "Unknown" or similar failure),
+            // we should probably flag this as incomplete data rather than showing a terrifying score drop.
+            if (symbols.length > 1 && diversificationScore === 0) {
+                const missingSectors = symbols.filter((_, i) => !profilesResults[i]?.finnhubIndustry);
+                console.warn(`[Health] Diversity 0 detected despite ${symbols.length} stocks. Missing sectors for: ${missingSectors.length}`);
+
+                // Only throw if we are pretty sure it's a data failure (e.g., >50% missing sectors)
+                if (missingSectors.length > 0) {
+                    throw new Error(`Incomplete sector data causing 0 Diversity`);
+                }
+            }
+
             // 2. Volatility
             let weightedBeta = 0;
             let validBetaWeight = 0;

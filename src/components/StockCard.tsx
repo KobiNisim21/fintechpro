@@ -27,20 +27,26 @@ export function StockCard({ stock, className }: StockCardProps) {
   const [showAddLot, setShowAddLot] = useState(false);
 
   // Initialize lots when opening edit dialog
+  // FIX: Race Condition - Only initialize when opening. Do NOT re-initialize if 'stock' updates while open.
   useEffect(() => {
     if (editOpen) {
+      // Only set if we haven't already (or if we want to reset on open)
+      // We use a simple check: if we are opening, we sync with current stock state.
+      // But we MUST NOT react to 'stock' changes while already open.
+
       if (stock.lots && stock.lots.length > 0) {
         setLots(stock.lots);
       } else {
-        // Fallback for legacy positions without lots: Create a single lot from current aggregates
+        // Fallback for legacy positions without lots
         setLots([{
-          date: new Date().toISOString().split('T')[0], // Default to today/now if unknown
-          quantity: stock.quantity,
-          price: stock.averagePrice
+          date: new Date().toISOString().split('T')[0],
+          quantity: stock.quantity || 0,
+          price: stock.averagePrice || 0
         }]);
       }
     }
-  }, [editOpen, stock]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editOpen]); // REMOVED 'stock' dependency to prevent overwrite during background refresh
 
   const isPositive = stock.change >= 0;
   const chartData = stock.sparklineData.map((value) => ({ value }));
