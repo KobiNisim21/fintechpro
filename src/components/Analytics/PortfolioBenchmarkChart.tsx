@@ -98,8 +98,11 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
                     <div className="flex items-center justify-center h-full text-zinc-500 text-sm">No benchmark data</div>
                 )}
             </CardContent>
-            {/* Watermark */}
-            <img src="/logo.png" alt="" className="absolute bottom-3 right-3 w-8 h-8 opacity-10 pointer-events-none" />
+            {/* Watermark & Version */}
+            <div className="absolute bottom-3 right-3 flex flex-col items-end opacity-20 pointer-events-none">
+                <img src="/logo.png" alt="" className="w-8 h-8 mb-1" />
+                <span className="text-[10px] text-white font-mono">v9.0</span>
+            </div>
         </Card>
     );
 });
