@@ -782,112 +782,127 @@ async function fetchDividendInfo(symbol) {
  * @param {Array} positions - Array of position objects with lots
  */
 export async function getPortfolioHealthAndBenchmark(positions) {
-    // Extract basic arrays for health score logic (using aggregates)
     const symbols = positions.map(p => p.symbol);
-
-    // Build a stable cache key
-    // Note: We use positions.length in cache key, but maybe we should use something more specific if quantities change?
-    // But since we persist to DB, positions length + symbols is usually enough. 
-    // If quantities change in DB, user might need to refresh or we need a better key.
-    // For now, let's keep the key simple but maybe we should include lastUpdated?
-
     const sortedKey = symbols.slice().sort().join(',');
-    // We can't easily use quantities in the key before calculating them! 
-    // So let's use a simpler key for now, or just symbols + length + latest update time if available?
-    // The original key used pre-calculated quantities. 
-    // Let's use `analytics_v2_${sortedKey}_${positions.length}` 
-    const cacheKey = `analytics_v3_${sortedKey}_${positions.length}`;
+    const cacheKey = `analytics_v4_${sortedKey}_${positions.length}`;
 
+    // 1. Check Cache
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached) return cached;
 
+    // 2. Deduped Fetch
+    console.log(`[Health] Starting fetch for ${positions.length} positions:`, cacheKey);
     return dedupedFetch(cacheKey, async () => {
         try {
-            // 1. Calculate Aggregates (Quantities & Prices) from Lots or Fallback
+            console.log('[Health] Calculating aggregates...');
+            // --- A. Pre-calculation & aggregation ---
             const quantities = [];
             const prices = [];
-
-            // 2. Determine Earliest Date (Initialize to far future)
-            // Use a far future date so any valid past date will be smaller
-            let earliestDate = new Date(8640000000000000);
-            let hasValidDate = false;
-
+            let earliestDate = new Date();
+            let hasFoundDate = false;
             const lotEvents = []; // { date, symbol, quantity, price }
+
+            // Initialize earliestDate to a far future timestamps to ensure Math.min works
+            let minTimestamp = 8640000000000000;
 
             positions.forEach(pos => {
                 let qty = 0;
                 let cost = 0;
+                let posHasLots = false;
 
                 if (pos.lots && pos.lots.length > 0) {
                     pos.lots.forEach(lot => {
-                        qty += lot.quantity;
-                        cost += (lot.quantity * lot.price);
+                        const q = Number(lot.quantity);
+                        const p = Number(lot.price);
 
-                        const d = new Date(lot.date);
-                        if (!isNaN(d.getTime())) {
-                            if (d < earliestDate) {
-                                earliestDate = d;
-                                hasValidDate = true;
+                        if (!isNaN(q) && !isNaN(p)) {
+                            qty += q;
+                            cost += (q * p);
+                            posHasLots = true;
+
+                            const d = new Date(lot.date);
+                            if (!isNaN(d.getTime())) {
+                                if (d.getTime() < minTimestamp) {
+                                    minTimestamp = d.getTime();
+                                    hasFoundDate = true;
+                                }
+                                lotEvents.push({
+                                    date: d.toISOString().split('T')[0],
+                                    symbol: pos.symbol,
+                                    quantity: q,
+                                    price: p
+                                });
                             }
-                            lotEvents.push({
-                                date: d.toISOString().split('T')[0],
-                                symbol: pos.symbol,
-                                quantity: lot.quantity,
-                                price: lot.price
-                            });
                         }
                     });
-
-                    quantities.push(qty);
-                    prices.push(qty > 0 ? cost / qty : 0);
-
-                } else {
-                    // Fallback for migrated/legacy positions
-                    qty = pos.quantity;
-                    cost = pos.quantity * pos.averagePrice;
-
-                    quantities.push(qty);
-                    prices.push(pos.averagePrice);
-
-                    const d = pos.createdAt ? new Date(pos.createdAt) : new Date();
-                    if (!isNaN(d.getTime())) {
-                        if (d < earliestDate) {
-                            earliestDate = d;
-                            hasValidDate = true;
-                        }
-                        lotEvents.push({
-                            date: d.toISOString().split('T')[0],
-                            symbol: pos.symbol,
-                            quantity: qty,
-                            price: pos.averagePrice
-                        });
-                    }
                 }
+
+                // Fallback if no lots or lots resulted in 0 quantity (orphan position)
+                if (!posHasLots || qty === 0) {
+                    qty = Number(pos.quantity) || 0;
+                    const avg = Number(pos.averagePrice) || 0;
+                    cost = qty * avg;
+
+                    // Try to get a date from created_at
+                    const d = pos.createdAt ? new Date(pos.createdAt) : new Date();
+                    const safeDate = !isNaN(d.getTime()) ? d : new Date();
+
+                    if (safeDate.getTime() < minTimestamp) {
+                        minTimestamp = safeDate.getTime();
+                        hasFoundDate = true;
+                    }
+
+                    lotEvents.push({
+                        date: safeDate.toISOString().split('T')[0],
+                        symbol: pos.symbol,
+                        quantity: qty,
+                        price: avg
+                    });
+                }
+
+                quantities.push(qty);
+                prices.push(qty > 0 ? cost / qty : 0);
             });
 
-            // If no valid dates found, default to today
-            if (!hasValidDate) {
-                earliestDate = new Date();
-                console.warn('[TWR] No valid dates found in portfolio, defaulting to today.');
+            if (hasFoundDate) {
+                earliestDate = new Date(minTimestamp);
+            } else {
+                // Default to 1 year ago if absolutely no dates found
+                const d = new Date();
+                d.setFullYear(d.getFullYear() - 1);
+                earliestDate = d;
             }
 
-            // ג”€ג”€ Parallel fetch ג”€ג”€
-            const [metricsResults, profilesResults, recsResults, spyChart, dividendResults, ...symbolCharts] =
-                await Promise.all([
-                    Promise.all(symbols.map(s => getBasicFinancials(s).catch(() => null))),
-                    Promise.all(symbols.map(s => getCompanyProfile(s).catch(() => null))),
-                    Promise.all(symbols.map(s => getAnalystRecommendations(s).catch(() => []))),
-                    fetchYahooChart('SPY', earliestDate),
-                    Promise.all(symbols.map(s => fetchDividendInfo(s).catch(() => null))),
-                    ...symbols.map(s => fetchYahooChart(s, earliestDate).catch(() => ({ dates: [], closes: [] })))
-                ]);
+            // --- B. Parallel Data Fetching ---
+            console.log('[Health] Starting parallel fetch with timeouts...');
+            // Use specific timeouts/catch for each to prevent one failure from blocking all
+            const fetchWithTimeout = (promise, ms = 10000, fallback = null) => {
+                const timeout = new Promise(resolve => setTimeout(() => resolve(fallback), ms));
+                return Promise.race([promise, timeout]).catch(() => fallback);
+            };
 
-            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-            // 1. HEALTH SCORE (Logic preserved)
-            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+            const [
+                metricsResults,
+                profilesResults,
+                recsResults,
+                spyChart,
+                dividendResults,
+                ...symbolCharts
+            ] = await Promise.all([
+                Promise.all(symbols.map(s => fetchWithTimeout(getBasicFinancials(s), 5000, null))),
+                Promise.all(symbols.map(s => fetchWithTimeout(getCompanyProfile(s), 5000, {}))),
+                Promise.all(symbols.map(s => fetchWithTimeout(getAnalystRecommendations(s), 5000, []))),
+                fetchWithTimeout(fetchYahooChart('SPY', earliestDate), 8000, { dates: [], closes: [] }),
+                Promise.all(symbols.map(s => fetchWithTimeout(fetchDividendInfo(s), 5000, null))),
+                ...symbols.map(s => fetchWithTimeout(fetchYahooChart(s, earliestDate), 8000, { dates: [], closes: [] }))
+            ]);
+
+            console.log('[Health] Fetch complete. Building result...');
+
+            // --- C. Health Score Calculation ---
             const totalValue = quantities.reduce((acc, q, i) => acc + (q * prices[i]), 0);
 
-            // -- Diversification --
+            // 1. Diversification
             const sectorExposure = {};
             let maxSectorPct = 0;
             symbols.forEach((_, i) => {
@@ -901,7 +916,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             });
             const diversificationScore = Math.max(0, 100 - Math.max(0, maxSectorPct - 30) * 2.5);
 
-            // -- Volatility --
+            // 2. Volatility
             let weightedBeta = 0;
             let validBetaWeight = 0;
             symbols.forEach((_, i) => {
@@ -913,12 +928,12 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             const portfolioBeta = validBetaWeight > 0 ? weightedBeta / validBetaWeight : 1;
             const volatilityScore = Math.max(0, 100 - Math.max(0, portfolioBeta - 1.0) * 50);
 
-            // -- Sentiment --
+            // 3. Sentiment
             let totalBuyRatio = 0;
             let sentimentCount = 0;
             symbols.forEach((_, i) => {
                 const isETF = profilesResults[i]?.finnhubIndustry === 'Exchange Traded Fund';
-                if (isETF) return;
+                if (isETF) return; // Skip ETFs for sentiment
                 const recs = recsResults[i];
                 if (recs && recs.length > 0) {
                     const latest = recs[0];
@@ -936,99 +951,99 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 (diversificationScore * 0.4) + (volatilityScore * 0.3) + (sentimentScore * 0.3)
             );
 
-            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-            // 2. BENCHMARK COMPARISON (TWR)
-            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+            // --- D. Benchmark (TWR) ---
             const benchmarkData = [];
+            // Optimize lookup
             const symbolCloseLookup = symbolCharts.map(chart => {
                 const map = {};
-                if (chart.dates) {
+                if (chart && chart.dates) {
                     chart.dates.forEach((d, i) => map[d] = chart.closes[i]);
                 }
                 return map;
             });
 
-            // Group inflows
-            const inflowsByDate = {};
-            lotEvents.forEach(e => {
-                if (!inflowsByDate[e.date]) inflowsByDate[e.date] = [];
-                inflowsByDate[e.date].push(e);
-            });
+            // Pre-sort events just in case
+            lotEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            const allDates = spyChart.dates || [];
-            let cumulativeTWR = 0;
-            let spCumReturn = 0;
-            const currentQty = {};
-            symbols.forEach(s => currentQty[s] = 0);
+            const allDates = spyChart?.dates || [];
+            if (allDates.length > 0) {
+                let prevPortfolioValue = 0;
+                let cumulativeTWR = 0;
+                let spCumReturn = 0;
+                let prevSpyClose = spyChart.closes[0];
 
-            let prevPortfolioValue = 0;
-            let prevSpyClose = null;
-            let lotIndex = 0;
+                const currentQty = {};
+                symbols.forEach(s => currentQty[s] = 0);
 
+                let lotIndex = 0;
 
-            for (let i = 0; i < allDates.length; i++) {
-                const date = allDates[i];
-                const spyClose = spyChart.closes[i];
+                for (let i = 0; i < allDates.length; i++) {
+                    const date = allDates[i];
+                    const spyClose = spyChart.closes[i];
 
-                // 1. Process Inflows (Catch up on all lots <= current date)
-                let dailyInflowValue = 0;
-                while (lotIndex < lotEvents.length && lotEvents[lotIndex].date <= date) {
-                    const inf = lotEvents[lotIndex];
-                    currentQty[inf.symbol] = (currentQty[inf.symbol] || 0) + inf.quantity;
-                    dailyInflowValue += (inf.quantity * inf.price);
-                    lotIndex++;
-                }
-
-                // 2. Calculate End Value
-                let currentMarketValue = 0;
-                let hasPrice = false;
-
-                symbols.forEach((s, idx) => {
-                    const qty = currentQty[s];
-                    if (qty > 0) {
-                        const price = symbolCloseLookup[idx][date];
-                        if (price) {
-                            currentMarketValue += qty * price;
-                            hasPrice = true;
-                        }
+                    // Process inflows for this date
+                    let dailyInflowValue = 0;
+                    while (lotIndex < lotEvents.length && lotEvents[lotIndex].date <= date) {
+                        const inf = lotEvents[lotIndex];
+                        currentQty[inf.symbol] = (currentQty[inf.symbol] || 0) + inf.quantity;
+                        dailyInflowValue += (inf.quantity * inf.price);
+                        lotIndex++;
                     }
-                });
 
-                // 3. TWR Step
-                const startAdj = prevPortfolioValue + dailyInflowValue;
-                let dailyReturn = 0;
+                    // Value at end of day
+                    let currentMarketValue = 0;
+                    let hasPrice = false;
 
-                if (startAdj > 0) {
-                    dailyReturn = (currentMarketValue - startAdj) / startAdj;
-                } else if (dailyInflowValue > 0) {
-                    dailyReturn = (currentMarketValue - dailyInflowValue) / dailyInflowValue;
-                }
+                    symbols.forEach((s, idx) => {
+                        const qty = currentQty[s];
+                        if (qty > 0) {
+                            const price = symbolCloseLookup[idx][date];
+                            if (price) {
+                                currentMarketValue += qty * price;
+                                hasPrice = true;
+                            } else {
+                                // Forward fill price if missing? Or assume previous?
+                                // For now, if price missing, try to use price from previous available day?
+                                // Too complex for now, just skip value contribution (conservative)
+                            }
+                        }
+                    });
 
-                cumulativeTWR = ((1 + cumulativeTWR) * (1 + dailyReturn)) - 1;
+                    // Update TWR 
+                    // TWR = (EndValue - Inflows) / StartValue
+                    // StartValue = PrevEndValue
 
-                // SPY Return
-                if (prevSpyClose === null) {
-                    spCumReturn = 0;
-                } else {
-                    const spyDaily = (spyClose - prevSpyClose) / prevSpyClose;
-                    spCumReturn = ((1 + spCumReturn) * (1 + spyDaily)) - 1;
-                }
+                    const startValue = prevPortfolioValue;
 
-                if (hasPrice || dailyInflowValue > 0) {
+                    if (startValue > 0) {
+                        const dailyRet = (currentMarketValue - dailyInflowValue - startValue) / startValue;
+                        cumulativeTWR = ((1 + cumulativeTWR) * (1 + dailyRet)) - 1;
+                    }
+                    // Special case: Initial investment established today
+                    else if (dailyInflowValue > 0 && currentMarketValue > 0) {
+                        // First day performance
+                        const dailyRet = (currentMarketValue - dailyInflowValue) / dailyInflowValue;
+                        cumulativeTWR = dailyRet;
+                    }
+
+                    // SPY Return
+                    if (prevSpyClose > 0 && spyClose > 0) {
+                        const spRet = (spyClose - prevSpyClose) / prevSpyClose;
+                        spCumReturn = ((1 + spCumReturn) * (1 + spRet)) - 1;
+                    }
+
                     benchmarkData.push({
                         date,
                         portfolio: parseFloat((cumulativeTWR * 100).toFixed(2)),
                         spy: parseFloat((spCumReturn * 100).toFixed(2))
                     });
-                }
 
-                prevPortfolioValue = currentMarketValue;
-                prevSpyClose = spyClose;
+                    prevPortfolioValue = currentMarketValue;
+                    prevSpyClose = spyClose;
+                }
             }
 
-            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-            // 3. EXTRAS (Dividends, Correlation)
-            // ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+            // --- E. Dividends & Correlation ---
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
@@ -1041,8 +1056,6 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 if (!info || !info.exDate) return;
 
                 const exDate = new Date(info.exDate);
-
-                // Logic: Show if Upcoming (next 60 days) OR Current Month (even if passed)
                 const isUpcoming = exDate >= now && exDate <= sixtyDaysFromNow;
                 const isCurrentMonth = exDate.getMonth() === currentMonth && exDate.getFullYear() === currentYear;
 
@@ -1053,25 +1066,12 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                     exDate: info.exDate,
                     paymentDate: info.paymentDate || null,
                     amount: info.dividendRate || 0,
-                    // Calculate Payout based on TOTAL Quantity (from DB aggregation)
                     estimatedPayout: Math.round(((info.dividendRate || 0) * quantities[i]) * 100) / 100,
                 });
             });
             dividends.sort((a, b) => new Date(a.exDate).getTime() - new Date(b.exDate).getTime());
 
-            // Correlation
-            const dailyReturns = symbols.map((_, i) => {
-                const chart = symbolCharts[i] || { dates: [], closes: [] };
-                const closes = chart.closes;
-                if (closes.length < 2) return [];
-                const recent = closes.slice(-31);
-                const returns = [];
-                for (let j = 1; j < recent.length; j++) {
-                    if (recent[j - 1] > 0) returns.push((recent[j] - recent[j - 1]) / recent[j - 1]);
-                }
-                return returns;
-            });
-
+            // Correlation Matrix
             function pearson(a, b) {
                 const n = Math.min(a.length, b.length);
                 if (n < 5) return null;
@@ -1089,30 +1089,39 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 return den === 0 ? 0 : Math.round((num / den) * 100) / 100;
             }
 
+            const dailyReturns = symbolCharts.map((chart) => {
+                if (!chart || !chart.closes || chart.closes.length < 2) return [];
+                const closes = chart.closes;
+                const recent = closes.slice(-30);
+                const returns = [];
+                for (let j = 1; j < recent.length; j++) {
+                    if (recent[j - 1] > 0) returns.push((recent[j] - recent[j - 1]) / recent[j - 1]);
+                }
+                return returns;
+            });
+
             const correlationMatrix = {
                 symbols: symbols.slice(),
                 matrix: symbols.map((_, i) =>
                     symbols.map((_, j) => (i === j ? 1 : pearson(dailyReturns[i], dailyReturns[j])))
-                ),
+                )
             };
 
-            const result = {
+            return {
                 healthScore,
                 components: {
                     diversification: Math.round(diversificationScore),
                     volatility: Math.round(volatilityScore),
-                    sentiment: Math.round(sentimentScore),
+                    sentiment: Math.round(sentimentScore)
                 },
-                portfolioBeta: Math.round(portfolioBeta * 100) / 100,
-                maxSectorPct: Math.round(maxSectorPct),
+                portfolioBeta: Number(portfolioBeta.toFixed(2)),
+                maxSectorPct: Number(maxSectorPct.toFixed(1)),
                 benchmarkData,
                 dividends,
                 correlationMatrix,
                 lastUpdated: new Date().toISOString()
             };
 
-            setCache(cacheKey, result);
-            return result;
         } catch (error) {
             console.error('ג Œ Error in getPortfolioHealthAndBenchmark:', error);
             // Return safe fallback instead of 500

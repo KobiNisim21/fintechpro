@@ -3,13 +3,14 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Treemap,
-    AreaChart, Area, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { stocksAPI, RecommendationTrend, PriceTarget, CompanyProfile, PortfolioAnalytics } from '@/api/stocks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown, ShieldCheck, DollarSign, CalendarDays } from 'lucide-react';
 import { motion } from 'framer-motion';
+import CorrelationMatrix from './Analytics/CorrelationMatrix';
+import PortfolioBenchmarkChart from './Analytics/PortfolioBenchmarkChart';
 
 // ─── Premium Color Palette ───────────────────────────────────────
 const COLORS = [
@@ -162,7 +163,6 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     const [analytics, setAnalytics] = useState<PortfolioAnalytics | null>(null);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
     const analyticsRef = useRef(false);
-    const [benchmarkRange, setBenchmarkRange] = useState<'1M' | '6M' | '1Y'>('1Y');
 
     // ── Portfolio Distribution (Pie Chart) ──
     const distributionData = useMemo(() => {
@@ -222,21 +222,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     }, [isActive, positions]);
 
     // ── Slice benchmark data by range (no re-fetch) ──
-    const slicedBenchmark = useMemo(() => {
-        if (!analytics?.benchmarkData?.length) return [];
-        const data = analytics.benchmarkData;
-        const daysMap = { '1M': 22, '6M': 130, '1Y': 365 };
-        const days = daysMap[benchmarkRange];
-        const sliced = data.slice(Math.max(0, data.length - days));
-        // Re-normalise so both start at 0%
-        if (sliced.length === 0) return [];
-        const base = sliced[0];
-        return sliced.map(d => ({
-            date: d.date,
-            portfolio: +(d.portfolio - base.portfolio).toFixed(2),
-            spy: +(d.spy - base.spy).toFixed(2),
-        }));
-    }, [analytics, benchmarkRange]);
+    // MOVED TO PortfolioBenchmarkChart COMPONENT
 
     // ── Sector Data (Treemap) ──
     const sectorData = useMemo(() => {
@@ -367,70 +353,10 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                 </Card>
 
                 {/* ── Benchmark Comparison Chart ── */}
-                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg lg:col-span-2 relative overflow-hidden">
-                    <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
-                            <TrendingUp className="w-5 h-5 text-emerald-400" />
-                            Portfolio vs S&P 500
-                        </CardTitle>
-                        <div className="flex gap-1">
-                            {(['1M', '6M', '1Y'] as const).map(range => (
-                                <button
-                                    key={range}
-                                    onClick={() => setBenchmarkRange(range)}
-                                    className={`px-3 py-1 text-xs font-medium rounded-lg transition-all ${benchmarkRange === range
-                                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                                        : 'text-white/40 hover:text-white/60 hover:bg-white/5'
-                                        }`}
-                                >
-                                    {range}
-                                </button>
-                            ))}
-                        </div>
-                    </CardHeader>
-                    <CardContent className="h-[280px]">
-                        {analyticsLoading || !analytics ? (
-                            <div className="w-full h-full bg-white/5 animate-pulse rounded-xl" />
-                        ) : slicedBenchmark.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={slicedBenchmark} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                                    <defs>
-                                        <linearGradient id="portfolioFill" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.3} />
-                                            <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                                    <XAxis
-                                        dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
-                                        tickFormatter={(d: string) => { const m = d.split('-'); return `${m[1]}/${m[2]}`; }}
-                                        interval={Math.max(1, Math.floor(slicedBenchmark.length / 6))}
-                                        axisLine={false} tickLine={false}
-                                    />
-                                    <YAxis
-                                        tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
-                                        tickFormatter={(v: number) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`}
-                                        axisLine={false} tickLine={false}
-                                    />
-                                    <RechartsTooltip
-                                        contentStyle={{ background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: 12 }}
-                                        labelStyle={{ color: 'rgba(255,255,255,0.5)' }}
-                                        formatter={(value: number, name: string) => [
-                                            `${value > 0 ? '+' : ''}${value.toFixed(2)}%`,
-                                            name === 'portfolio' ? 'My Portfolio' : 'S&P 500'
-                                        ]}
-                                    />
-                                    <Area type="monotone" dataKey="portfolio" stroke="#22d3ee" strokeWidth={2} fill="url(#portfolioFill)" />
-                                    <Area type="monotone" dataKey="spy" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} strokeDasharray="6 3" fill="none" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-zinc-500 text-sm">No benchmark data</div>
-                        )}
-                    </CardContent>
-                    {/* Watermark */}
-                    <img src="/logo.png" alt="" className="absolute bottom-3 right-3 w-8 h-8 opacity-10 pointer-events-none" />
-                </Card>
+                <PortfolioBenchmarkChart
+                    data={analytics?.benchmarkData}
+                    isLoading={analyticsLoading || !analytics}
+                />
             </div>
 
             {/* ══ Dividend Calendar + Correlation Matrix Row ══ */}
@@ -499,83 +425,10 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                 </Card>
 
                 {/* ── Correlation Matrix Heatmap ── */}
-                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg relative overflow-hidden">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-violet-400" />
-                            Correlation Matrix
-                            <span className="text-[10px] text-white/30 ml-auto">30-day Pearson</span>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {analyticsLoading || !analytics?.correlationMatrix ? (
-                            <div className="w-full aspect-square max-w-[400px] mx-auto bg-white/5 rounded-xl animate-pulse" />
-                        ) : (() => {
-                            const { symbols: corrSymbols, matrix } = analytics.correlationMatrix;
-                            const cellSize = corrSymbols.length <= 5 ? 48 : corrSymbols.length <= 8 ? 36 : 28;
-                            const labelSize = corrSymbols.length <= 5 ? 40 : corrSymbols.length <= 8 ? 32 : 24;
-
-                            const getColor = (val: number | null) => {
-                                if (val === null) return 'rgba(255,255,255,0.05)';
-                                if (val >= 0) {
-                                    const g = Math.round(120 + val * 135); // 120 → 255
-                                    return `rgba(${Math.round(34 + (1 - val) * 100)}, ${g}, ${Math.round(100 - val * 40)}, ${0.15 + val * 0.5})`;
-                                } else {
-                                    const r = Math.round(180 + Math.abs(val) * 75);
-                                    return `rgba(${r}, ${Math.round(100 - Math.abs(val) * 50)}, ${Math.round(100 - Math.abs(val) * 30)}, ${0.15 + Math.abs(val) * 0.5})`;
-                                }
-                            };
-
-                            return (
-                                <div className="overflow-x-auto">
-                                    <div className="inline-block">
-                                        {/* Header row with symbols */}
-                                        <div className="flex" style={{ paddingLeft: labelSize }}>
-                                            {corrSymbols.map(sym => (
-                                                <div key={sym} style={{ width: cellSize, minWidth: cellSize }}
-                                                    className="text-[9px] text-white/40 text-center font-mono truncate">
-                                                    {sym}
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {/* Matrix rows */}
-                                        {matrix.map((row, i) => (
-                                            <div key={i} className="flex items-center">
-                                                <div style={{ width: labelSize, minWidth: labelSize }}
-                                                    className="text-[9px] text-white/40 font-mono truncate pr-1 text-right">
-                                                    {corrSymbols[i]}
-                                                </div>
-                                                {row.map((val, j) => (
-                                                    <div
-                                                        key={j}
-                                                        className="relative group cursor-pointer transition-all duration-200 hover:scale-110 hover:z-10 rounded-sm"
-                                                        style={{
-                                                            width: cellSize - 2, height: cellSize - 2, margin: 1,
-                                                            background: getColor(val),
-                                                        }}
-                                                    >
-                                                        {/* Value inside cell (only if big enough) */}
-                                                        {cellSize >= 36 && val !== null && (
-                                                            <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono text-white/60">
-                                                                {val.toFixed(2)}
-                                                            </span>
-                                                        )}
-                                                        {/* Tooltip */}
-                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 text-white text-xs font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
-                                                            {corrSymbols[i]} vs {corrSymbols[j]}: {val !== null ? val.toFixed(2) : 'N/A'}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        })()}
-                    </CardContent>
-                    {/* Watermark */}
-                    <img src="/logo.png" alt="" className="absolute bottom-3 right-3 w-8 h-8 opacity-10 pointer-events-none" />
-                </Card>
+                <CorrelationMatrix
+                    data={analytics?.correlationMatrix ?? null}
+                    isLoading={analyticsLoading || !analytics}
+                />
             </motion.div>
 
             {/* ── Top Row: Allocation + Sectors ── */}
