@@ -66,6 +66,16 @@ export function StockCard({ stock, className }: StockCardProps) {
     setEditOpen(true);
   };
 
+  // Helper to update a specific lot in the list
+  const updateLot = (index: number, field: keyof Lot, value: any) => {
+    const updatedDislots = [...lots];
+    updatedDislots[index] = {
+      ...updatedDislots[index],
+      [field]: value
+    };
+    setLots(updatedDislots);
+  };
+
   const handleAddLot = () => {
     if (newLot.quantity > 0 && newLot.price >= 0) {
       setLots([...lots, { ...newLot }]);
@@ -89,19 +99,20 @@ export function StockCard({ stock, className }: StockCardProps) {
 
     setLoading(true);
     try {
-      // If all lots removed, delete position? Or just save empty lots? 
-      // Backend might behave weirdly with empty lots. 
-      // Let's assume user wants to save the lots.
       if (lots.length === 0) {
         if (confirm("Removing all lots will delete the position. Continue?")) {
           await removePosition(stock._id);
         }
       } else {
-        // Calculate expected totals for immediate UI feedback (optional, backend does it)
+        // Calculate expected totals based on the edited lots
+        const totalQty = lots.reduce((acc, lot) => acc + Number(lot.quantity), 0);
+        const totalCost = lots.reduce((acc, lot) => acc + (Number(lot.quantity) * Number(lot.price)), 0);
+        const avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
+
         await updatePosition(
           stock._id,
-          undefined, // quantity calculated by backend
-          undefined, // avgPrice calculated by backend
+          totalQty,
+          avgPrice,
           lots
         );
       }
@@ -263,17 +274,38 @@ export function StockCard({ stock, className }: StockCardProps) {
           <div className="space-y-4">
             {/* Lots List */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs text-white/50 px-2">
-                <span className="w-24">Date</span>
-                <span className="w-20 text-right">Qty</span>
-                <span className="w-20 text-right">Price</span>
+              <div className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-2 items-center text-xs text-white/50 px-2">
+                <span>Date</span>
+                <span className="text-right">Qty</span>
+                <span className="text-right">Price</span>
                 <span className="w-8"></span>
               </div>
               {lots.map((lot, index) => (
-                <div key={index} className="flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/5 text-sm">
-                  <span className="w-24 text-white/70">{new Date(lot.date).toLocaleDateString()}</span>
-                  <span className="w-20 text-right font-medium">{lot.quantity}</span>
-                  <span className="w-20 text-right text-white/70">${Number(lot.price).toFixed(2)}</span>
+                <div key={index} className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-2 items-center bg-white/5 p-2 rounded-lg border border-white/5 text-sm">
+                  {/* Date Input - Editable */}
+                  <Input
+                    type="date"
+                    value={typeof lot.date === 'string' ? lot.date.split('T')[0] : new Date(lot.date).toISOString().split('T')[0]}
+                    onChange={(e) => updateLot(index, 'date', e.target.value)}
+                    className="h-8 text-xs bg-transparent border-none focus-visible:ring-0 p-0 text-white/70 dark:scheme-dark"
+                  />
+
+                  {/* Quantity Input - Editable */}
+                  <Input
+                    type="number"
+                    value={lot.quantity}
+                    onChange={(e) => updateLot(index, 'quantity', Number(e.target.value))}
+                    className="h-8 text-xs bg-transparent border-none focus-visible:ring-0 p-0 text-right font-medium text-white"
+                  />
+
+                  {/* Price Input - Editable */}
+                  <Input
+                    type="number"
+                    value={lot.price}
+                    onChange={(e) => updateLot(index, 'price', Number(e.target.value))}
+                    className="h-8 text-xs bg-transparent border-none focus-visible:ring-0 p-0 text-right text-white/70"
+                  />
+
                   <button
                     onClick={() => removeLot(index)}
                     className="w-8 flex justify-center text-white/30 hover:text-rose-500 transition-colors"
