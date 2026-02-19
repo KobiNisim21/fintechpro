@@ -76,7 +76,16 @@ export const updatePosition = async (req, res) => {
 
         // If 'lots' are provided, they take precedence and will trigger auto-calc
         if (lots && Array.isArray(lots)) {
-            position.lots = lots;
+            // FIX: Explicitly map to new objects to force Mongoose to replace the array content
+            // instead of trying to update/merge existing subdocuments by ID.
+            position.lots = lots.map(lot => ({
+                quantity: Number(lot.quantity),
+                price: Number(lot.price),
+                date: lot.date ? new Date(lot.date) : new Date() // Ensure standard Date object
+            }));
+
+            // Mark as modified to ensure save hooks run
+            position.markModified('lots');
         } else {
             // Fallback for legacy updates (though UI should send lots)
             if (quantity !== undefined) position.quantity = quantity;
@@ -84,7 +93,7 @@ export const updatePosition = async (req, res) => {
         }
 
         const updatedPosition = await position.save();
-        console.log(`[UPDATE] Saved successfully. New Qty: ${updatedPosition.quantity}, AvgPrice: ${updatedPosition.averagePrice}`);
+        console.log(`[UPDATE] Saved successfully. New Qty: ${updatedPosition.quantity}, AvgPrice: ${updatedPosition.averagePrice}, Lots: ${updatedPosition.lots.length}`);
 
         res.json(updatedPosition);
     } catch (error) {

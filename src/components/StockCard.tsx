@@ -95,7 +95,7 @@ export function StockCard({ stock, className }: StockCardProps) {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stock._id) return;
+    if (!stock._id || loading) return; // Prevent double-submit
 
     setLoading(true);
     try {
@@ -109,16 +109,24 @@ export function StockCard({ stock, className }: StockCardProps) {
         const totalCost = lots.reduce((acc, lot) => acc + (Number(lot.quantity) * Number(lot.price)), 0);
         const avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
 
+        // STRICT PAYLOAD: Ensure dates are valid ISO strings to prevent backend merging/shifting
+        const strictLots = lots.map(lot => ({
+          quantity: Number(lot.quantity),
+          price: Number(lot.price),
+          date: typeof lot.date === 'string' ? lot.date : new Date(lot.date).toISOString()
+        }));
+
         await updatePosition(
           stock._id,
           totalQty,
           avgPrice,
-          lots
+          strictLots
         );
       }
       setEditOpen(false);
     } catch (error) {
       console.error('Failed to update position:', error);
+      alert('Failed to save changes. Please try again.');
     } finally {
       setLoading(false);
     }
