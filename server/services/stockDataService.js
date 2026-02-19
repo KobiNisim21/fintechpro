@@ -864,14 +864,16 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 prices.push(qty > 0 ? cost / qty : 0);
             });
 
-            if (hasFoundDate) {
-                earliestDate = new Date(minTimestamp);
-            } else {
-                // Default to 1 year ago if absolutely no dates found
-                const d = new Date();
-                d.setFullYear(d.getFullYear() - 1);
-                earliestDate = d;
-            }
+            // Ensure we look back at least 1 year for benchmark comparison
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+            const oneYearAgoTs = oneYearAgo.getTime();
+
+            // Correct Logic: Use EARLIEST date between (First Purchase) AND (1 Year Ago)
+            // This ensures we always fetch at least 1y of data, but go back further if needed.
+            // If minTimestamp is huge (no lots), it will default to oneYearAgoTs due to Math.min
+            earliestDate = new Date(Math.min(minTimestamp, oneYearAgoTs));
+            console.log(`[Health] Chart Range Start: ${earliestDate.toISOString().split('T')[0]}`);
 
             // --- B. Parallel Data Fetching ---
             console.log('[Health] Starting parallel fetch with timeouts...');
@@ -1061,12 +1063,15 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
                 if (!isUpcoming && !isCurrentMonth) return;
 
+                // Calculate quarterly amount (Annual Rate / 4)
+                // USER REQUEST: Explicitly divide annual rate by 4 for quarterly payers like MSFT
+                const quarterlyAmount = (info.dividendRate || 0) / 4;
                 dividends.push({
                     symbol: sym,
                     exDate: info.exDate,
                     paymentDate: info.paymentDate || null,
-                    amount: info.dividendRate || 0,
-                    estimatedPayout: Math.round(((info.dividendRate || 0) * quantities[i]) * 100) / 100,
+                    amount: quarterlyAmount,
+                    estimatedPayout: quarterlyAmount * quantities[i], // Exact payout based on qty
                 });
             });
             dividends.sort((a, b) => new Date(a.exDate).getTime() - new Date(b.exDate).getTime());
