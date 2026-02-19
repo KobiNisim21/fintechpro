@@ -907,12 +907,13 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 ...symbols.map(s => fetchWithTimeout(fetchYahooChart(s, earliestDate), 8000, { dates: [], closes: [] }))
             ]);
 
-            // VALIDATION: If too many critical metrics failed (e.g., >50% charts missing), use LAST CACHED or partial?
+            // VALIDATION: STRICT "All or Nothing" for Score Stability
             const validChartsCount = symbolCharts.filter(c => c && c.closes && c.closes.length > 0).length;
-            if (validChartsCount < (symbols.length * 0.5) && symbols.length > 0) {
-                console.warn(`[Health] Critical data missing: only ${validChartsCount}/${symbols.length} charts loaded.`);
-                // We could return a previous cached version here if we had access to persistent store,
-                // but for now we proceed best-effort rather than throwing 500.
+            if (validChartsCount < symbols.length && symbols.length > 0) {
+                const missingNames = symbols.filter((_, i) => !symbolCharts[i] || !symbolCharts[i].closes || symbolCharts[i].closes.length === 0);
+                console.warn(`[Health] Critical data missing: only ${validChartsCount}/${symbols.length} charts loaded. Missing: ${missingNames.join(', ')}`);
+                // THROW to prevent partial score update
+                throw new Error(`Incomplete data for: ${missingNames.join(', ')}`);
             }
 
             console.log('[Health] Fetch complete. Building result...');
@@ -1084,18 +1085,21 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 }
             }
 
-            // Filter out dates before inception
-            const filteredBenchmarkData = benchmarkData.filter(d => new Date(d.date).getTime() >= minTimestamp);
+            // Filter out dates before inception (or 1Y ago timeframe)
+            // Fix: Use 'earliestDate' to ensure we match the fetched range and don't accidentally truncate if minTimestamp logic was shaky
+            const filteredBenchmarkData = benchmarkData.filter(d => new Date(d.date).getTime() >= earliestDate.getTime());
 
-            // Normalize Start to 0%
-            // Even with TWR, the cumulative products drift. We want the graph to start at 0.
+            // Normalize SPY to 0% at start of filtered series only (to compare relative movement)
+            // FIX: DO NOT NORMALIZE PORTFOLIO TO 0%. User wants absolute cumulative return since inception.
             if (filteredBenchmarkData.length > 0) {
-                const basePortfolio = filteredBenchmarkData[0].portfolio;
                 const baseSpy = filteredBenchmarkData[0].spy;
+                // const basePortfolio = filteredBenchmarkData[0].portfolio; // DISABLED
 
                 for (let i = 0; i < filteredBenchmarkData.length; i++) {
-                    filteredBenchmarkData[i].portfolio = Number((filteredBenchmarkData[i].portfolio - basePortfolio).toFixed(2));
+                    // Only normalize SPY
                     filteredBenchmarkData[i].spy = Number((filteredBenchmarkData[i].spy - baseSpy).toFixed(2));
+                    // Keep Portfolio Absolute
+                    filteredBenchmarkData[i].portfolio = Number((filteredBenchmarkData[i].portfolio).toFixed(2));
                 }
             }
 
