@@ -151,10 +151,10 @@ export function StockCard({ stock, className }: StockCardProps) {
                 <>
                   <button
                     onClick={handleEdit}
-                    className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-cyan-400 transition-colors z-20"
+                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/20 text-cyan-400 opacity-100 transition-all z-20"
                     title="Edit position"
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
+                    <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={handleDelete}

@@ -783,9 +783,9 @@ async function fetchDividendInfo(symbol) {
  */
 export async function getPortfolioHealthAndBenchmark(positions) {
     const symbols = positions.map(p => p.symbol);
-    console.log(`--- STOCK DATA SERVICE v11 LOADED (${positions.length} positions) ---`);
+    console.log(`--- STOCK DATA SERVICE v12 LOADED (${positions.length} positions) ---`);
     const sortedKey = symbols.slice().sort().join(',');
-    const cacheKey = `analytics_v11_${sortedKey}_${positions.length}`;
+    const cacheKey = `analytics_v12_${sortedKey}_${positions.length}`;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached) return cached;
 
@@ -998,6 +998,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             const validLotEvents = lotEvents.filter(e => validChartSymbols.has(e.symbol));
 
             const allDates = spyChart?.dates || [];
+
             if (allDates.length > 0) {
                 let prevPortfolioValue = 0;
                 let cumulativeTWR = 0;
@@ -1093,9 +1094,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
                     // Check if we should track SPY for this date
                     if (spyClose !== undefined && spyClose !== null) {
-                        if (spCumReturn === 0 && prevSpyClose > 0) {
-                            // First valid point
-                        } else if (prevSpyClose > 0) {
+                        if (prevSpyClose > 0) {
                             const spyDaily = (spyClose - prevSpyClose) / prevSpyClose;
                             spCumReturn = ((1 + spCumReturn) * (1 + spyDaily)) - 1;
                         }
