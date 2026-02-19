@@ -71,6 +71,9 @@ export const updatePosition = async (req, res) => {
 
         const { quantity, averagePrice, lots } = req.body;
 
+        console.log(`[UPDATE] Updating position ${position.symbol} (${position._id})`);
+        console.log(`[UPDATE] Payload lots:`, lots ? `${lots.length} lots provided` : 'No lots provided');
+
         // If 'lots' are provided, they take precedence and will trigger auto-calc
         if (lots && Array.isArray(lots)) {
             position.lots = lots;
@@ -81,8 +84,11 @@ export const updatePosition = async (req, res) => {
         }
 
         const updatedPosition = await position.save();
+        console.log(`[UPDATE] Saved successfully. New Qty: ${updatedPosition.quantity}, AvgPrice: ${updatedPosition.averagePrice}`);
+
         res.json(updatedPosition);
     } catch (error) {
+        console.error('[UPDATE] Error saving position:', error);
         res.status(400).json({ message: error.message });
     }
 };

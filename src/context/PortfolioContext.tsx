@@ -404,17 +404,30 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const updatePosition = async (id: string, quantity?: number, averagePrice?: number, lots?: Lot[]) => {
     try {
       setError(null);
-      await positionsAPI.update(id, { quantity, averagePrice, lots });
+      // We expect the backend to return the fully updated position object
+      // Note: positionsAPI.update needs to return Promise<Position>
+      const updatedPos = await positionsAPI.update(id, { quantity, averagePrice, lots });
 
-      // Update local state
+      // Update local state with the REAL data from backend
       setPositions((prev) => {
         const updated = prev.map((pos) =>
           pos._id === id
             ? {
               ...pos,
-              quantity: quantity ?? pos.quantity,
-              averagePrice: averagePrice ?? pos.averagePrice,
-              lots: lots ?? pos.lots
+              // Merge backend response with existing UI state (like market price, colors)
+              quantity: updatedPos.quantity,
+              averagePrice: updatedPos.averagePrice,
+              lots: updatedPos.lots,
+              // Keep the live market data which isn't in the update response (unless backend fetches it)
+              price: pos.price,
+              change: pos.change,
+              changePercent: pos.changePercent,
+              extendedPrice: pos.extendedPrice,
+              extendedChange: pos.extendedChange,
+              extendedChangePercent: pos.extendedChangePercent,
+              marketStatus: pos.marketStatus,
+              sparklineData: pos.sparklineData,
+              color: pos.color
             }
             : pos
         );
