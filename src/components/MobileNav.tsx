@@ -11,7 +11,7 @@ export function MobileNav() {
                 <a href="/" className="flex items-center gap-3">
                     <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
                     <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                        Portfolio Pro
+                        FinTechPro
                     </h1>
                 </a>
             </div>

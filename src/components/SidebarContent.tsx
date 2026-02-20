@@ -11,23 +11,18 @@ export function SidebarContent() {
             <div className="p-6 flex-1 overflow-y-auto min-h-0">
                 {/* Logo/Header */}
 
-                <div className="mb-8 text-center">
-                    <a href="/" className="inline-flex flex-col items-center gap-4 group">
+                <div className="mb-10 text-center">
+                    <a href="/" className="inline-flex flex-col items-center group">
                         <div className="relative w-40 h-40 transition-transform duration-500 group-hover:scale-105">
                             <img
                                 src="/logo.png"
-                                alt="Portfolio Pro"
+                                alt="FinTechPro"
                                 className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                             />
                         </div>
-                        <div>
-                            <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">
-                                Portfolio Pro
-                            </h1>
-                            <p className="text-xs font-medium text-emerald-400/60 uppercase tracking-widest mt-1">
-                                Wealth Management
-                            </p>
-                        </div>
+                        <p className="text-xs font-medium text-emerald-400/60 uppercase tracking-widest -mt-6">
+                            Wealth Management
+                        </p>
                     </a>
                 </div>
 
