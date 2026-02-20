@@ -248,7 +248,7 @@ export function StockCard({ stock, className }: StockCardProps) {
             <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-white/5 rounded-xl border border-white/5">
               <div>
                 <p className="text-xs text-white/40 mb-0.5">Holdings</p>
-                <p className="text-sm font-medium text-white">{quantity} Shares</p>
+                <p className="text-sm font-medium text-white">{quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })} Shares</p>
                 <p className="text-xs text-white/40">Avg: ${avgPrice.toFixed(2)}</p>
               </div>
               <div className="text-right">
@@ -307,6 +307,7 @@ export function StockCard({ stock, className }: StockCardProps) {
                   {/* Quantity Input - Editable */}
                   <Input
                     type="number"
+                    step="any"
                     value={lot.quantity}
                     onChange={(e) => updateLot(index, 'quantity', Number(e.target.value))}
                     className="h-8 text-xs bg-transparent border-none focus-visible:ring-0 p-0 text-right font-medium text-white"
@@ -347,6 +348,7 @@ export function StockCard({ stock, className }: StockCardProps) {
                     <Label className="text-xs text-white/50">Quantity</Label>
                     <Input
                       type="number"
+                      step="any"
                       value={newLot.quantity || ''}
                       onChange={(e) => setNewLot({ ...newLot, quantity: Number(e.target.value) })}
                       className="h-8 text-xs bg-white/5 border-white/10"
@@ -384,7 +386,7 @@ export function StockCard({ stock, className }: StockCardProps) {
             <div className="pt-4 border-t border-white/10 mt-4">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-sm text-white/50">Total Shares</span>
-                <span className="font-bold text-white">{projectTotalQty}</span>
+                <span className="font-bold text-white">{projectTotalQty.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-white/50">Avg Price</span>
