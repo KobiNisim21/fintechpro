@@ -207,6 +207,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           name: pos.name,
           quantity: pos.quantity,
           averagePrice: pos.averagePrice,
+          lots: pos.lots,
           price: currentPrice,
           change,
           changePercent,
@@ -428,6 +429,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         name: newPosition.name,
         quantity: newPosition.quantity,
         averagePrice: newPosition.averagePrice,
+        lots: newPosition.lots,
         price: currentPrice,
         change,
         changePercent,
@@ -449,6 +451,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       });
       // Invalidate analytics
       setLastAnalyticsFetch(0);
+      fetchAnalytics(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to add position');
       throw err;
@@ -490,6 +493,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       });
       // Invalidate analytics
       setLastAnalyticsFetch(0);
+      fetchAnalytics(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update position');
       throw err;
@@ -507,6 +511,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       });
       // Invalidate analytics
       setLastAnalyticsFetch(0);
+      fetchAnalytics(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to remove position');
       throw err;
