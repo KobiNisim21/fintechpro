@@ -29,6 +29,10 @@ export interface Position {
   lots?: Lot[]; // Array of purchase lots
   sparklineData: number[];
   color: string;
+
+  // Added via batch extended quotes
+  fiftyTwoWeekLow?: number;
+  nextEarningsDate?: keyof any; // using any to bypass strict type, it's a number timestamp from yahoo but we treat it loosely in React
 }
 
 interface PortfolioContextType {
@@ -215,6 +219,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           extendedChange,
           extendedChangePercent,
           marketStatus,
+          fiftyTwoWeekLow: extendedQuote?.fiftyTwoWeekLow,
+          nextEarningsDate: extendedQuote?.earningsTimestamp,
           sparklineData: Array(10).fill(currentPrice), // placeholder until background fetch
           color: change >= 0 ? '#10B981' : '#EF4444',
         };
@@ -373,6 +379,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             extendedChangePercent: inExtendedHours ? changePercent : undefined,
             marketStatus,
 
+            fiftyTwoWeekLow: pos.fiftyTwoWeekLow, // retain
+            nextEarningsDate: pos.nextEarningsDate, // retain
+
             color: change >= 0 ? '#10B981' : '#EF4444',
           };
         }
@@ -440,6 +449,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         extendedChangePercent: inExtendedHours ? changePercent : undefined,
         marketStatus,
 
+        fiftyTwoWeekLow: undefined, // Will be fetched on next refresh or WS doesn't provide
+        nextEarningsDate: undefined,
+
         sparklineData: Array.from({ length: 8 }, () => currentPrice),
         color: change >= 0 ? '#10B981' : '#EF4444',
       };
@@ -483,6 +495,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
               extendedChange: pos.extendedChange,
               extendedChangePercent: pos.extendedChangePercent,
               marketStatus: pos.marketStatus,
+              fiftyTwoWeekLow: pos.fiftyTwoWeekLow,
+              nextEarningsDate: pos.nextEarningsDate,
               sparklineData: pos.sparklineData,
               color: pos.color
             }

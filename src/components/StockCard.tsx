@@ -58,6 +58,17 @@ export function StockCard({ stock, className }: StockCardProps) {
   const totalReturnPercent = avgPrice > 0 ? ((stock.price - avgPrice) / avgPrice) * 100 : 0;
   const istotalReturnPositive = totalReturn >= 0;
 
+  // Visual Alert Logic
+  const isNear52wLow = stock.fiftyTwoWeekLow && (stock.price <= stock.fiftyTwoWeekLow * 1.05);
+
+  let formattedEarnings = null;
+  if (stock.nextEarningsDate) {
+    // Yahoo mostly gives seconds, but occasionally milliseconds depending on the endpoint 
+    const ts = stock.nextEarningsDate as number;
+    const date = new Date(ts > 1e11 ? ts : ts * 1000);
+    formattedEarnings = date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+  }
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (stock._id) {
@@ -147,17 +158,17 @@ export function StockCard({ stock, className }: StockCardProps) {
     <>
       <div
         data-ticker={stock.symbol}
-        className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 p-4 pr-12 hover:border-white/20 hover:from-white/15 hover:to-white/10 transition-all cursor-pointer ${className || ''}`}
+        className={`group relative overflow-hidden rounded-2xl bg-linear-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 p-4 pr-12 hover:border-white/20 hover:from-white/15 hover:to-white/10 transition-all cursor-pointer ${className || ''} ${isNear52wLow ? 'ring-1 ring-inset ring-amber-500/40' : ''}`}
       >
         {/* Glassmorphism overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent pointer-events-none" />
 
         <div className="relative z-10">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               {/* Stock Logo */}
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/20 to-white/10 flex items-center justify-center font-bold text-sm text-white border border-white/20">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-white/20 to-white/10 flex items-center justify-center font-bold text-sm text-white border border-white/20">
                 {stock.symbol.slice(0, 2)}
               </div>
               <div>
@@ -277,6 +288,23 @@ export function StockCard({ stock, className }: StockCardProps) {
               </LineChart>
             </ResponsiveContainer>
           </div>
+
+          {/* Special Insights Footer */}
+          {(formattedEarnings || isNear52wLow) && (
+            <div className="flex items-center gap-3 pt-3 mt-3 border-t border-white/5 text-[11px] font-medium">
+              {isNear52wLow && (
+                <div className="flex items-center gap-1 text-amber-500/90 bg-amber-500/10 px-2 py-0.5 rounded-md">
+                  <TrendingDown className="w-3 h-3" />
+                  Buying Opportunity (Near 52W Low)
+                </div>
+              )}
+              {formattedEarnings && (
+                <div className="text-white/40">
+                  Next Earnings: <span className="text-white/70">{formattedEarnings}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

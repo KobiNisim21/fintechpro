@@ -246,6 +246,8 @@ export async function getExtendedQuote(symbol) {
             postMarketChangePercent: quote.postMarketChangePercent || null,
             marketState: quote.marketState,
             exchangeTimezoneName: quote.exchangeTimezoneName,
+            fiftyTwoWeekLow: quote.fiftyTwoWeekLow || null,
+            earningsTimestamp: quote.earningsTimestamp || null,
         };
 
         setCache(cacheKey, result);
@@ -310,6 +312,8 @@ export async function getBatchExtendedQuotes(symbols) {
                     postMarketChangePercent: quote.postMarketChangePercent || null,
                     marketState: quote.marketState,
                     exchangeTimezoneName: quote.exchangeTimezoneName,
+                    fiftyTwoWeekLow: quote.fiftyTwoWeekLow || null,
+                    earningsTimestamp: quote.earningsTimestamp || null,
                 };
 
                 // Cache each result individually
