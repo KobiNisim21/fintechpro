@@ -207,6 +207,17 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
         fetchAnalytics();
     }, [isActive, positions.length, fetchAnalytics]);
 
+    // ── Safety-net: retry analytics if still null after positions loaded ──
+    useEffect(() => {
+        if (!isActive || positions.length === 0 || analytics || analyticsLoading) return;
+        // Positions are loaded but analytics is still null — force a retry after a short delay
+        const timer = setTimeout(() => {
+            console.log('Safety-net: forcing analytics re-fetch (data was null)');
+            fetchAnalytics(true);
+        }, 2000);
+        return () => clearTimeout(timer);
+    }, [isActive, positions.length, analytics, analyticsLoading, fetchAnalytics]);
+
     // ── Slice benchmark data by range (no re-fetch) ──
     // MOVED TO PortfolioBenchmarkChart COMPONENT
 
