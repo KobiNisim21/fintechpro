@@ -439,31 +439,65 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     </CardContent>
                 </Card>
 
-                {/* ── Correlation Matrix Heatmap ── */}
-                <CorrelationMatrix
-                    data={analytics?.correlationMatrix ?? null}
-                    isLoading={analyticsLoading || !analytics}
-                />
+                {/* ── Sector Distribution (Treemap) ── */}
+                {loading ? (
+                    <SkeletonChart />
+                ) : (
+                    <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg h-full flex flex-col">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-violet-400" />
+                                Sector Distribution
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 min-h-[340px]">
+                            {sectorData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <Treemap
+                                        data={sectorData}
+                                        dataKey="value"
+                                        aspectRatio={isMobile ? 1 / 2 : 4 / 3}
+                                        stroke="none"
+                                        content={<BentoTreemapContent colors={COLORS} />}
+                                    >
+                                        <RechartsTooltip content={<CustomTooltip />} />
+                                    </Treemap>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-zinc-500">
+                                    No sector data available
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
             </motion.div>
 
-            {/* ── Top Row: Allocation + Sectors ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {loading ? (
-                    <>
+            {/* ══ Correlation Matrix + Portfolio Allocation Row ══ */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+                {/* ── Correlation Matrix (Span 8) ── */}
+                <div className="lg:col-span-8 w-full h-full">
+                    <div className="h-full w-full [&>div]:h-full flex flex-col">
+                        <CorrelationMatrix
+                            data={analytics?.correlationMatrix ?? null}
+                            isLoading={analyticsLoading || !analytics}
+                        />
+                    </div>
+                </div>
+
+                {/* ── Portfolio Allocation (Span 4) ── */}
+                <div className="lg:col-span-4 w-full h-full">
+                    {loading ? (
                         <SkeletonChart />
-                        <SkeletonChart />
-                    </>
-                ) : (
-                    <>
-                        {/* Pie Chart */}
-                        <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg">
+                    ) : (
+                        <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg w-full h-full flex flex-col">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
                                     <PieChartIcon className="w-5 h-5 text-cyan-400" />
                                     Portfolio Allocation
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="h-[340px]">
+                            <CardContent className="flex-1 min-h-[340px]">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie data={distributionData} cx="50%" cy="50%"
@@ -483,37 +517,8 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                 </ResponsiveContainer>
                             </CardContent>
                         </Card>
-
-                        {/* Treemap – Bento Box */}
-                        <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
-                                    <Activity className="w-5 h-5 text-violet-400" />
-                                    Sector Distribution
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="h-[340px]">
-                                {sectorData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <Treemap
-                                            data={sectorData}
-                                            dataKey="value"
-                                            aspectRatio={isMobile ? 1 / 2 : 4 / 3}
-                                            stroke="none"
-                                            content={<BentoTreemapContent colors={COLORS} />}
-                                        >
-                                            <RechartsTooltip content={<CustomTooltip />} />
-                                        </Treemap>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-zinc-500">
-                                        No sector data available
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* ── Analyst Recommendations ── */}
