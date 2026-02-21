@@ -66,19 +66,33 @@ export function StockCard({ stock, className }: StockCardProps) {
 
   if (stock.nextEarningsDate) {
     try {
-      // Handle both seconds (10 digits) and milliseconds (13+ digits)
-      const ts = Number(stock.nextEarningsDate);
-      if (!isNaN(ts)) {
-        const date = new Date(ts > 1e11 ? ts : ts * 1000);
+      let parsedDate: Date;
+      const rawVal = stock.nextEarningsDate as string | number;
 
-        // Ensure date is valid
-        if (!isNaN(date.getTime())) {
-          console.log(`[EARNINGS] ${stock.symbol} TS: ${ts}, Parsed Date: ${date.toISOString()}`);
+      if (typeof rawVal === 'number' || (typeof rawVal === 'string' && /^\d+$/.test(rawVal))) {
+        // Unix Conversion: If the timestamp is in seconds (10 digits), multiply by 1000
+        const ts = Number(rawVal);
+        parsedDate = new Date(ts > 1e11 ? ts : ts * 1000);
+      } else {
+        // Handle ISO String directly
+        parsedDate = new Date(rawVal);
+      }
 
-          // User requested: "If a date exists and is valid, show it."
-          // We bypass aggressive 'compareDate > today' blocking here to ensure 
-          // timezone shifts don't hide 'today/tomorrow' earnings.
-          formattedEarnings = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      // Validation
+      if (parsedDate instanceof Date && !isNaN(parsedDate.getTime())) {
+        console.log(`[EARNINGS] ${stock.symbol} Parsed Date: ${parsedDate.toISOString()}`);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Start of today
+
+        const compareDate = new Date(parsedDate);
+        compareDate.setHours(0, 0, 0, 0);
+
+        // Strict Hiding: null, invalid, or in the past
+        if (compareDate >= today) {
+          formattedEarnings = parsedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        } else {
+          console.log(`[EARNINGS] ${stock.symbol} date ${parsedDate.toISOString()} is strictly in the past, hiding.`);
         }
       }
     } catch (e) {
