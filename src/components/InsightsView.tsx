@@ -474,51 +474,45 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
             </motion.div>
 
             {/* ══ Portfolio Allocation + Correlation Matrix Row ══ */}
-            <div className="flex flex-col lg:flex-row gap-6 items-stretch w-full mt-6">
-                {/* ── Portfolio Allocation (Left - Small) ── */}
-                <div className="flex-[1] min-w-0 h-full flex flex-col justify-center">
-                    {loading ? (
-                        <SkeletonChart />
-                    ) : (
-                        <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg w-full h-full flex flex-col">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
-                                    <PieChartIcon className="w-5 h-5 text-cyan-400" />
-                                    Portfolio Allocation
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="flex-1 min-h-[340px] flex items-center justify-center p-0">
-                                <ResponsiveContainer width="100%" height="100%" minHeight={300}>
-                                    <PieChart>
-                                        <Pie data={distributionData} cx="50%" cy="50%"
-                                            innerRadius={isMobile ? 40 : 55}
-                                            outerRadius={isMobile ? 70 : 95}
-                                            paddingAngle={2}
-                                            dataKey="value" stroke="none" minAngle={3}
-                                            label={renderCustomLabel} labelLine={false}
-                                            isAnimationActive={true} animationDuration={800}
-                                        >
-                                            {distributionData.map((_, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <RechartsTooltip content={<CustomTooltip />} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* ── Portfolio Allocation (Left - Small, col-span-1) ── */}
+                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg lg:col-span-1">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                            <PieChartIcon className="w-5 h-5 text-cyan-400" />
+                            Portfolio Allocation
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[280px]">
+                        {loading ? (
+                            <div className="w-full h-full bg-white/5 animate-pulse rounded-xl" />
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={distributionData} cx="50%" cy="50%"
+                                        innerRadius={isMobile ? 40 : 55}
+                                        outerRadius={isMobile ? 70 : 95}
+                                        paddingAngle={2}
+                                        dataKey="value" stroke="none" minAngle={3}
+                                        label={renderCustomLabel} labelLine={false}
+                                        isAnimationActive={true} animationDuration={800}
+                                    >
+                                        {distributionData.map((_, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <RechartsTooltip content={<CustomTooltip />} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        )}
+                    </CardContent>
+                </Card>
 
-                {/* ── Correlation Matrix (Right - Wide) ── */}
-                <div className="flex-[2.5] min-w-0 flex flex-col">
-                    <div className="h-full flex flex-col">
-                        <CorrelationMatrix
-                            data={analytics?.correlationMatrix ?? null}
-                            isLoading={analyticsLoading || !analytics}
-                        />
-                    </div>
-                </div>
+                {/* ── Correlation Matrix (Right - Wide, col-span-2 is baked into the component) ── */}
+                <CorrelationMatrix
+                    data={analytics?.correlationMatrix ?? null}
+                    isLoading={analyticsLoading || !analytics}
+                />
             </div>
 
             {/* ── Analyst Recommendations ── */}
