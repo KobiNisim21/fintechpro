@@ -47,7 +47,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                 {!content ? (
                     <div className="w-full h-[280px] bg-white/5 rounded-xl animate-pulse" />
                 ) : (
-                    <div className="overflow-x-auto overflow-y-hidden w-full py-2 pb-8 max-h-[350px]">
+                    <div className="overflow-x-auto overflow-y-hidden w-full py-2 pb-12 max-h-[380px]">
                         <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                             <div style={{ display: 'inline-block' }}>
                                 {/* Header row */}
