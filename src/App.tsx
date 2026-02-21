@@ -10,11 +10,13 @@ import { LiveAlertsProvider } from './context/LiveAlertsContext';
 import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
 
-import { useState } from 'react';
+import { useState, startTransition, lazy, Suspense } from 'react';
 import { LayoutGrid, PieChart, Eye } from 'lucide-react';
 import { AddPositionDialog } from './components/AddPositionDialog';
-import { InsightsView } from './components/InsightsView';
-import { WatchlistView } from './components/WatchlistView';
+
+// Lazy-load heavy views to avoid blocking the main thread on tab switch
+const InsightsView = lazy(() => import('./components/InsightsView').then(m => ({ default: m.InsightsView })));
+const WatchlistView = lazy(() => import('./components/WatchlistView').then(m => ({ default: m.WatchlistView })));
 
 function Dashboard() {
   const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist'>('holdings');
@@ -53,7 +55,7 @@ function Dashboard() {
               {/* View Toggle */}
               <div className="flex p-1 bg-white/5 backdrop-blur-md rounded-lg border border-white/10">
                 <button
-                  onClick={() => setViewMode('holdings')}
+                  onClick={() => startTransition(() => setViewMode('holdings'))}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'holdings'
                     ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
@@ -63,7 +65,7 @@ function Dashboard() {
                   <span className="hidden sm:inline">Holdings</span>
                 </button>
                 <button
-                  onClick={() => setViewMode('insights')}
+                  onClick={() => startTransition(() => setViewMode('insights'))}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'insights'
                     ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
@@ -73,7 +75,7 @@ function Dashboard() {
                   <span className="hidden sm:inline">Insights</span>
                 </button>
                 <button
-                  onClick={() => setViewMode('watchlist')}
+                  onClick={() => startTransition(() => setViewMode('watchlist'))}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'watchlist'
                     ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
@@ -91,13 +93,19 @@ function Dashboard() {
             </div>
           </div>
 
-          {viewMode === 'holdings' ? (
-            <StockGrid />
-          ) : viewMode === 'insights' ? (
-            <InsightsView />
-          ) : (
-            <WatchlistView />
-          )}
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+            </div>
+          }>
+            {viewMode === 'holdings' ? (
+              <StockGrid />
+            ) : viewMode === 'insights' ? (
+              <InsightsView />
+            ) : (
+              <WatchlistView />
+            )}
+          </Suspense>
         </section>
 
         {/* Statistics & Analytics (Always visible or maybe hide in insights mode?) */}
