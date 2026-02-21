@@ -1,12 +1,12 @@
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { usePortfolio } from '@/context/PortfolioContext';
 import { stocksAPI } from '@/api/stocks';
 
 export function PortfolioHero() {
   const [pulse, setPulse] = useState(true);
   const [usdToIls, setUsdToIls] = useState(3.6); // Default fallback
-  const { positions } = usePortfolio();
+  const { positions, portfolioAnalytics } = usePortfolio();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -55,6 +55,28 @@ export function PortfolioHero() {
 
   const isDailyPositive = dailyChangeUSD >= 0;
   const isTotalPositive = totalGainUSD >= 0;
+
+  // ── Compute Weekly / Monthly / Yearly returns from benchmarkData ──
+  const periodReturns = useMemo(() => {
+    const bd = portfolioAnalytics?.benchmarkData;
+    if (!bd || bd.length < 2) return null;
+
+    const latest = bd[bd.length - 1].portfolio; // latest TWR cumulative %
+
+    const getReturn = (daysAgo: number) => {
+      const idx = Math.max(0, bd.length - 1 - daysAgo);
+      const past = bd[idx].portfolio;
+      // Convert cumulative values: relative return = ((1+latest/100)/(1+past/100)-1)*100
+      const rel = ((1 + latest / 100) / (1 + past / 100) - 1) * 100;
+      return rel;
+    };
+
+    return {
+      weekly: getReturn(5),   // ~5 trading days
+      monthly: getReturn(22), // ~22 trading days
+      yearly: getReturn(252), // ~252 trading days (or full history if less)
+    };
+  }, [portfolioAnalytics?.benchmarkData]);
 
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500/20 via-[#1a1a1f]/80 to-cyan-500/20 backdrop-blur-2xl border border-white/10 p-6 md:p-8">
@@ -117,16 +139,45 @@ export function PortfolioHero() {
             </div>
           </div>
 
-          {/* Activity Indicator & Exchange Rate */}
-          <div className="flex flex-col items-end gap-3">
-            <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
-              <Activity className="w-8 h-8 text-cyan-400" />
+          {/* ── Right Column: Returns + Activity/Exchange ── */}
+          <div className="flex flex-col items-end gap-4">
+            {/* Activity Indicator & Exchange Rate */}
+            <div className="flex items-center gap-3">
+              <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
+                <Activity className="w-8 h-8 text-cyan-400" />
+              </div>
+              <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 min-w-[80px]">
+                <div className="text-[10px] text-white/40 uppercase tracking-wider mb-0.5">USD/ILS</div>
+                <div className="text-base font-bold text-white/90">{usdToIls.toFixed(4)}</div>
+              </div>
             </div>
-            {/* Exchange Rate Display */}
-            <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 min-w-[80px]">
-              <div className="text-[10px] text-white/40 uppercase tracking-wider mb-0.5">USD/ILS</div>
-              <div className="text-base font-bold text-white/90">{usdToIls.toFixed(4)}</div>
-            </div>
+
+            {/* ── Period Returns (Weekly / Monthly / Yearly) ── */}
+            {periodReturns && (
+              <div className="flex flex-row gap-3">
+                {([
+                  { label: '1W', value: periodReturns.weekly },
+                  { label: '1M', value: periodReturns.monthly },
+                  { label: '1Y', value: periodReturns.yearly },
+                ] as const).map(({ label, value }) => {
+                  const isPositive = value >= 0;
+                  return (
+                    <div
+                      key={label}
+                      className={`flex flex-col items-center px-4 py-3 rounded-2xl border backdrop-blur-md min-w-[80px] ${isPositive
+                        ? 'bg-emerald-500/10 border-emerald-400/20'
+                        : 'bg-rose-500/10 border-rose-400/20'
+                        }`}
+                    >
+                      <span className="text-[10px] text-white/40 uppercase tracking-wider mb-1">{label} Return</span>
+                      <span className={`text-lg font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {isPositive ? '+' : ''}{value.toFixed(1)}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
