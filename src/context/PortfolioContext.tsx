@@ -261,10 +261,21 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
       const data = await stocksAPI.getPortfolioAnalytics(symbols, quantities, prices);
       setPortfolioAnalytics(data);
-      setLastAnalyticsFetch(Date.now());
+
+      // Detect if the backend returned default/placeholder values
+      const isDefault = data?.healthScore === 50 &&
+        data?.components?.diversification === 50 &&
+        data?.components?.volatility === 50 &&
+        data?.components?.sentiment === 50;
+
+      if (isDefault) {
+        console.warn('Analytics returned defaults — not caching timestamp (will allow retry)');
+        // Don't update lastAnalyticsFetch so the throttle allows a retry
+      } else {
+        setLastAnalyticsFetch(Date.now());
+      }
     } catch (err: any) {
       console.error('Failed to fetch analytics:', err);
-      // Don't set error state globally as this is secondary data
     } finally {
       setAnalyticsLoading(false);
     }

@@ -207,14 +207,24 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
         fetchAnalytics();
     }, [isActive, positions.length, fetchAnalytics]);
 
-    // ── Safety-net: retry analytics if still null after positions loaded ──
+    // ── Safety-net: retry analytics if still null or defaults after positions loaded ──
     useEffect(() => {
-        if (!isActive || positions.length === 0 || analytics || analyticsLoading) return;
-        // Positions are loaded but analytics is still null — force a retry after a short delay
+        if (!isActive || positions.length === 0 || analyticsLoading) return;
+
+        // Detect if analytics is missing OR contains default/placeholder values
+        const isDefault = analytics &&
+            analytics.healthScore === 50 &&
+            analytics.components?.diversification === 50 &&
+            analytics.components?.volatility === 50 &&
+            analytics.components?.sentiment === 50;
+
+        if (analytics && !isDefault) return; // Real data exists, no retry needed
+
+        // Positions are loaded but analytics is null or defaults — force a retry
         const timer = setTimeout(() => {
-            console.log('Safety-net: forcing analytics re-fetch (data was null)');
+            console.log('Safety-net: forcing analytics re-fetch (data was null or defaults)');
             fetchAnalytics(true);
-        }, 2000);
+        }, 2500);
         return () => clearTimeout(timer);
     }, [isActive, positions.length, analytics, analyticsLoading, fetchAnalytics]);
 
