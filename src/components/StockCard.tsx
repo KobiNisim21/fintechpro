@@ -63,10 +63,25 @@ export function StockCard({ stock, className }: StockCardProps) {
 
   let formattedEarnings = null;
   if (stock.nextEarningsDate) {
-    // Yahoo mostly gives seconds, but occasionally milliseconds depending on the endpoint 
-    const ts = stock.nextEarningsDate as number;
-    const date = new Date(ts > 1e11 ? ts : ts * 1000);
-    formattedEarnings = date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+    try {
+      // Handle both seconds (10 digits) and milliseconds (13 digits)
+      const ts = Number(stock.nextEarningsDate);
+      if (!isNaN(ts)) {
+        const date = new Date(ts > 1e11 ? ts : ts * 1000);
+
+        // Ensure date is valid and strictly in the future (or today)
+        if (!isNaN(date.getTime())) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          if (date >= today) {
+            formattedEarnings = date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Error parsing earnings date:", stock.nextEarningsDate);
+    }
   }
 
   const handleDelete = (e: React.MouseEvent) => {
