@@ -474,9 +474,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
             </motion.div>
 
             {/* ══ Correlation Matrix + Portfolio Allocation Row ══ */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6 items-stretch w-full">
-                {/* ── Correlation Matrix (Span 8) ── */}
-                <div className="lg:col-span-8 flex flex-col">
+            <div className="flex flex-col lg:flex-row gap-6 w-full items-stretch mt-6">
+                {/* ── Correlation Matrix (66% Width) ── */}
+                <div className="flex-[2] min-w-0 flex flex-col">
                     <div className="h-full flex flex-col">
                         <CorrelationMatrix
                             data={analytics?.correlationMatrix ?? null}
@@ -485,8 +485,8 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     </div>
                 </div>
 
-                {/* ── Portfolio Allocation (Span 4) ── */}
-                <div className="lg:col-span-4 flex flex-col justify-center">
+                {/* ── Portfolio Allocation (33% Width) ── */}
+                <div className="flex-[1] min-w-0 h-full flex flex-col justify-center">
                     {loading ? (
                         <SkeletonChart />
                     ) : (

@@ -37,7 +37,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
 
         return (
             <div className="overflow-x-auto overflow-y-hidden w-full flex justify-center py-2">
-                <div className="inline-block">
+                <div className="inline-block mx-auto">
                     {/* Header row with symbols */}
                     <div className="flex" style={{ paddingLeft: labelSize }}>
                         {corrSymbols.map(sym => (
