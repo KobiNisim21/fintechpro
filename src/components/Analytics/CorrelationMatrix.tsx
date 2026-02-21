@@ -83,7 +83,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
     }, [data, isLoading]);
 
     return (
-        <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg relative overflow-hidden">
+        <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg relative overflow-hidden h-full flex flex-col">
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-violet-400" />
@@ -91,7 +91,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                     <span className="text-[10px] text-white/30 ml-auto">30-day Pearson</span>
                 </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex justify-center items-center">
                 {content}
             </CardContent>
             {/* Watermark */}
