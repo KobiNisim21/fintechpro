@@ -36,47 +36,49 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
         };
 
         return (
-            <div className="overflow-x-auto overflow-y-hidden w-full flex justify-center py-2">
-                <div className="inline-block mx-auto">
-                    {/* Header row with symbols */}
-                    <div className="flex" style={{ paddingLeft: labelSize }}>
-                        {corrSymbols.map(sym => (
-                            <div key={sym} style={{ width: cellSize, minWidth: cellSize }}
-                                className="text-[9px] text-white/40 text-center font-mono truncate">
-                                {sym}
-                            </div>
-                        ))}
-                    </div>
-                    {/* Matrix rows */}
-                    {matrix.map((row, i) => (
-                        <div key={i} className="flex items-center">
-                            <div style={{ width: labelSize, minWidth: labelSize }}
-                                className="text-[9px] text-white/40 font-mono truncate pr-1 text-right">
-                                {corrSymbols[i]}
-                            </div>
-                            {row.map((val, j) => (
-                                <div
-                                    key={j}
-                                    className="relative group cursor-pointer transition-all duration-200 hover:scale-110 hover:z-10 rounded-sm"
-                                    style={{
-                                        width: cellSize - 2, height: cellSize - 2, margin: 1,
-                                        background: getColor(val),
-                                    }}
-                                >
-                                    {/* Value inside cell (only if big enough) */}
-                                    {cellSize >= 36 && val !== null && (
-                                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono text-white/60">
-                                            {val.toFixed(2)}
-                                        </span>
-                                    )}
-                                    {/* Tooltip */}
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 text-white text-xs font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
-                                        {corrSymbols[i]} vs {corrSymbols[j]}: {val !== null ? val.toFixed(2) : 'N/A'}
-                                    </div>
+            <div className="overflow-x-auto overflow-y-hidden w-full py-2">
+                <div className="w-full flex justify-center">
+                    <div className="inline-block">
+                        {/* Header row with symbols */}
+                        <div className="flex" style={{ paddingLeft: labelSize }}>
+                            {corrSymbols.map(sym => (
+                                <div key={sym} style={{ width: cellSize, minWidth: cellSize }}
+                                    className="text-[9px] text-white/40 text-center font-mono truncate">
+                                    {sym}
                                 </div>
                             ))}
                         </div>
-                    ))}
+                        {/* Matrix rows */}
+                        {matrix.map((row, i) => (
+                            <div key={i} className="flex items-center">
+                                <div style={{ width: labelSize, minWidth: labelSize }}
+                                    className="text-[9px] text-white/40 font-mono truncate pr-1 text-right">
+                                    {corrSymbols[i]}
+                                </div>
+                                {row.map((val, j) => (
+                                    <div
+                                        key={j}
+                                        className="relative group cursor-pointer transition-all duration-200 hover:scale-110 hover:z-10 rounded-sm"
+                                        style={{
+                                            width: cellSize - 2, height: cellSize - 2, margin: 1,
+                                            background: getColor(val),
+                                        }}
+                                    >
+                                        {/* Value inside cell (only if big enough) */}
+                                        {cellSize >= 36 && val !== null && (
+                                            <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono text-white/60">
+                                                {val.toFixed(2)}
+                                            </span>
+                                        )}
+                                        {/* Tooltip */}
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 text-white text-xs font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                                            {corrSymbols[i]} vs {corrSymbols[j]}: {val !== null ? val.toFixed(2) : 'N/A'}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
