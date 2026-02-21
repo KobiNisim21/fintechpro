@@ -10,13 +10,11 @@ import { LiveAlertsProvider } from './context/LiveAlertsContext';
 import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
 
-import { useState, startTransition, lazy, Suspense } from 'react';
+import { useState, startTransition } from 'react';
 import { LayoutGrid, PieChart, Eye } from 'lucide-react';
 import { AddPositionDialog } from './components/AddPositionDialog';
-
-// Lazy-load heavy views to avoid blocking the main thread on tab switch
-const InsightsView = lazy(() => import('./components/InsightsView').then(m => ({ default: m.InsightsView })));
-const WatchlistView = lazy(() => import('./components/WatchlistView').then(m => ({ default: m.WatchlistView })));
+import { InsightsView } from './components/InsightsView';
+import { WatchlistView } from './components/WatchlistView';
 
 function Dashboard() {
   const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist'>('holdings');
@@ -93,19 +91,13 @@ function Dashboard() {
             </div>
           </div>
 
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-            </div>
-          }>
-            {viewMode === 'holdings' ? (
-              <StockGrid />
-            ) : viewMode === 'insights' ? (
-              <InsightsView />
-            ) : (
-              <WatchlistView />
-            )}
-          </Suspense>
+          {viewMode === 'holdings' ? (
+            <StockGrid />
+          ) : viewMode === 'insights' ? (
+            <InsightsView />
+          ) : (
+            <WatchlistView />
+          )}
         </section>
 
         {/* Statistics & Analytics (Always visible or maybe hide in insights mode?) */}

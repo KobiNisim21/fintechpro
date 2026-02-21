@@ -296,6 +296,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setLastAnalyticsFetch(0);
   }, [positions.length]);
 
+  // Eagerly fetch analytics as soon as positions are loaded
+  // This ensures hero card returns (1W/1M/1Y) and health score are ready
+  useEffect(() => {
+    if (positions.length === 0) return;
+    fetchAnalytics();
+  }, [positions.length, fetchAnalytics]);
+
   // Background sparkline enrichment — runs AFTER positions are rendered
   useEffect(() => {
     if (positions.length === 0 || !isAuthenticated) return;
