@@ -309,7 +309,7 @@ export function StockCard({ stock, className }: StockCardProps) {
                     type="number"
                     step="any"
                     value={lot.quantity}
-                    onChange={(e) => updateLot(index, 'quantity', Number(e.target.value))}
+                    onChange={(e) => updateLot(index, 'quantity', e.target.value)}
                     className="h-8 text-xs bg-transparent border-none focus-visible:ring-0 p-0 text-right font-medium text-white"
                   />
 
@@ -317,7 +317,7 @@ export function StockCard({ stock, className }: StockCardProps) {
                   <Input
                     type="number"
                     value={lot.price}
-                    onChange={(e) => updateLot(index, 'price', Number(e.target.value))}
+                    onChange={(e) => updateLot(index, 'price', e.target.value)}
                     className="h-8 text-xs bg-transparent border-none focus-visible:ring-0 p-0 text-right text-white/70"
                   />
 
@@ -349,8 +349,8 @@ export function StockCard({ stock, className }: StockCardProps) {
                     <Input
                       type="number"
                       step="any"
-                      value={newLot.quantity || ''}
-                      onChange={(e) => setNewLot({ ...newLot, quantity: Number(e.target.value) })}
+                      value={newLot.quantity !== undefined ? newLot.quantity : ''}
+                      onChange={(e) => setNewLot({ ...newLot, quantity: e.target.value as unknown as number })}
                       className="h-8 text-xs bg-white/5 border-white/10"
                       placeholder="Qty"
                     />
@@ -359,8 +359,9 @@ export function StockCard({ stock, className }: StockCardProps) {
                     <Label className="text-xs text-white/50">Price per Share</Label>
                     <Input
                       type="number"
-                      value={newLot.price || ''}
-                      onChange={(e) => setNewLot({ ...newLot, price: Number(e.target.value) })}
+                      step="any"
+                      value={newLot.price !== undefined ? newLot.price : ''}
+                      onChange={(e) => setNewLot({ ...newLot, price: e.target.value as unknown as number })}
                       className="h-8 text-xs bg-white/5 border-white/10"
                       placeholder="Price"
                     />
