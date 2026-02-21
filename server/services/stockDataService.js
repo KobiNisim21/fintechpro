@@ -33,6 +33,7 @@ const CACHE_DURATIONS = {
     news: 5 * 60 * 1000,      // 5 minutes for news
     marketNews: 5 * 60 * 1000, // 5 minutes for market news
     forex: 6 * 60 * 60 * 1000, // 6 hours for forex rates
+    projectedEarnings: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
 function getCached(key, duration) {
@@ -45,6 +46,41 @@ function getCached(key, duration) {
 
 function setCache(key, data) {
     cache.set(key, { data, timestamp: Date.now() });
+}
+
+// ============================================
+// FUTURE EARNINGS FALLBACK
+// ============================================
+
+/**
+ * Fallback to fetch the NEXT projected earnings date if the standard quote returns a past date.
+ * Cached heavily (7 days) to avoid slowing down batch queries.
+ */
+async function getFutureEarningsDate(symbol) {
+    const cacheKey = `projected_earnings_${symbol}`;
+    const cached = getCached(cacheKey, CACHE_DURATIONS.projectedEarnings);
+    if (cached !== null) return cached === 'none' ? null : cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        try {
+            const qs = await yahooFinance.quoteSummary(symbol, { modules: ['calendarEvents'] });
+            if (qs.calendarEvents && qs.calendarEvents.earnings && qs.calendarEvents.earnings.earningsDate && qs.calendarEvents.earnings.earningsDate.length > 0) {
+                const dateObj = qs.calendarEvents.earnings.earningsDate[0];
+                if (dateObj instanceof Date) {
+                    const ts = Math.floor(dateObj.getTime() / 1000);
+                    // Ensure it's strictly in the future
+                    if (ts > (Date.now() / 1000)) {
+                        setCache(cacheKey, ts);
+                        return ts;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn(`[EARNINGS] Failed future earnings for ${symbol}:`, e.message);
+        }
+        setCache(cacheKey, 'none');
+        return null;
+    });
 }
 
 // ============================================
@@ -250,6 +286,15 @@ export async function getExtendedQuote(symbol) {
             earningsTimestamp: quote.earningsTimestamp || null,
         };
 
+        // Fallback for past earnings
+        const nowSecs = Date.now() / 1000;
+        if (!result.earningsTimestamp || result.earningsTimestamp < nowSecs) {
+            const futureTs = await getFutureEarningsDate(symbol);
+            if (futureTs) {
+                result.earningsTimestamp = futureTs;
+            }
+        }
+
         setCache(cacheKey, result);
         return result;
     });
@@ -321,7 +366,20 @@ export async function getBatchExtendedQuotes(symbols) {
                 batchData[quote.symbol] = result;
             }
 
-            console.log(`ג… Batch extended quotes: ${Object.keys(batchData).length} fetched, ${symbols.length - uncachedSymbols.length} from cache`);
+            // Post-process: Fallback for past earnings in parallel
+            const nowSecs = Date.now() / 1000;
+            await Promise.all(Object.keys(batchData).map(async (sym) => {
+                const b = batchData[sym];
+                if (!b.earningsTimestamp || b.earningsTimestamp < nowSecs) {
+                    const futureTs = await getFutureEarningsDate(sym);
+                    if (futureTs) {
+                        b.earningsTimestamp = futureTs;
+                        setCache(`extended_quote_${sym}`, b);
+                    }
+                }
+            }));
+
+            console.log(`✅ Batch extended quotes: ${Object.keys(batchData).length} fetched, ${symbols.length - uncachedSymbols.length} from cache`);
             return batchData;
         });
 

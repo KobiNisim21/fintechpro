@@ -64,18 +64,25 @@ export function StockCard({ stock, className }: StockCardProps) {
   let formattedEarnings = null;
   if (stock.nextEarningsDate) {
     try {
-      // Handle both seconds (10 digits) and milliseconds (13 digits)
+      // Handle both seconds (10 digits) and milliseconds (13+ digits)
       const ts = Number(stock.nextEarningsDate);
       if (!isNaN(ts)) {
         const date = new Date(ts > 1e11 ? ts : ts * 1000);
 
-        // Ensure date is valid and strictly in the future (or today)
+        // Ensure date is valid
         if (!isNaN(date.getTime())) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
+          console.log(`[EARNINGS] ${stock.symbol} TS: ${ts}, Parsed: ${date.toISOString()}`);
 
-          if (date >= today) {
-            formattedEarnings = date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Start of today
+
+          const compareDate = new Date(date);
+          compareDate.setHours(0, 0, 0, 0);
+
+          if (compareDate >= today) {
+            formattedEarnings = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          } else {
+            console.log(`[EARNINGS] ${stock.symbol} date ${date.toISOString()} is strictly in the past, hiding.`);
           }
         }
       }
