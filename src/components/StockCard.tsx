@@ -62,6 +62,8 @@ export function StockCard({ stock, className }: StockCardProps) {
   const isNear52wLow = stock.fiftyTwoWeekLow && (stock.price <= stock.fiftyTwoWeekLow * 1.05);
 
   let formattedEarnings = null;
+  console.log(`[EARNINGS] Card rendered for ${stock.symbol}. Raw nextEarningsDate:`, stock.nextEarningsDate);
+
   if (stock.nextEarningsDate) {
     try {
       // Handle both seconds (10 digits) and milliseconds (13+ digits)
@@ -71,19 +73,12 @@ export function StockCard({ stock, className }: StockCardProps) {
 
         // Ensure date is valid
         if (!isNaN(date.getTime())) {
-          console.log(`[EARNINGS] ${stock.symbol} TS: ${ts}, Parsed: ${date.toISOString()}`);
+          console.log(`[EARNINGS] ${stock.symbol} TS: ${ts}, Parsed Date: ${date.toISOString()}`);
 
-          const today = new Date();
-          today.setHours(0, 0, 0, 0); // Start of today
-
-          const compareDate = new Date(date);
-          compareDate.setHours(0, 0, 0, 0);
-
-          if (compareDate >= today) {
-            formattedEarnings = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          } else {
-            console.log(`[EARNINGS] ${stock.symbol} date ${date.toISOString()} is strictly in the past, hiding.`);
-          }
+          // User requested: "If a date exists and is valid, show it."
+          // We bypass aggressive 'compareDate > today' blocking here to ensure 
+          // timezone shifts don't hide 'today/tomorrow' earnings.
+          formattedEarnings = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
       }
     } catch (e) {

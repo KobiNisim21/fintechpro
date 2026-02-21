@@ -57,7 +57,8 @@ function setCache(key, data) {
  * Cached heavily (7 days) to avoid slowing down batch queries.
  */
 async function getFutureEarningsDate(symbol) {
-    const cacheKey = `projected_earnings_${symbol}`;
+    // Busting cache using v2 key to clear out any stale 'none' entries from earlier bugs
+    const cacheKey = `projected_earnings_v2_${symbol}`;
     const cached = getCached(cacheKey, CACHE_DURATIONS.projectedEarnings);
     if (cached !== null) return cached === 'none' ? null : cached;
 
