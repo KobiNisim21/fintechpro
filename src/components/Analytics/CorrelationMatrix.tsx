@@ -17,8 +17,8 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
         if (isLoading || !data) return null;
 
         const { symbols: corrSymbols, matrix } = data;
-        const cellSize = corrSymbols.length <= 5 ? 48 : corrSymbols.length <= 8 ? 36 : 28;
-        const labelSize = corrSymbols.length <= 5 ? 40 : corrSymbols.length <= 8 ? 32 : 24;
+        const cellSize = corrSymbols.length <= 5 ? 38 : corrSymbols.length <= 8 ? 28 : 22;
+        const labelSize = corrSymbols.length <= 5 ? 36 : corrSymbols.length <= 8 ? 28 : 22;
 
         const getColor = (val: number | null) => {
             if (val === null) return 'rgba(255,255,255,0.05)';
@@ -35,7 +35,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
     }, [data, isLoading]);
 
     return (
-        <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg lg:col-span-2 relative overflow-hidden h-full">
+        <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg lg:col-span-2 relative overflow-hidden">
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-violet-400" />
@@ -45,9 +45,9 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
             </CardHeader>
             <CardContent>
                 {!content ? (
-                    <div className="w-full aspect-square max-w-[400px] mx-auto bg-white/5 rounded-xl animate-pulse" />
+                    <div className="w-full h-[280px] bg-white/5 rounded-xl animate-pulse" />
                 ) : (
-                    <div className="overflow-x-auto overflow-y-hidden w-full py-2">
+                    <div className="overflow-x-auto overflow-y-hidden w-full py-2 max-h-[350px]">
                         <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                             <div style={{ display: 'inline-block' }}>
                                 {/* Header row */}

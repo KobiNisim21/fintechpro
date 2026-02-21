@@ -483,7 +483,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             Portfolio Allocation
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[280px]">
+                    <CardContent className="h-[280px] flex justify-center items-center">
                         {loading ? (
                             <div className="w-full h-full bg-white/5 animate-pulse rounded-xl" />
                         ) : (
