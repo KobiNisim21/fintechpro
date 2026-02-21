@@ -26,12 +26,12 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
         const days = daysMap[range];
         const sliced = data.slice(Math.max(0, data.length - days));
 
-        // Re-normalise so both start at 0%
+        // Protect absolute portfolio return from inception; normalize SPY to this slice's start
         if (sliced.length === 0) return [];
         const base = sliced[0];
         return sliced.map(d => ({
             date: d.date,
-            portfolio: +(d.portfolio - base.portfolio).toFixed(2),
+            portfolio: +(d.portfolio).toFixed(2), // Keep absolute gain/loss
             spy: +(d.spy - base.spy).toFixed(2),
         }));
     }, [data, range]);

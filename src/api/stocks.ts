@@ -197,6 +197,13 @@ export interface PortfolioAnalytics {
         amount: number;
         estimatedPayout: number;
     }>;
+    pendingPayouts?: Array<{
+        symbol: string;
+        exDate: string;
+        paymentDate: string | null;
+        amount: number;
+        estimatedPayout: number;
+    }>;
     correlationMatrix: {
         symbols: string[];
         matrix: (number | null)[][];

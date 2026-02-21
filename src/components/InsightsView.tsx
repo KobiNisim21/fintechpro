@@ -4,7 +4,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Treemap,
 } from 'recharts';
-import { stocksAPI, RecommendationTrend, PriceTarget, CompanyProfile, PortfolioAnalytics } from '@/api/stocks';
+import { stocksAPI, RecommendationTrend, PriceTarget, CompanyProfile } from '@/api/stocks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown, ShieldCheck, DollarSign, CalendarDays } from 'lucide-react';
@@ -399,6 +399,35 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             <div className="flex flex-col items-center justify-center py-8 text-zinc-500">
                                 <DollarSign className="w-8 h-8 mb-2 opacity-30" />
                                 <p className="text-sm">No upcoming dividends</p>
+                            </div>
+                        )}
+                        {analytics?.pendingPayouts && analytics.pendingPayouts.length > 0 && (
+                            <div className="mt-6 border-t border-white/5 pt-4">
+                                <h4 className="text-xs text-white/50 uppercase tracking-wider mb-3">Pending Payouts (Passed Ex-Date)</h4>
+                                <div className="grid grid-cols-4 gap-2 text-[10px] text-white/40 uppercase tracking-wider pb-2 border-b border-white/5">
+                                    <span>Symbol</span>
+                                    <span>Ex-Date</span>
+                                    <span className="text-right">Pay Date</span>
+                                    <span className="text-right">Payout</span>
+                                </div>
+                                <div className="overflow-hidden opacity-80">
+                                    {analytics.pendingPayouts.map((div, i) => (
+                                        <div key={`pending-${i}`} className="grid grid-cols-4 gap-2 items-center py-2 border-b border-white/5 last:border-0 relative">
+                                            {/* Subtle processing indicator */}
+                                            <div className="absolute left-[-10px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-emerald-500/50 animate-pulse" />
+                                            <span className="text-sm font-semibold text-white pl-2">{div.symbol}</span>
+                                            <span className="text-xs text-white/60">
+                                                {new Date(div.exDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                            </span>
+                                            <span className="text-[10px] text-white/40 text-right leading-tight flex flex-col items-end">
+                                                {div.paymentDate ? new Date(div.paymentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD'}
+                                            </span>
+                                            <span className="text-sm text-emerald-400 text-right font-bold font-mono">
+                                                ${div.estimatedPayout.toFixed(2)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                         {analytics?.lastUpdated && (

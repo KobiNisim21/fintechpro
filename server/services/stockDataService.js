@@ -944,16 +944,12 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             const diversificationScore = Math.max(0, 100 - Math.max(0, maxSectorPct - 30) * 2.5);
 
             // FIX: Guard against "Diversity 0" glitch when data is missing but multiple stocks exist.
-            // If we have >1 stock but diversity is calculated as 0 (implying 100% concentration in "Unknown" or similar failure),
-            // we should probably flag this as incomplete data rather than showing a terrifying score drop.
-            if (symbols.length > 1 && diversificationScore === 0) {
+            if (symbols.length > 0 && diversificationScore === 0) {
                 const missingSectors = symbols.filter((_, i) => !profilesResults[i]?.finnhubIndustry);
                 console.warn(`[Health] Diversity 0 detected despite ${symbols.length} stocks. Missing sectors for: ${missingSectors.length}`);
 
-                // Only throw if we are pretty sure it's a data failure (e.g., >50% missing sectors)
-                if (missingSectors.length > 0) {
-                    throw new Error(`Incomplete sector data causing 0 Diversity`);
-                }
+                // Throw error to prevent caching and updating UI with zero values
+                throw new Error(`Critical data failure: Calculated 0 diversity. Aborting tick to protect UI.`);
             }
 
             // 2. Volatility
@@ -1117,11 +1113,13 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             }
 
             // --- E. Dividends ---
-            const now = new Date();
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Strip time for fair date comparison
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
             const dividends = [];
-            const sixtyDaysFromNow = new Date();
+            const pendingPayouts = [];
+            const sixtyDaysFromNow = new Date(today);
             sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
 
             symbols.forEach((sym, i) => {
@@ -1129,21 +1127,32 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 if (!info || !info.exDate) return;
 
                 const exDate = new Date(info.exDate);
-                const isUpcoming = exDate >= now && exDate <= sixtyDaysFromNow;
-                const isCurrentMonth = exDate.getMonth() === currentMonth && exDate.getFullYear() === currentYear;
-
-                if (!isUpcoming && !isCurrentMonth) return;
+                exDate.setHours(0, 0, 0, 0);
 
                 const quarterlyAmount = (info.dividendRate || 0) / 4;
-                dividends.push({
+                const dividendObj = {
                     symbol: sym,
                     exDate: info.exDate,
                     paymentDate: info.paymentDate || null,
                     amount: quarterlyAmount,
                     estimatedPayout: quarterlyAmount * quantities[i],
-                });
+                };
+
+                const payDate = info.paymentDate ? new Date(info.paymentDate) : null;
+                if (payDate) payDate.setHours(0, 0, 0, 0);
+
+                if (exDate < today) {
+                    // Ex-date has passed. Is it pending payout?
+                    if (!payDate || payDate >= today) {
+                        pendingPayouts.push(dividendObj);
+                    }
+                } else if (exDate <= sixtyDaysFromNow) {
+                    // Upcoming or Today
+                    dividends.push(dividendObj);
+                }
             });
             dividends.sort((a, b) => new Date(a.exDate).getTime() - new Date(b.exDate).getTime());
+            pendingPayouts.sort((a, b) => new Date(a.exDate).getTime() - new Date(b.exDate).getTime());
 
             // --- F. Correlation ---
             function pearson(a, b) {
@@ -1192,6 +1201,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 maxSectorPct: Number(maxSectorPct.toFixed(1)),
                 benchmarkData: filteredBenchmarkData,
                 dividends,
+                pendingPayouts,
                 correlationMatrix,
                 lastUpdated: new Date().toISOString()
             };
@@ -1201,15 +1211,25 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             return finalResult;
 
         } catch (error) {
-            console.error('ג Œ Error in getPortfolioHealthAndBenchmark logic:', error);
-            // Return safe fallback
+            console.error('❌ Error in getPortfolioHealthAndBenchmark logic:', error);
+
+            // Try to return the LAST cached good response instead of 0s
+            // getCached with Infinity duration essentially grabs the stale data
+            const previousGoodData = getCached(cacheKey, Infinity);
+            if (previousGoodData) {
+                console.log('[Health] Falling back to stale cached data instead of sending 0s to UI.');
+                return previousGoodData;
+            }
+
+            // Return safe fallback ONLY if we have absolutely nothing else
             return {
-                healthScore: 0,
-                components: { diversification: 0, volatility: 0, sentiment: 0 },
-                portfolioBeta: 0,
-                maxSectorPct: 0,
+                healthScore: 50,
+                components: { diversification: 50, volatility: 50, sentiment: 50 },
+                portfolioBeta: 1,
+                maxSectorPct: 100,
                 benchmarkData: [],
                 dividends: [],
+                pendingPayouts: [],
                 correlationMatrix: { symbols: [], matrix: [] },
                 error: error.message
             };
