@@ -26,14 +26,24 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
         const days = daysMap[range];
         const sliced = data.slice(Math.max(0, data.length - days));
 
-        // Protect absolute portfolio return from inception; normalize SPY to this slice's start
+        // Calculate relative returns based on the start of this slice window
         if (sliced.length === 0) return [];
-        const base = sliced[0];
-        return sliced.map(d => ({
-            date: d.date,
-            portfolio: +(d.portfolio).toFixed(2), // Keep absolute gain/loss
-            spy: +(d.spy - base.spy).toFixed(2),
-        }));
+
+        // Convert from % display back to absolute multiplier: 71.24% -> 1.7124
+        // Then calculate relative difference, and convert back to %
+        const basePortfolio = 1 + (sliced[0].portfolio / 100);
+        const baseSpy = 1 + (sliced[0].spy / 100);
+
+        return sliced.map(d => {
+            const currentPortfolio = 1 + (d.portfolio / 100);
+            const currentSpy = 1 + (d.spy / 100);
+
+            return {
+                date: d.date,
+                portfolio: +((currentPortfolio / basePortfolio - 1) * 100).toFixed(2),
+                spy: +((currentSpy / baseSpy - 1) * 100).toFixed(2),
+            };
+        });
     }, [data, range]);
 
     return (
