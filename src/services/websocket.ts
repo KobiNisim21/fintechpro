@@ -90,15 +90,25 @@ class FinnhubWebSocketService {
     }
 
     subscribeToSymbol(symbol: string): void {
-        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-            console.warn(`⚠️ Cannot subscribe to ${symbol} - WebSocket not connected`);
-            this.subscribedSymbols.add(symbol);
+        this.subscribedSymbols.add(symbol);
+
+        if (!this.ws) {
+            // Not connected at all, will subscribe when connect() is called
+            return;
+        }
+
+        if (this.ws.readyState === WebSocket.CONNECTING) {
+            // Silently queue it. The onopen handler will process the queue.
+            return;
+        }
+
+        if (this.ws.readyState !== WebSocket.OPEN) {
+            console.warn(`⚠️ WebSocket closed. Will subscribe to ${symbol} upon reconnection.`);
             return;
         }
 
         const message = JSON.stringify({ type: 'subscribe', symbol });
         this.ws.send(message);
-        this.subscribedSymbols.add(symbol);
         console.log(`📡 Subscribed to ${symbol}`);
     }
 
