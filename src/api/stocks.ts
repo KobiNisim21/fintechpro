@@ -81,6 +81,13 @@ export const stocksAPI = {
         });
         return response.data;
     },
+
+    getMarketCalendar: async (symbols: string[]): Promise<MarketCalendarData> => {
+        const response = await apiClient.get('/stocks/market-calendar', {
+            params: { symbols: symbols.join(',') }
+        });
+        return response.data;
+    },
 };
 
 export interface StockQuote {
@@ -209,4 +216,34 @@ export interface PortfolioAnalytics {
         matrix: (number | null)[][];
     };
     lastUpdated?: string;
+}
+
+export interface EconomicEvent {
+    date: string;
+    time: string;
+    event: string;
+    country: string;
+    importance: number;
+    category: string;
+}
+
+export interface MarketHoliday {
+    date: string;
+    name: string;
+    exchange: string;
+    tradingHour: string;
+}
+
+export interface StockSplit {
+    symbol: string;
+    date: string;
+    fromFactor: number;
+    toFactor: number;
+    description: string;
+}
+
+export interface MarketCalendarData {
+    economicEvents: EconomicEvent[];
+    marketHolidays: MarketHoliday[];
+    stockSplits: StockSplit[];
 }

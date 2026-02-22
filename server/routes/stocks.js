@@ -1,5 +1,5 @@
 import express from 'express';
-import { getQuote, getNews, getMarketNews, getForexRate, getStockCandles, getExtendedQuote, getBatchExtendedQuote, searchStocks, getAnalystRecommendations, getPriceTarget, getCompanyProfile, getBatchInsights, getPortfolioAnalytics } from '../controllers/stocksController.js';
+import { getQuote, getNews, getMarketNews, getForexRate, getStockCandles, getExtendedQuote, getBatchExtendedQuote, searchStocks, getAnalystRecommendations, getPriceTarget, getCompanyProfile, getBatchInsights, getPortfolioAnalytics, getMarketCalendar } from '../controllers/stocksController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -11,6 +11,7 @@ router.use(protect);
 router.get('/batch-extended-quote', getBatchExtendedQuote);
 router.get('/batch-insights', getBatchInsights);
 router.get('/portfolio-analytics', getPortfolioAnalytics);
+router.get('/market-calendar', getMarketCalendar);
 router.get('/market/news', getMarketNews);
 router.get('/forex/usd-ils', getForexRate);
 router.get('/search', searchStocks); // Add Search Route

@@ -9,7 +9,13 @@
 
 import fetch from 'node-fetch';
 import YahooFinance from 'yahoo-finance2';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 const yahooFinance = new YahooFinance();
+
+const __filename_service = fileURLToPath(import.meta.url);
+const __dirname_service = dirname(__filename_service);
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 
@@ -34,6 +40,9 @@ const CACHE_DURATIONS = {
     marketNews: 5 * 60 * 1000, // 5 minutes for market news
     forex: 6 * 60 * 60 * 1000, // 6 hours for forex rates
     projectedEarnings: 7 * 24 * 60 * 60 * 1000, // 7 days
+    marketHolidays: 24 * 60 * 60 * 1000,  // 24 hours for holidays
+    stockSplits: 24 * 60 * 60 * 1000,     // 24 hours for splits
+    economicEvents: 24 * 60 * 60 * 1000,  // 24 hours for events
 };
 
 function getCached(key, duration) {
@@ -1299,3 +1308,133 @@ export async function getPortfolioHealthAndBenchmark(positions) {
         }
     });
 }
+
+// ============================================
+// MARKET CALENDAR (Holidays, Splits, Economic Events)
+// ============================================
+
+
+
+/**
+ * Get US market holidays from Finnhub.
+ * Endpoint: GET /stock/market-holiday?exchange=US
+ * Free tier.
+ */
+async function getMarketHolidays(exchange = 'US') {
+    const cacheKey = `market_holidays_${exchange}`;
+    const cached = getCached(cacheKey, CACHE_DURATIONS.marketHolidays);
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
+
+            const url = `${FINNHUB_BASE_URL}/stock/market-holiday?exchange=${exchange}&token=${apiKey}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            // data.data is the array of holidays
+            const holidays = (data?.data || []).map(h => ({
+                date: h.atDate,
+                name: h.eventName,
+                exchange: exchange,
+                tradingHour: h.tradingHour || 'closed', // 'closed' or partial hours
+            }));
+
+            setCache(cacheKey, holidays);
+            return holidays;
+        } catch (error) {
+            console.error('Failed to fetch market holidays:', error.message);
+            return [];
+        }
+    });
+}
+
+/**
+ * Get stock splits for given symbols from Finnhub.
+ * Endpoint: GET /stock/split?symbol=AAPL&from=...&to=...
+ * Free tier. Checks upcoming 6 months.
+ */
+async function getStockSplits(symbols) {
+    const cacheKey = `stock_splits_${symbols.sort().join(',')}`;
+    const cached = getCached(cacheKey, CACHE_DURATIONS.stockSplits);
+    if (cached) return cached;
+
+    return dedupedFetch(cacheKey, async () => {
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
+
+            const now = new Date();
+            const from = now.toISOString().split('T')[0];
+            const sixMonthsLater = new Date(now);
+            sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+            const to = sixMonthsLater.toISOString().split('T')[0];
+
+            const allSplits = [];
+
+            // Fetch splits for each symbol (usually very fast, small payloads)
+            await Promise.all(symbols.map(async (symbol) => {
+                try {
+                    const url = `${FINNHUB_BASE_URL}/stock/split?symbol=${symbol}&from=${from}&to=${to}&token=${apiKey}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(split => {
+                            allSplits.push({
+                                symbol: split.symbol || symbol,
+                                date: split.date,
+                                fromFactor: split.fromFactor,
+                                toFactor: split.toFactor,
+                                description: `${split.fromFactor}:${split.toFactor} split`
+                            });
+                        });
+                    }
+                } catch (err) {
+                    console.warn(`Failed to fetch splits for ${symbol}:`, err.message);
+                }
+            }));
+
+            // Sort by date
+            allSplits.sort((a, b) => a.date.localeCompare(b.date));
+
+            setCache(cacheKey, allSplits);
+            return allSplits;
+        } catch (error) {
+            console.error('Failed to fetch stock splits:', error.message);
+            return [];
+        }
+    });
+}
+
+/**
+ * Get curated economic events from static JSON file.
+ * Returns only future events (from today onward).
+ */
+function getEconomicEvents() {
+    const cacheKey = 'economic_events';
+    const cached = getCached(cacheKey, CACHE_DURATIONS.economicEvents);
+    if (cached) return cached;
+
+    try {
+        const dataPath = join(__dirname_service, '..', 'data', 'economicEvents.json');
+        const raw = readFileSync(dataPath, 'utf8');
+        const allEvents = JSON.parse(raw);
+
+        // Filter to only future events (from today)
+        const today = new Date().toISOString().split('T')[0];
+        const futureEvents = allEvents.filter(e => e.date >= today);
+
+        // Return next 30 events max
+        const result = futureEvents.slice(0, 30);
+        setCache(cacheKey, result);
+        return result;
+    } catch (error) {
+        console.error('Failed to load economic events:', error.message);
+        return [];
+    }
+}
+
+export { getMarketHolidays, getStockSplits, getEconomicEvents };

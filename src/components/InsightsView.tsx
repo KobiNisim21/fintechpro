@@ -8,6 +8,7 @@ import { stocksAPI, RecommendationTrend, PriceTarget, CompanyProfile } from '@/a
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown, ShieldCheck, DollarSign, CalendarDays } from 'lucide-react';
+import { MarketCalendar } from '@/components/Analytics/MarketCalendar';
 import { motion } from 'framer-motion';
 import CorrelationMatrix from './Analytics/CorrelationMatrix';
 import PortfolioBenchmarkChart from './Analytics/PortfolioBenchmarkChart';
@@ -632,6 +633,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     </>
                 )}
             </div>
+
+            {/* Market Calendar */}
+            <MarketCalendar />
         </div>
     );
 }

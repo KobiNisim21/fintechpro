@@ -265,3 +265,30 @@ export const getBatchInsights = async (req, res) => {
 };
 
 
+// @desc    Get market calendar (economic events + holidays + stock splits)
+// @route   GET /api/stocks/market-calendar?symbols=NVDA,AAPL,...
+// @access  Private
+export const getMarketCalendar = async (req, res) => {
+    try {
+        const { symbols } = req.query;
+        const symbolList = symbols
+            ? symbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+            : [];
+
+        // Fetch all three data sources in parallel
+        const [economicEvents, marketHolidays, stockSplits] = await Promise.all([
+            stockData.getEconomicEvents(),
+            stockData.getMarketHolidays('US'),
+            symbolList.length > 0 ? stockData.getStockSplits(symbolList) : [],
+        ]);
+
+        res.json({
+            economicEvents,
+            marketHolidays,
+            stockSplits,
+        });
+    } catch (error) {
+        console.error('❌ Error in getMarketCalendar:', error.message);
+        res.status(500).json({ message: error.message });
+    }
+};

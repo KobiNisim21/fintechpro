@@ -1,0 +1,794 @@
+[
+    {
+        "date": "2025-03-07",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Feb)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2025-03-12",
+        "time": "08:30",
+        "event": "CPI (Feb)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-03-13",
+        "time": "08:30",
+        "event": "PPI (Feb)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-03-19",
+        "time": "14:00",
+        "event": "FOMC Rate Decision",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2025-03-27",
+        "time": "08:30",
+        "event": "GDP (Q4 Final)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    },
+    {
+        "date": "2025-04-02",
+        "time": "14:00",
+        "event": "FOMC Meeting Minutes (Mar)",
+        "country": "US",
+        "importance": 2,
+        "category": "fed"
+    },
+    {
+        "date": "2025-04-04",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Mar)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2025-04-07",
+        "time": "10:00",
+        "event": "BOI Interest Rate Decision",
+        "country": "IL",
+        "importance": 3,
+        "category": "central_bank"
+    },
+    {
+        "date": "2025-04-10",
+        "time": "08:30",
+        "event": "CPI (Mar)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-04-11",
+        "time": "08:30",
+        "event": "PPI (Mar)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-04-15",
+        "time": "08:30",
+        "event": "Israel CPI (Mar)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-04-30",
+        "time": "08:30",
+        "event": "GDP (Q1 Advance)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    },
+    {
+        "date": "2025-05-02",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Apr)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2025-05-07",
+        "time": "14:00",
+        "event": "FOMC Rate Decision",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2025-05-13",
+        "time": "08:30",
+        "event": "CPI (Apr)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-05-15",
+        "time": "08:30",
+        "event": "PPI (Apr)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-05-15",
+        "time": "08:30",
+        "event": "Israel CPI (Apr)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-05-26",
+        "time": "10:00",
+        "event": "BOI Interest Rate Decision",
+        "country": "IL",
+        "importance": 3,
+        "category": "central_bank"
+    },
+    {
+        "date": "2025-05-28",
+        "time": "14:00",
+        "event": "FOMC Meeting Minutes (May)",
+        "country": "US",
+        "importance": 2,
+        "category": "fed"
+    },
+    {
+        "date": "2025-06-06",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (May)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2025-06-11",
+        "time": "08:30",
+        "event": "CPI (May)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-06-13",
+        "time": "08:30",
+        "event": "PPI (May)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-06-15",
+        "time": "08:30",
+        "event": "Israel CPI (May)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-06-18",
+        "time": "14:00",
+        "event": "FOMC Rate Decision + SEP",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2025-06-26",
+        "time": "08:30",
+        "event": "GDP (Q1 Final)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    },
+    {
+        "date": "2025-07-03",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Jun)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2025-07-07",
+        "time": "10:00",
+        "event": "BOI Interest Rate Decision",
+        "country": "IL",
+        "importance": 3,
+        "category": "central_bank"
+    },
+    {
+        "date": "2025-07-09",
+        "time": "14:00",
+        "event": "FOMC Meeting Minutes (Jun)",
+        "country": "US",
+        "importance": 2,
+        "category": "fed"
+    },
+    {
+        "date": "2025-07-11",
+        "time": "08:30",
+        "event": "CPI (Jun)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-07-15",
+        "time": "08:30",
+        "event": "PPI (Jun)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-07-15",
+        "time": "08:30",
+        "event": "Israel CPI (Jun)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-07-30",
+        "time": "14:00",
+        "event": "FOMC Rate Decision",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2025-07-30",
+        "time": "08:30",
+        "event": "GDP (Q2 Advance)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    },
+    {
+        "date": "2025-08-01",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Jul)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2025-08-12",
+        "time": "08:30",
+        "event": "CPI (Jul)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-08-14",
+        "time": "08:30",
+        "event": "PPI (Jul)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-08-15",
+        "time": "08:30",
+        "event": "Israel CPI (Jul)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-08-20",
+        "time": "14:00",
+        "event": "FOMC Meeting Minutes (Jul)",
+        "country": "US",
+        "importance": 2,
+        "category": "fed"
+    },
+    {
+        "date": "2025-09-05",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Aug)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2025-09-10",
+        "time": "08:30",
+        "event": "CPI (Aug)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-09-12",
+        "time": "08:30",
+        "event": "PPI (Aug)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-09-15",
+        "time": "08:30",
+        "event": "Israel CPI (Aug)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-09-17",
+        "time": "14:00",
+        "event": "FOMC Rate Decision + SEP",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2025-09-25",
+        "time": "08:30",
+        "event": "GDP (Q2 Final)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    },
+    {
+        "date": "2025-10-03",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Sep)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2025-10-08",
+        "time": "14:00",
+        "event": "FOMC Meeting Minutes (Sep)",
+        "country": "US",
+        "importance": 2,
+        "category": "fed"
+    },
+    {
+        "date": "2025-10-14",
+        "time": "08:30",
+        "event": "CPI (Sep)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-10-15",
+        "time": "08:30",
+        "event": "PPI (Sep)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-10-15",
+        "time": "08:30",
+        "event": "Israel CPI (Sep)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-10-29",
+        "time": "14:00",
+        "event": "FOMC Rate Decision",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2025-10-29",
+        "time": "08:30",
+        "event": "GDP (Q3 Advance)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    },
+    {
+        "date": "2025-11-07",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Oct)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2025-11-12",
+        "time": "08:30",
+        "event": "CPI (Oct)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-11-13",
+        "time": "08:30",
+        "event": "PPI (Oct)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-11-15",
+        "time": "08:30",
+        "event": "Israel CPI (Oct)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-11-24",
+        "time": "10:00",
+        "event": "BOI Interest Rate Decision",
+        "country": "IL",
+        "importance": 3,
+        "category": "central_bank"
+    },
+    {
+        "date": "2025-11-26",
+        "time": "14:00",
+        "event": "FOMC Meeting Minutes (Oct)",
+        "country": "US",
+        "importance": 2,
+        "category": "fed"
+    },
+    {
+        "date": "2025-12-05",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Nov)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2025-12-10",
+        "time": "08:30",
+        "event": "CPI (Nov)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-12-10",
+        "time": "14:00",
+        "event": "FOMC Rate Decision + SEP",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2025-12-11",
+        "time": "08:30",
+        "event": "PPI (Nov)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-12-15",
+        "time": "08:30",
+        "event": "Israel CPI (Nov)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2025-12-23",
+        "time": "08:30",
+        "event": "GDP (Q3 Final)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    },
+    {
+        "date": "2026-01-09",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Dec)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2026-01-14",
+        "time": "08:30",
+        "event": "CPI (Dec)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-01-15",
+        "time": "08:30",
+        "event": "PPI (Dec)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-01-15",
+        "time": "08:30",
+        "event": "Israel CPI (Dec)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-01-28",
+        "time": "14:00",
+        "event": "FOMC Rate Decision",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2026-01-29",
+        "time": "08:30",
+        "event": "GDP (Q4 Advance)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    },
+    {
+        "date": "2026-02-06",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Jan)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2026-02-11",
+        "time": "08:30",
+        "event": "CPI (Jan)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-02-13",
+        "time": "08:30",
+        "event": "PPI (Jan)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-02-15",
+        "time": "08:30",
+        "event": "Israel CPI (Jan)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-02-18",
+        "time": "14:00",
+        "event": "FOMC Meeting Minutes (Jan)",
+        "country": "US",
+        "importance": 2,
+        "category": "fed"
+    },
+    {
+        "date": "2026-02-23",
+        "time": "10:00",
+        "event": "BOI Interest Rate Decision",
+        "country": "IL",
+        "importance": 3,
+        "category": "central_bank"
+    },
+    {
+        "date": "2026-03-06",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Feb)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2026-03-11",
+        "time": "08:30",
+        "event": "CPI (Feb)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-03-13",
+        "time": "08:30",
+        "event": "PPI (Feb)",
+        "country": "US",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-03-15",
+        "time": "08:30",
+        "event": "Israel CPI (Feb)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-03-18",
+        "time": "14:00",
+        "event": "FOMC Rate Decision + SEP",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2026-03-26",
+        "time": "08:30",
+        "event": "GDP (Q4 Final)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    },
+    {
+        "date": "2026-04-03",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Mar)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2026-04-08",
+        "time": "14:00",
+        "event": "FOMC Meeting Minutes (Mar)",
+        "country": "US",
+        "importance": 2,
+        "category": "fed"
+    },
+    {
+        "date": "2026-04-14",
+        "time": "08:30",
+        "event": "CPI (Mar)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-04-15",
+        "time": "08:30",
+        "event": "Israel CPI (Mar)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-05-06",
+        "time": "14:00",
+        "event": "FOMC Rate Decision",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2026-05-08",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Apr)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2026-05-12",
+        "time": "08:30",
+        "event": "CPI (Apr)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-05-15",
+        "time": "08:30",
+        "event": "Israel CPI (Apr)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-06-05",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (May)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2026-06-10",
+        "time": "08:30",
+        "event": "CPI (May)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-06-15",
+        "time": "08:30",
+        "event": "Israel CPI (May)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-06-17",
+        "time": "14:00",
+        "event": "FOMC Rate Decision + SEP",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2026-06-25",
+        "time": "08:30",
+        "event": "GDP (Q1 Final)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    },
+    {
+        "date": "2026-07-02",
+        "time": "08:30",
+        "event": "Non-Farm Payrolls (Jun)",
+        "country": "US",
+        "importance": 3,
+        "category": "employment"
+    },
+    {
+        "date": "2026-07-14",
+        "time": "08:30",
+        "event": "CPI (Jun)",
+        "country": "US",
+        "importance": 3,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-07-15",
+        "time": "08:30",
+        "event": "Israel CPI (Jun)",
+        "country": "IL",
+        "importance": 2,
+        "category": "inflation"
+    },
+    {
+        "date": "2026-07-29",
+        "time": "14:00",
+        "event": "FOMC Rate Decision",
+        "country": "US",
+        "importance": 3,
+        "category": "fed"
+    },
+    {
+        "date": "2026-07-30",
+        "time": "08:30",
+        "event": "GDP (Q2 Advance)",
+        "country": "US",
+        "importance": 3,
+        "category": "gdp"
+    }
+]
