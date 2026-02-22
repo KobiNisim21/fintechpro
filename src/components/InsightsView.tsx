@@ -4,7 +4,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Treemap,
 } from 'recharts';
-import { stocksAPI, RecommendationTrend, PriceTarget, CompanyProfile } from '@/api/stocks';
+import { stocksAPI } from '@/api/stocks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown, ShieldCheck, DollarSign, CalendarDays } from 'lucide-react';
@@ -151,13 +151,15 @@ const renderCustomLabel = ({ cx, cy, midAngle, outerRadius, name, percent }: any
 //  INSIGHTS VIEW
 // ═════════════════════════════════════════════════════════════════
 export function InsightsView({ isActive = true }: { isActive?: boolean }) {
-    const { positions, positionsReady, portfolioAnalytics, analyticsLoading, fetchAnalytics } = usePortfolio();
+    const { positions, positionsReady, portfolioAnalytics, analyticsLoading, fetchAnalytics, insightsData, setInsightsData } = usePortfolio();
     const isMobile = useIsMobile();
-    const [recommendations, setRecommendations] = useState<Record<string, RecommendationTrend[]>>({});
-    const [priceTargets, setPriceTargets] = useState<Record<string, PriceTarget>>({});
-    const [profiles, setProfiles] = useState<Record<string, CompanyProfile>>({});
     const [loading, setLoading] = useState(false);
     const hasFetchedRef = useRef(false);
+
+    // Provide default empty objects if context data is currently null
+    const recommendations = insightsData?.recommendations || {};
+    const priceTargets = insightsData?.priceTargets || {};
+    const profiles = insightsData?.profiles || {};
 
     // ── Analytics (Health Score + Benchmark) ──
     const analytics = portfolioAnalytics;
@@ -172,6 +174,12 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
     // ── Lazy Fetch: Only when tab is active, positions are FRESH, and not yet fetched ──
     useEffect(() => {
+        // If we already have data in context, mark as fetched so we don't refetch on tab switch!
+        if (insightsData && Object.keys(insightsData.profiles).length > 0) {
+            hasFetchedRef.current = true;
+            return;
+        }
+
         if (!isActive || positions.length === 0 || !positionsReady || hasFetchedRef.current) return;
 
         let retryCount = 0;
@@ -193,9 +201,11 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     retryCount++;
                     retryTimer = setTimeout(fetchInsights, 5000); // 5 sec retry
                 } else {
-                    setRecommendations(data.recommendations || {});
-                    setPriceTargets(data.priceTargets || {});
-                    setProfiles(data.profiles || {});
+                    setInsightsData({
+                        recommendations: data.recommendations || {},
+                        priceTargets: data.priceTargets || {},
+                        profiles: data.profiles || {}
+                    });
                     hasFetchedRef.current = true;
                 }
             } catch (error) {
@@ -219,7 +229,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
             clearTimeout(staggerTimer);
             clearTimeout(retryTimer);
         };
-    }, [isActive, positions, positionsReady]);
+    }, [isActive, positions, positionsReady, insightsData, setInsightsData]);
 
     // Reset fetch flag when positions change
     useEffect(() => {

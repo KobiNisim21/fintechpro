@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { positionsAPI } from '../api/positions';
-import { stocksAPI, PortfolioAnalytics } from '../api/stocks';
+import { stocksAPI, PortfolioAnalytics, RecommendationTrend, PriceTarget, CompanyProfile } from '../api/stocks';
 import { useAuth } from './AuthContext';
 import { getFinnhubWebSocket, PriceUpdateCallback } from '../services/websocket';
 
@@ -49,6 +49,14 @@ interface PortfolioContextType {
   portfolioAnalytics: PortfolioAnalytics | null;
   analyticsLoading: boolean;
   fetchAnalytics: (force?: boolean) => Promise<string | void>;
+
+  // Insights State (Persists across tab switches)
+  insightsData: {
+    recommendations: Record<string, RecommendationTrend[]>;
+    priceTargets: Record<string, PriceTarget>;
+    profiles: Record<string, CompanyProfile>;
+  } | null;
+  setInsightsData: (data: any) => void;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
@@ -152,6 +160,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   });
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [lastAnalyticsFetch, setLastAnalyticsFetch] = useState<number>(0);
+
+  // Insights State (kept in context so it survives tab unmounts)
+  const [insightsData, setInsightsData] = useState<{
+    recommendations: Record<string, RecommendationTrend[]>;
+    priceTargets: Record<string, PriceTarget>;
+    profiles: Record<string, CompanyProfile>;
+  } | null>(null);
 
   // Fetch positions from backend — FAST: uses batch extended quotes for prices
   const fetchPositions = async () => {
@@ -376,10 +391,17 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       );
 
       // Batch update all sparklines at once
-      setPositions(prev => prev.map(pos => {
-        const result = results.find(r => r.symbol === pos.symbol);
-        return result ? { ...pos, sparklineData: result.sparklineData } : pos;
-      }));
+      setPositions(prev => {
+        const enriched = prev.map(pos => {
+          const result = results.find(r => r.symbol === pos.symbol);
+          return result ? { ...pos, sparklineData: result.sparklineData } : pos;
+        });
+
+        // Save the enriched positions (with sparklines) to localStorage
+        // This allows them to render instantly on next page load (Stale-While-Revalidate)
+        saveCachedPositions(enriched);
+        return enriched;
+      });
     };
 
     enrichSparklines();
@@ -485,7 +507,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         change = currentPrice - quote.pc;
         changePercent = (change / quote.pc) * 100;
       } catch (priceError) {
-        console.warn(`Could not fetch price for ${symbol}, using defaults:`, priceError);
+        console.warn(`Could not fetch price for ${symbol}, using defaults: `, priceError);
         // Price will stay as averagePrice, which is a reasonable default
       }
 
@@ -607,7 +629,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         // Analytics
         portfolioAnalytics,
         analyticsLoading,
-        fetchAnalytics
+        fetchAnalytics,
+        insightsData,
+        setInsightsData
       }}
     >
       {children}
