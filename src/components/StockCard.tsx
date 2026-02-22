@@ -1,7 +1,7 @@
 import { TrendingUp, TrendingDown, Trash2, Edit2, Plus, X } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 import { usePortfolio, Position, Lot } from '@/context/PortfolioContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { SimpleDialog } from './SimpleDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ interface StockCardProps {
   className?: string;
 }
 
-export function StockCard({ stock, className }: StockCardProps) {
+export const StockCard = memo(function StockCard({ stock, className }: StockCardProps) {
   const { removePosition, updatePosition } = usePortfolio();
   const [editOpen, setEditOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,7 +49,7 @@ export function StockCard({ stock, className }: StockCardProps) {
   }, [editOpen]); // REMOVED 'stock' dependency to prevent overwrite during background refresh
 
   const isPositive = stock.change >= 0;
-  const chartData = stock.sparklineData.map((value) => ({ value }));
+  const chartData = useMemo(() => stock.sparklineData.map((value) => ({ value })), [stock.sparklineData]);
 
   const quantity = stock.quantity || 0;
   const avgPrice = stock.averagePrice || 0;
@@ -61,58 +61,49 @@ export function StockCard({ stock, className }: StockCardProps) {
   // Visual Alert Logic
   const isNear52wLow = stock.fiftyTwoWeekLow && (stock.price <= stock.fiftyTwoWeekLow * 1.05);
 
-  let formattedEarnings = null;
-  console.log(`[EARNINGS] Card rendered for ${stock.symbol}. Raw nextEarningsDate:`, stock.nextEarningsDate);
-
-  if (stock.nextEarningsDate) {
+  // Memoize earnings date parsing to avoid expensive work on every render
+  const formattedEarnings = useMemo(() => {
+    if (!stock.nextEarningsDate) return null;
     try {
       let parsedDate: Date;
       const rawVal = stock.nextEarningsDate as string | number;
 
       if (typeof rawVal === 'number' || (typeof rawVal === 'string' && /^\d+$/.test(rawVal))) {
-        // Unix Conversion: If the timestamp is in seconds (10 digits), multiply by 1000
         const ts = Number(rawVal);
         parsedDate = new Date(ts > 1e11 ? ts : ts * 1000);
       } else {
-        // Handle ISO String directly
         parsedDate = new Date(rawVal);
       }
 
-      // Validation
       if (parsedDate instanceof Date && !isNaN(parsedDate.getTime())) {
-        console.log(`[EARNINGS] ${stock.symbol} Parsed Date: ${parsedDate.toISOString()}`);
-
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Start of today
-
+        today.setHours(0, 0, 0, 0);
         const compareDate = new Date(parsedDate);
         compareDate.setHours(0, 0, 0, 0);
 
-        // Strict Hiding: null, invalid, or in the past
         if (compareDate >= today) {
-          formattedEarnings = parsedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        } else {
-          console.log(`[EARNINGS] ${stock.symbol} date ${parsedDate.toISOString()} is strictly in the past, hiding.`);
+          return parsedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
       }
     } catch (e) {
-      console.warn("Error parsing earnings date:", stock.nextEarningsDate);
+      // Silently ignore parse errors
     }
-  }
+    return null;
+  }, [stock.nextEarningsDate]);
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (stock._id) {
       if (confirm(`Are you sure you want to delete ${stock.symbol}?`)) {
         removePosition(stock._id);
       }
     }
-  };
+  }, [stock._id, stock.symbol, removePosition]);
 
-  const handleEdit = (e: React.MouseEvent) => {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setEditOpen(true);
-  };
+  }, []);
 
   // Helper to update a specific lot in the list
   const updateLot = (index: number, field: keyof Lot, value: any) => {
@@ -477,4 +468,4 @@ export function StockCard({ stock, className }: StockCardProps) {
       </SimpleDialog>
     </>
   );
-}
+});

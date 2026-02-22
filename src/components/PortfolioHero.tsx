@@ -3,17 +3,22 @@ import { useEffect, useState, useMemo } from 'react';
 import { usePortfolio } from '@/context/PortfolioContext';
 import { stocksAPI } from '@/api/stocks';
 
-export function PortfolioHero() {
+// Extracted pulse animation into its own component to prevent
+// 1-second re-renders of the entire PortfolioHero
+function PulseDot() {
   const [pulse, setPulse] = useState(true);
+  useEffect(() => {
+    const id = setInterval(() => setPulse(p => !p), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className={`w-2 h-2 rounded-full bg-emerald-400 transition-opacity duration-300 ${pulse ? 'opacity-100' : 'opacity-30'}`} />
+  );
+}
+
+export function PortfolioHero() {
   const [usdToIls, setUsdToIls] = useState(3.6); // Default fallback
   const { positions, portfolioAnalytics } = usePortfolio();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPulse(p => !p);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Fetch USD/ILS exchange rate
   useEffect(() => {
@@ -22,7 +27,6 @@ export function PortfolioHero() {
         const forexData = await stocksAPI.getForexRate();
         if (forexData.rate) {
           setUsdToIls(forexData.rate);
-          console.log(`📊 USD/ILS rate updated: ${forexData.rate} (source: ${forexData.source}, last update: ${forexData.lastUpdate || 'N/A'})`);
         }
       } catch (error) {
         console.error('Failed to fetch forex rate, using fallback:', error);
@@ -30,29 +34,27 @@ export function PortfolioHero() {
     };
 
     fetchForexRate();
-    // Refresh rate every 6 hours (4 times per day)
     const interval = setInterval(fetchForexRate, 6 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate total portfolio value (current market value)
-  const totalValueUSD = positions.reduce((sum, pos) => sum + (pos.price * pos.quantity), 0);
+  // Combined memoization: single loop for all portfolio totals
+  const { totalValueUSD, totalCostUSD, dailyChangeUSD } = useMemo(() => {
+    let value = 0, cost = 0, change = 0;
+    for (const pos of positions) {
+      value += pos.price * pos.quantity;
+      cost += pos.averagePrice * pos.quantity;
+      change += pos.change * pos.quantity;
+    }
+    return { totalValueUSD: value, totalCostUSD: cost, dailyChangeUSD: change };
+  }, [positions]);
 
-  // Calculate total investment cost
-  const totalCostUSD = positions.reduce((sum, pos) => sum + (pos.averagePrice * pos.quantity), 0);
-
-  // Calculate total gain/loss
+  // Derive all other values (cheap, no need for separate memo)
   const totalGainUSD = totalValueUSD - totalCostUSD;
   const totalGainPercent = totalCostUSD > 0 ? (totalGainUSD / totalCostUSD) * 100 : 0;
-
-  // Calculate daily change (sum of all daily changes)
-  const dailyChangeUSD = positions.reduce((sum, pos) => sum + (pos.change * pos.quantity), 0);
   const dailyChangePercent = totalValueUSD > 0 ? (dailyChangeUSD / (totalValueUSD - dailyChangeUSD)) * 100 : 0;
-
-  // Convert to ILS using real-time rate
   const totalValueILS = totalValueUSD * usdToIls;
   const dailyChangeILS = dailyChangeUSD * usdToIls;
-
   const isDailyPositive = dailyChangeUSD >= 0;
   const isTotalPositive = totalGainUSD >= 0;
 
@@ -89,7 +91,7 @@ export function PortfolioHero() {
             <div className="flex items-center gap-3 mb-2">
               <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider">Total Portfolio Value</h3>
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full bg-emerald-400 transition-opacity duration-300 ${pulse ? 'opacity-100' : 'opacity-30'}`} />
+                <PulseDot />
                 <span className="text-xs text-emerald-400 font-medium">LIVE</span>
               </div>
             </div>
