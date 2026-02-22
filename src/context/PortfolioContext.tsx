@@ -248,7 +248,6 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     const now = Date.now();
     if (!force && analyticsLoading) return;
     if (!force && portfolioAnalytics && (now - lastAnalyticsFetch < 10 * 60 * 1000)) {
-      console.log('Skipping analytics fetch (fresh enough)');
       return;
     }
 
