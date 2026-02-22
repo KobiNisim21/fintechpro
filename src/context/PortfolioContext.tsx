@@ -38,6 +38,7 @@ export interface Position {
 interface PortfolioContextType {
   positions: Position[];
   loading: boolean;
+  positionsLoading: boolean;
   error: string | null;
   addPosition: (symbol: string, name: string, quantity: number, averagePrice: number, date?: string | Date) => Promise<void>;
   updatePosition: (id: string, quantity?: number, averagePrice?: number, lots?: Lot[]) => Promise<void>;
@@ -118,8 +119,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     if (!isAuthenticated) return [];
     return loadCachedPositions();
   });
-  // Only show loading if no cached data
+  // Only show loading if we DON'T have cached data
   const [loading, setLoading] = useState(false);
+  // Tracks whether fresh positions have been loaded from API (not just stale cache)
+  const [positionsReady, setPositionsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Analytics State
@@ -229,6 +232,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setPositions(positionsWithPrices);
       // Save fresh data to localStorage for next refresh
       saveCachedPositions(positionsWithPrices);
+      // Mark positions as ready (fresh from API, not stale cache)
+      setPositionsReady(true);
     } catch (err: any) {
       setError(err.message || 'Failed to load positions');
       console.error('Error fetching positions:', err);
@@ -295,12 +300,12 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setLastAnalyticsFetch(0);
   }, [positions.length]);
 
-  // Eagerly fetch analytics as soon as positions are loaded
-  // This ensures hero card returns (1W/1M/1Y) and health score are ready
+  // Eagerly fetch analytics ONLY after fresh positions are loaded from API
+  // This prevents computing health scores from stale localStorage cache data
   useEffect(() => {
-    if (positions.length === 0) return;
+    if (positions.length === 0 || !positionsReady) return;
     fetchAnalytics();
-  }, [positions.length, fetchAnalytics]);
+  }, [positions.length, positionsReady, fetchAnalytics]);
 
   // Background sparkline enrichment — runs AFTER positions are rendered
   useEffect(() => {
@@ -554,6 +559,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       value={{
         positions,
         loading,
+        positionsLoading: loading,
         error,
         addPosition,
         updatePosition,
