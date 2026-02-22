@@ -47,7 +47,7 @@ interface PortfolioContextType {
   // Analytics State
   portfolioAnalytics: PortfolioAnalytics | null;
   analyticsLoading: boolean;
-  fetchAnalytics: (force?: boolean) => Promise<void>;
+  fetchAnalytics: (force?: boolean) => Promise<string | void>;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
@@ -265,21 +265,17 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   };
 
   // Fetch Analytics (Health Score, TWR, etc.)
-  // Memoized to prevent excessive re-renders/calls
   const fetchAnalytics = useCallback(async (force = false) => {
-    // Prevent fetching if no positions
     if (positions.length === 0) return;
 
-    // Throttle: Don't fetch if fetched < 10 minutes ago, unless forced
-    // Also don't fetch if already loading
     const now = Date.now();
     if (!force && analyticsLoading) return;
-    if (!force && portfolioAnalytics && (now - lastAnalyticsFetch < 10 * 60 * 1000)) {
+    if (!force && lastAnalyticsFetch > 0 && (now - lastAnalyticsFetch < 10 * 60 * 1000)) {
       return;
     }
 
     try {
-      // Only show loading spinner if we don't have ANY cached analytics to display
+      // Only show loading spinner if we have NO analytics at all (no cache)
       if (!portfolioAnalytics) {
         setAnalyticsLoading(true);
       }
@@ -289,48 +285,64 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
       const data = await stocksAPI.getPortfolioAnalytics(symbols, quantities, prices);
 
-      // Detect if the backend returned default/placeholder values
+      // Detect if the backend returned default/placeholder values (cold-start fallback)
       const isDefault = data?.healthScore === 50 &&
         data?.components?.diversification === 50 &&
         data?.components?.volatility === 50 &&
         data?.components?.sentiment === 50;
 
       if (isDefault) {
-        // Don't update lastAnalyticsFetch so the throttle allows a retry
-        // Also don't overwrite good cached data with defaults
+        // Don't overwrite good cached data with defaults
+        // Don't update lastAnalyticsFetch → allows retry
         if (!portfolioAnalytics) {
+          // No cache at all — show defaults temporarily
           setPortfolioAnalytics(data);
         }
+        // Return 'defaults' flag so caller can retry
+        return 'defaults';
       } else {
         setPortfolioAnalytics(data);
         setLastAnalyticsFetch(Date.now());
-        // Save to localStorage for instant display on next session
         saveCachedAnalytics(data);
+        return 'success';
       }
     } catch (err: any) {
       console.error('Failed to fetch analytics:', err);
+      return 'error';
     } finally {
       setAnalyticsLoading(false);
     }
   }, [positions, analyticsLoading, portfolioAnalytics, lastAnalyticsFetch]);
 
-  // Load positions on mount and when auth status changes
+  // Load positions on mount
   useEffect(() => {
     fetchPositions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
-  // Clear analytics timestamp when positions change (add/remove)
-  // This allows the background refresh to re-compute with the new composition
+  // Invalidate analytics timestamp when positions change (add/remove)
   useEffect(() => {
     setLastAnalyticsFetch(0);
   }, [positions.length]);
 
-  // Eagerly fetch analytics ONLY after fresh positions are loaded from API
-  // Cached analytics are shown instantly; this silently refreshes them in the background
+  // Eagerly fetch analytics after fresh positions load
+  // If backend returns defaults (cold start), retry up to 3 times with 5s delay
   useEffect(() => {
     if (positions.length === 0 || !positionsReady) return;
-    fetchAnalytics();
+
+    let retryCount = 0;
+    let retryTimer: ReturnType<typeof setTimeout>;
+
+    const attemptFetch = async () => {
+      const result = await fetchAnalytics();
+      if (result === 'defaults' && retryCount < 3) {
+        retryCount++;
+        retryTimer = setTimeout(attemptFetch, 5000);
+      }
+    };
+
+    attemptFetch();
+    return () => clearTimeout(retryTimer);
   }, [positions.length, positionsReady, fetchAnalytics]);
 
   // Background sparkline enrichment — runs AFTER positions are rendered
