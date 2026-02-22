@@ -11,13 +11,14 @@ import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
 
 import { useState, startTransition } from 'react';
-import { LayoutGrid, PieChart, Eye } from 'lucide-react';
+import { LayoutGrid, PieChart, Eye, CalendarDays } from 'lucide-react';
 import { AddPositionDialog } from './components/AddPositionDialog';
 import { InsightsView } from './components/InsightsView';
 import { WatchlistView } from './components/WatchlistView';
+import { MarketCalendar } from './components/Analytics/MarketCalendar';
 
 function Dashboard() {
-  const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist'>('holdings');
+  const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist' | 'calendar'>('holdings');
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#0f0f12]">
@@ -41,7 +42,7 @@ function Dashboard() {
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div className="flex items-center justify-between w-full md:w-auto">
               <h2 className="text-xl md:text-2xl font-semibold text-white/90">
-                {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : 'Watchlist'}
+                {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : viewMode === 'watchlist' ? 'Watchlist' : 'Market Calendar'}
               </h2>
               {/* Mobile Add Button - Visible only on mobile */}
               <div className="md:hidden">
@@ -82,6 +83,16 @@ function Dashboard() {
                   <Eye className="w-4 h-4" />
                   <span className="hidden sm:inline">Watchlist</span>
                 </button>
+                <button
+                  onClick={() => startTransition(() => setViewMode('calendar'))}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'calendar'
+                    ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  <CalendarDays className="w-4 h-4" />
+                  <span className="hidden sm:inline">Calendar</span>
+                </button>
               </div>
 
               {/* Desktop Add Button - Hidden on mobile */}
@@ -95,8 +106,10 @@ function Dashboard() {
             <StockGrid />
           ) : viewMode === 'insights' ? (
             <InsightsView />
-          ) : (
+          ) : viewMode === 'watchlist' ? (
             <WatchlistView />
+          ) : (
+            <MarketCalendar />
           )}
         </section>
 
