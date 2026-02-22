@@ -174,24 +174,51 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     useEffect(() => {
         if (!isActive || positions.length === 0 || !positionsReady || hasFetchedRef.current) return;
 
+        let retryCount = 0;
+        let retryTimer: ReturnType<typeof setTimeout>;
+        let staggerTimer: ReturnType<typeof setTimeout>;
+
         const fetchInsights = async () => {
             setLoading(true);
             try {
                 const symbols = positions.map(p => p.symbol);
                 const data = await stocksAPI.getBatchInsights(symbols);
-                setRecommendations(data.recommendations || {});
-                setPriceTargets(data.priceTargets || {});
-                setProfiles(data.profiles || {});
-                hasFetchedRef.current = true;
+
+                const recsSize = Object.keys(data.recommendations || {}).length;
+
+                // If we got NO recommendations but we have positions, it's likely a Finnhub rate limit (429)
+                // The backend catches the 429 and returns empty objects.
+                if (recsSize === 0 && symbols.length > 0 && retryCount < 3) {
+                    console.warn(`[Insights] Got empty analyst data (likely rate limit). Retrying... (${retryCount + 1}/3)`);
+                    retryCount++;
+                    retryTimer = setTimeout(fetchInsights, 5000); // 5 sec retry
+                } else {
+                    setRecommendations(data.recommendations || {});
+                    setPriceTargets(data.priceTargets || {});
+                    setProfiles(data.profiles || {});
+                    hasFetchedRef.current = true;
+                }
             } catch (error) {
                 console.error("Failed to fetch batch insights", error);
-                // Allow fetching again if it failed
-                hasFetchedRef.current = false;
+                if (retryCount < 3) {
+                    retryCount++;
+                    retryTimer = setTimeout(fetchInsights, 5000);
+                } else {
+                    hasFetchedRef.current = false; // Allow manual refresh later
+                }
             } finally {
                 setLoading(false);
             }
         };
-        fetchInsights();
+
+        // Stagger this fetch by 2 seconds so it doesn't collide with the massive getPortfolioAnalytics API call
+        // This prevents blowing through Finnhub's 30 req/sec limit on initial load.
+        staggerTimer = setTimeout(fetchInsights, 2000);
+
+        return () => {
+            clearTimeout(staggerTimer);
+            clearTimeout(retryTimer);
+        };
     }, [isActive, positions, positionsReady]);
 
     // Reset fetch flag when positions change

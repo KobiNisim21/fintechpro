@@ -643,18 +643,26 @@ export async function getBatchInsights(symbols) {
     const priceTargets = {};
     const profiles = {};
 
-    // Fetch all insights in parallel across all symbols
-    await Promise.all(symbols.map(async (symbol) => {
-        const [recs, target, profile] = await Promise.all([
-            getAnalystRecommendations(symbol).catch(() => []),
-            getPriceTarget(symbol).catch(() => null),
-            getCompanyProfile(symbol).catch(() => null)
-        ]);
+    // Fetch sequentially to avoid hitting Finnhub 30 req/sec and 60 req/min rate limits on cold start
+    for (const symbol of symbols) {
+        try {
+            // We can still fetch the 3 endpoints for a single symbol in parallel
+            const [recs, target, profile] = await Promise.all([
+                getAnalystRecommendations(symbol).catch(() => []),
+                getPriceTarget(symbol).catch(() => null),
+                getCompanyProfile(symbol).catch(() => null)
+            ]);
 
-        if (recs && recs.length > 0) recommendations[symbol] = recs;
-        if (target) priceTargets[symbol] = target;
-        if (profile) profiles[symbol] = profile;
-    }));
+            if (recs && recs.length > 0) recommendations[symbol] = recs;
+            if (target) priceTargets[symbol] = target;
+            if (profile) profiles[symbol] = profile;
+
+            // Artificial delay to respect rate limits (3 requests just fired)
+            await new Promise(resolve => setTimeout(resolve, 150));
+        } catch (err) {
+            console.error(`Error fetching insights for ${symbol}:`, err);
+        }
+    }
 
     return { recommendations, priceTargets, profiles };
 }
@@ -951,8 +959,8 @@ export async function getPortfolioHealthAndBenchmark(positions) {
 
             const inceptionDateStr = new Date(minTimestamp).toISOString().split('T')[0];
 
-            // --- B. Parallel Data Fetching with ROBUST FAILOVER ---
-            console.log('[Health] Starting parallel fetch with individual failovers...');
+            // --- B. Sequential Category Fetching with ROBUST FAILOVER ---
+            console.log('[Health] Starting category-sequential fetch to avoid rate limits...');
 
             const fetchWithTimeout = (promise, ms = 10000, fallback = null) => {
                 const timeout = new Promise(resolve => setTimeout(() => resolve(fallback), ms));
@@ -962,22 +970,33 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 });
             };
 
-            // Using Promise.all with internal catches ensures one failure doesn't reject all
-            const [
-                metricsResults,
-                profilesResults,
-                recsResults,
-                spyChart,
-                dividendResults,
-                ...symbolCharts
-            ] = await Promise.all([
-                Promise.all(symbols.map(s => fetchWithTimeout(getBasicFinancials(s), 5000, null))),
-                Promise.all(symbols.map(s => fetchWithTimeout(getCompanyProfile(s), 5000, {}))),
-                Promise.all(symbols.map(s => fetchWithTimeout(getAnalystRecommendations(s), 5000, []))),
-                fetchWithTimeout(fetchYahooChart('SPY', earliestDate), 8000, { dates: [], closes: [] }),
-                Promise.all(symbols.map(s => fetchWithTimeout(fetchDividendInfo(s), 5000, null))),
-                ...symbols.map(s => fetchWithTimeout(fetchYahooChart(s, earliestDate), 8000, { dates: [], closes: [] }))
-            ]);
+            // Fetch SPY tracking chart first
+            const spyChart = await fetchWithTimeout(fetchYahooChart('SPY', earliestDate), 8000, { dates: [], closes: [] });
+
+            // 1. Fetch Symbol Charts (Yahoo Finance) - crucial for TWR
+            const symbolCharts = await Promise.all(
+                symbols.map(s => fetchWithTimeout(fetchYahooChart(s, earliestDate), 8000, { dates: [], closes: [] }))
+            );
+
+            // 2. Fetch Basic Financials (Finnhub)
+            const metricsResults = await Promise.all(
+                symbols.map(s => fetchWithTimeout(getBasicFinancials(s), 5000, null))
+            );
+
+            // 3. Fetch Company Profiles (Finnhub)
+            const profilesResults = await Promise.all(
+                symbols.map(s => fetchWithTimeout(getCompanyProfile(s), 5000, {}))
+            );
+
+            // 4. Fetch Analyst Recommendations (Finnhub)
+            const recsResults = await Promise.all(
+                symbols.map(s => fetchWithTimeout(getAnalystRecommendations(s), 5000, []))
+            );
+
+            // 5. Fetch Dividends
+            const dividendResults = await Promise.all(
+                symbols.map(s => fetchWithTimeout(fetchDividendInfo(s), 5000, null))
+            );
 
             // VALIDATION: STRICT "All or Nothing" for Score Stability
             const validChartsCount = symbolCharts.filter(c => c && c.closes && c.closes.length > 0).length;
