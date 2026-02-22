@@ -1410,31 +1410,183 @@ async function getStockSplits(symbols) {
 }
 
 /**
- * Get curated economic events from static JSON file.
- * Returns only future events (from today onward).
+ * Auto-generate economic events from known recurring patterns.
+ * This ensures the calendar never runs out of events.
+ * Patterns:
+ *  - NFP: First Friday of each month
+ *  - CPI: ~12th-14th of each month
+ *  - PPI: Day after CPI
+ *  - FOMC: 8 fixed meetings per year (known years in advance)
+ *  - GDP: Late month of Jan/Apr/Jul/Oct
+ *  - BOI: ~6 times per year
  */
+// Known FOMC meeting dates (last day = decision day)
+const FOMC_DATES = {
+    2025: ['01-29', '03-19', '05-07', '06-18', '07-30', '09-17', '10-29', '12-10'],
+    2026: ['01-28', '03-18', '05-06', '06-17', '07-29', '09-16', '10-28', '12-09'],
+    2027: ['01-27', '03-17', '05-05', '06-16', '07-28', '09-22', '10-27', '12-15'],
+};
+
+// FOMC meetings that include Summary of Economic Projections (SEP = dot plot)
+const FOMC_SEP_MONTHS = ['03', '06', '09', '12'];
+
+function getFirstFridayOfMonth(year, month) {
+    const d = new Date(year, month, 1);
+    const day = d.getDay(); // 0=Sun
+    const offset = (5 - day + 7) % 7; // days to first Friday
+    d.setDate(1 + offset);
+    return d.toISOString().split('T')[0];
+}
+
+function generateEventsForMonth(year, month) {
+    const events = [];
+    const mm = String(month + 1).padStart(2, '0');
+    const yearStr = String(year);
+
+    // NFP — First Friday, 08:30 ET
+    const nfpDate = getFirstFridayOfMonth(year, month);
+    const prevMonth = month === 0 ? 'Dec' : new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'short' });
+    events.push({
+        date: nfpDate,
+        time: '08:30',
+        event: `Non-Farm Payrolls (${prevMonth})`,
+        country: 'US',
+        importance: 3,
+        category: 'employment',
+    });
+
+    // CPI — ~12th of month
+    const cpiDay = 12;
+    let cpiDate = new Date(year, month, cpiDay);
+    // Skip weekends
+    if (cpiDate.getDay() === 0) cpiDate.setDate(cpiDay + 1);
+    if (cpiDate.getDay() === 6) cpiDate.setDate(cpiDay + 2);
+    const cpiStr = cpiDate.toISOString().split('T')[0];
+    events.push({
+        date: cpiStr,
+        time: '08:30',
+        event: `CPI (${prevMonth})`,
+        country: 'US',
+        importance: 3,
+        category: 'inflation',
+    });
+
+    // PPI — Day after CPI
+    const ppiDate = new Date(cpiDate);
+    ppiDate.setDate(ppiDate.getDate() + 1);
+    if (ppiDate.getDay() === 0) ppiDate.setDate(ppiDate.getDate() + 1);
+    if (ppiDate.getDay() === 6) ppiDate.setDate(ppiDate.getDate() + 2);
+    events.push({
+        date: ppiDate.toISOString().split('T')[0],
+        time: '08:30',
+        event: `PPI (${prevMonth})`,
+        country: 'US',
+        importance: 2,
+        category: 'inflation',
+    });
+
+    // Israel CPI — ~15th of month
+    let ilCpiDate = new Date(year, month, 15);
+    if (ilCpiDate.getDay() === 6) ilCpiDate.setDate(16); // Skip Sat
+    if (ilCpiDate.getDay() === 0) ilCpiDate.setDate(16);
+    events.push({
+        date: ilCpiDate.toISOString().split('T')[0],
+        time: '08:30',
+        event: `Israel CPI (${prevMonth})`,
+        country: 'IL',
+        importance: 2,
+        category: 'inflation',
+    });
+
+    // FOMC — from known dates
+    const fomcDates = FOMC_DATES[year] || [];
+    fomcDates.forEach(md => {
+        if (md.startsWith(mm)) {
+            const isSEP = FOMC_SEP_MONTHS.includes(mm);
+            events.push({
+                date: `${yearStr}-${md}`,
+                time: '14:00',
+                event: isSEP ? 'FOMC Rate Decision + SEP' : 'FOMC Rate Decision',
+                country: 'US',
+                importance: 3,
+                category: 'fed',
+            });
+        }
+    });
+
+    // GDP — quarterly (Jan=Q4 advance, Apr=Q1, Jul=Q2, Oct=Q3)
+    const gdpMonths = { 0: 'Q4 Advance', 3: 'Q1 Advance', 6: 'Q2 Advance', 9: 'Q3 Advance' };
+    if (gdpMonths[month] !== undefined) {
+        let gdpDate = new Date(year, month, 28);
+        if (gdpDate.getDay() === 0) gdpDate.setDate(27);
+        if (gdpDate.getDay() === 6) gdpDate.setDate(27);
+        events.push({
+            date: gdpDate.toISOString().split('T')[0],
+            time: '08:30',
+            event: `GDP (${gdpMonths[month]})`,
+            country: 'US',
+            importance: 3,
+            category: 'gdp',
+        });
+    }
+
+    return events;
+}
+
+// In-memory calendar cache (refreshed monthly)
+let generatedCalendar = null;
+let lastCalendarGeneration = 0;
+const CALENDAR_REFRESH_INTERVAL = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 function getEconomicEvents() {
     const cacheKey = 'economic_events';
     const cached = getCached(cacheKey, CACHE_DURATIONS.economicEvents);
     if (cached) return cached;
 
-    try {
-        const dataPath = join(__dirname_service, '..', 'data', 'economicEvents.json');
-        const raw = readFileSync(dataPath, 'utf8');
-        const allEvents = JSON.parse(raw);
+    const now = Date.now();
 
-        // Filter to only future events (from today)
-        const today = new Date().toISOString().split('T')[0];
-        const futureEvents = allEvents.filter(e => e.date >= today);
+    // Regenerate if stale or first run
+    if (!generatedCalendar || (now - lastCalendarGeneration) > CALENDAR_REFRESH_INTERVAL) {
+        console.log('📅 Generating economic calendar from patterns...');
 
-        // Return next 30 events max
-        const result = futureEvents.slice(0, 30);
-        setCache(cacheKey, result);
-        return result;
-    } catch (error) {
-        console.error('Failed to load economic events:', error.message);
-        return [];
+        // 1) Load static curated events as base layer
+        let staticEvents = [];
+        try {
+            const dataPath = join(__dirname_service, '..', 'data', 'economicEvents.json');
+            const raw = readFileSync(dataPath, 'utf8');
+            staticEvents = JSON.parse(raw);
+        } catch (e) {
+            console.warn('Could not load static events, using generated only:', e.message);
+        }
+
+        // 2) Auto-generate events for the next 6 months
+        const today = new Date();
+        const generated = [];
+        for (let i = 0; i < 6; i++) {
+            const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+            generated.push(...generateEventsForMonth(d.getFullYear(), d.getMonth()));
+        }
+
+        // 3) Merge: static events take priority (they have exact dates)
+        //    Generated events fill gaps where static doesn't cover
+        const staticDates = new Set(staticEvents.map(e => `${e.date}|${e.category}`));
+        const uniqueGenerated = generated.filter(e => !staticDates.has(`${e.date}|${e.category}`));
+        const merged = [...staticEvents, ...uniqueGenerated];
+
+        // 4) Filter to future only, sort, dedupe
+        const todayStr = today.toISOString().split('T')[0];
+        generatedCalendar = merged
+            .filter(e => e.date >= todayStr)
+            .sort((a, b) => a.date.localeCompare(b.date));
+
+        lastCalendarGeneration = now;
+        console.log(`📅 Calendar generated: ${generatedCalendar.length} upcoming events`);
     }
+
+    const result = generatedCalendar.slice(0, 30);
+    setCache(cacheKey, result);
+    return result;
 }
 
 export { getMarketHolidays, getStockSplits, getEconomicEvents };
+
