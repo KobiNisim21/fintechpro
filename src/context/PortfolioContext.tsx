@@ -87,13 +87,13 @@ function getMarketStatus(): MarketStatus {
 // LOCAL STORAGE CACHE (stale-while-revalidate)
 // ============================================
 const CACHE_KEY = 'portfolio_positions_cache';
+const ANALYTICS_CACHE_KEY = 'portfolio_analytics_cache';
 
 function loadCachedPositions(): Position[] {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    // Validate structure — must be an array with symbols
     if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].symbol) {
       return parsed;
     }
@@ -111,6 +111,25 @@ function clearCachedPositions() {
   localStorage.removeItem(CACHE_KEY);
 }
 
+function loadCachedAnalytics(): PortfolioAnalytics | null {
+  try {
+    const raw = localStorage.getItem(ANALYTICS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Validate structure — must have healthScore
+    if (parsed && typeof parsed.healthScore === 'number') {
+      return parsed;
+    }
+  } catch { /* corrupted cache, ignore */ }
+  return null;
+}
+
+function saveCachedAnalytics(analytics: PortfolioAnalytics) {
+  try {
+    localStorage.setItem(ANALYTICS_CACHE_KEY, JSON.stringify(analytics));
+  } catch { /* storage full, ignore */ }
+}
+
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
 
@@ -125,8 +144,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [positionsReady, setPositionsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Analytics State
-  const [portfolioAnalytics, setPortfolioAnalytics] = useState<PortfolioAnalytics | null>(null);
+  // Analytics State — initialize from localStorage cache for instant display
+  const [portfolioAnalytics, setPortfolioAnalytics] = useState<PortfolioAnalytics | null>(() => {
+    if (!isAuthenticated) return null;
+    return loadCachedAnalytics();
+  });
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [lastAnalyticsFetch, setLastAnalyticsFetch] = useState<number>(0);
 
@@ -257,14 +279,15 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      setAnalyticsLoading(true);
-      console.log('Fetching portfolio analytics...');
+      // Only show loading spinner if we don't have ANY cached analytics to display
+      if (!portfolioAnalytics) {
+        setAnalyticsLoading(true);
+      }
       const symbols = positions.map(p => p.symbol);
       const quantities = positions.map(p => p.quantity);
       const prices = positions.map(p => p.price);
 
       const data = await stocksAPI.getPortfolioAnalytics(symbols, quantities, prices);
-      setPortfolioAnalytics(data);
 
       // Detect if the backend returned default/placeholder values
       const isDefault = data?.healthScore === 50 &&
@@ -273,10 +296,16 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         data?.components?.sentiment === 50;
 
       if (isDefault) {
-        console.warn('Analytics returned defaults — not caching timestamp (will allow retry)');
         // Don't update lastAnalyticsFetch so the throttle allows a retry
+        // Also don't overwrite good cached data with defaults
+        if (!portfolioAnalytics) {
+          setPortfolioAnalytics(data);
+        }
       } else {
+        setPortfolioAnalytics(data);
         setLastAnalyticsFetch(Date.now());
+        // Save to localStorage for instant display on next session
+        saveCachedAnalytics(data);
       }
     } catch (err: any) {
       console.error('Failed to fetch analytics:', err);
@@ -291,17 +320,14 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
-  // Clear analytics when positions change efficiently
-  // Actually, we should probably invalidate logic. 
-  // If positions change significantly (add/remove), we should reset stored analytics 
-  // so next view fetches fresh data.
+  // Clear analytics timestamp when positions change (add/remove)
+  // This allows the background refresh to re-compute with the new composition
   useEffect(() => {
-    // If positions count changes, invalidate cache timestamp
     setLastAnalyticsFetch(0);
   }, [positions.length]);
 
   // Eagerly fetch analytics ONLY after fresh positions are loaded from API
-  // This prevents computing health scores from stale localStorage cache data
+  // Cached analytics are shown instantly; this silently refreshes them in the background
   useEffect(() => {
     if (positions.length === 0 || !positionsReady) return;
     fetchAnalytics();
