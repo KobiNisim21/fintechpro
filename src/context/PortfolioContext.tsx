@@ -39,6 +39,7 @@ interface PortfolioContextType {
   positions: Position[];
   loading: boolean;
   positionsLoading: boolean;
+  positionsReady: boolean;
   error: string | null;
   addPosition: (symbol: string, name: string, quantity: number, averagePrice: number, date?: string | Date) => Promise<void>;
   updatePosition: (id: string, quantity?: number, averagePrice?: number, lots?: Lot[]) => Promise<void>;
@@ -598,6 +599,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         positions,
         loading,
         positionsLoading: loading,
+        positionsReady,
         error,
         addPosition,
         updatePosition,

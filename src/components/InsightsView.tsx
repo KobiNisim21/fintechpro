@@ -151,7 +151,7 @@ const renderCustomLabel = ({ cx, cy, midAngle, outerRadius, name, percent }: any
 //  INSIGHTS VIEW
 // ═════════════════════════════════════════════════════════════════
 export function InsightsView({ isActive = true }: { isActive?: boolean }) {
-    const { positions, portfolioAnalytics, analyticsLoading, fetchAnalytics } = usePortfolio();
+    const { positions, positionsReady, portfolioAnalytics, analyticsLoading, fetchAnalytics } = usePortfolio();
     const isMobile = useIsMobile();
     const [recommendations, setRecommendations] = useState<Record<string, RecommendationTrend[]>>({});
     const [priceTargets, setPriceTargets] = useState<Record<string, PriceTarget>>({});
@@ -160,9 +160,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     const hasFetchedRef = useRef(false);
 
     // ── Analytics (Health Score + Benchmark) ──
-    // NOW USING CONTEXT STATE
     const analytics = portfolioAnalytics;
-    // Loading state from context is used directly
 
     // ── Portfolio Distribution (Pie Chart) ──
     const distributionData = useMemo(() => {
@@ -172,9 +170,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
         })).sort((a, b) => b.value - a.value);
     }, [positions]);
 
-    // ── Lazy Fetch: Only when tab is active and not yet fetched ──
+    // ── Lazy Fetch: Only when tab is active, positions are FRESH, and not yet fetched ──
     useEffect(() => {
-        if (!isActive || positions.length === 0 || hasFetchedRef.current) return;
+        if (!isActive || positions.length === 0 || !positionsReady || hasFetchedRef.current) return;
 
         const fetchInsights = async () => {
             setLoading(true);
@@ -187,46 +185,25 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                 hasFetchedRef.current = true;
             } catch (error) {
                 console.error("Failed to fetch batch insights", error);
+                // Allow fetching again if it failed
+                hasFetchedRef.current = false;
             } finally {
                 setLoading(false);
             }
         };
         fetchInsights();
-    }, [isActive, positions]);
+    }, [isActive, positions, positionsReady]);
 
     // Reset fetch flag when positions change
     useEffect(() => {
         hasFetchedRef.current = false;
-        // fetchAnalytics handles its own invalidation via context/timestamp
     }, [positions.length]);
 
-    // ── Fetch analytics (health score + benchmark) ──
+    // Trigger fetch if missing or stale when tab becomes active
     useEffect(() => {
-        if (!isActive || positions.length === 0) return;
-        // Trigger fetch if missing or stale (handled internally by context)
+        if (!isActive || positions.length === 0 || !positionsReady) return;
         fetchAnalytics();
-    }, [isActive, positions.length, fetchAnalytics]);
-
-    // ── Safety-net: retry analytics if still null or defaults after positions loaded ──
-    useEffect(() => {
-        if (!isActive || positions.length === 0 || analyticsLoading) return;
-
-        // Detect if analytics is missing OR contains default/placeholder values
-        const isDefault = analytics &&
-            analytics.healthScore === 50 &&
-            analytics.components?.diversification === 50 &&
-            analytics.components?.volatility === 50 &&
-            analytics.components?.sentiment === 50;
-
-        if (analytics && !isDefault) return; // Real data exists, no retry needed
-
-        // Positions are loaded but analytics is null or defaults — force a retry
-        const timer = setTimeout(() => {
-            console.log('Safety-net: forcing analytics re-fetch (data was null or defaults)');
-            fetchAnalytics(true);
-        }, 2500);
-        return () => clearTimeout(timer);
-    }, [isActive, positions.length, analytics, analyticsLoading, fetchAnalytics]);
+    }, [isActive, positions.length, positionsReady, fetchAnalytics]);
 
     // ── Slice benchmark data by range (no re-fetch) ──
     // MOVED TO PortfolioBenchmarkChart COMPONENT
