@@ -175,40 +175,48 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
         })).sort((a, b) => b.value - a.value);
     }, [positions]);
 
-    // ── Lazy Fetch: Only when tab is active, positions are FRESH, and not yet fetched ──
+    // ── Fetch insights: instant from cache, background refresh from API ──
     useEffect(() => {
-        // If we already have data in context, mark as fetched so we don't refetch on tab switch!
-        if (insightsData && Object.keys(insightsData.profiles).length > 0) {
-            hasFetchedRef.current = true;
-            return;
-        }
+        // Already fetched fresh data this session — no need to refetch
+        if (hasFetchedRef.current) return;
 
-        if (!isActive || positions.length === 0 || !positionsReady || hasFetchedRef.current) return;
+        // Not ready yet
+        if (!isActive || positions.length === 0 || !positionsReady) return;
+
+        // If we have cached data, mark as "loaded" but still do a background refresh
+        const hasCachedData = insightsData !== null && Object.keys(insightsData.profiles).length > 0;
 
         let retryCount = 0;
         let retryTimer: ReturnType<typeof setTimeout>;
         let staggerTimer: ReturnType<typeof setTimeout>;
 
         const fetchInsights = async () => {
-            setLoading(true);
+            // Only show loading spinner if there's NO cached data at all
+            if (!hasCachedData) {
+                setLoading(true);
+            }
+
             try {
                 const symbols = positions.map(p => p.symbol);
                 const data = await stocksAPI.getBatchInsights(symbols);
 
                 const recsSize = Object.keys(data.recommendations || {}).length;
+                const profilesSize = Object.keys(data.profiles || {}).length;
 
-                // If we got NO recommendations but we have positions, it's likely a Finnhub rate limit (429)
-                // The backend catches the 429 and returns empty objects.
-                if (recsSize === 0 && symbols.length > 0 && retryCount < 3) {
-                    console.warn(`[Insights] Got empty analyst data (likely rate limit). Retrying... (${retryCount + 1}/3)`);
+                // If we got NO profiles AND no recommendations, it's likely a Finnhub rate limit
+                if (profilesSize === 0 && recsSize === 0 && symbols.length > 0 && retryCount < 3) {
+                    console.warn(`[Insights] Got empty data (likely rate limit). Retrying... (${retryCount + 1}/3)`);
                     retryCount++;
-                    retryTimer = setTimeout(fetchInsights, 5000); // 5 sec retry
+                    retryTimer = setTimeout(fetchInsights, 5000);
                 } else {
-                    setInsightsData({
-                        recommendations: data.recommendations || {},
-                        priceTargets: data.priceTargets || {},
-                        profiles: data.profiles || {}
-                    });
+                    // Only update if fresh data has substance — don't overwrite good cache with empty results
+                    if (profilesSize > 0) {
+                        setInsightsData({
+                            recommendations: data.recommendations || {},
+                            priceTargets: data.priceTargets || {},
+                            profiles: data.profiles || {}
+                        });
+                    }
                     hasFetchedRef.current = true;
                 }
             } catch (error) {
@@ -216,23 +224,23 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                 if (retryCount < 3) {
                     retryCount++;
                     retryTimer = setTimeout(fetchInsights, 5000);
-                } else {
-                    hasFetchedRef.current = false; // Allow manual refresh later
                 }
+                // If we have cached data, just keep showing it — don't break the UI
             } finally {
                 setLoading(false);
             }
         };
 
-        // Stagger this fetch by 2 seconds so it doesn't collide with the massive getPortfolioAnalytics API call
-        // This prevents blowing through Finnhub's 30 req/sec limit on initial load.
-        staggerTimer = setTimeout(fetchInsights, 2000);
+        // If we have cached data, skip the stagger — start the background refresh immediately
+        // If no cache, stagger by 2s to avoid collision with analytics API
+        const delay = hasCachedData ? 100 : 2000;
+        staggerTimer = setTimeout(fetchInsights, delay);
 
         return () => {
             clearTimeout(staggerTimer);
             clearTimeout(retryTimer);
         };
-    }, [isActive, positions, positionsReady, insightsData, setInsightsData]);
+    }, [isActive, positions, positionsReady]);
 
     // Reset fetch flag when positions change
     useEffect(() => {

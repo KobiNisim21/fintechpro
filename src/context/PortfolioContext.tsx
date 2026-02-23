@@ -97,6 +97,7 @@ function getMarketStatus(): MarketStatus {
 // ============================================
 const CACHE_KEY = 'portfolio_positions_cache';
 const ANALYTICS_CACHE_KEY = 'portfolio_analytics_cache_v2'; // v2: keyed by portfolio hash
+const INSIGHTS_CACHE_KEY = 'portfolio_insights_cache'; // profiles, recommendations, priceTargets
 
 function loadCachedPositions(): Position[] {
   try {
@@ -158,6 +159,41 @@ function saveCachedAnalytics(analytics: PortfolioAnalytics, positions: Position[
   } catch { /* storage full, ignore */ }
 }
 
+// ── Insights Cache (profiles, recommendations, priceTargets) ──
+type InsightsData = {
+  recommendations: Record<string, RecommendationTrend[]>;
+  priceTargets: Record<string, PriceTarget>;
+  profiles: Record<string, CompanyProfile>;
+};
+
+function loadCachedInsights(positions: Position[]): InsightsData | null {
+  try {
+    const raw = localStorage.getItem(INSIGHTS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.profiles) return null;
+    // Must match the current portfolio
+    const cachedHash = parsed._portfolioHash;
+    const currentHash = getPortfolioHash(positions);
+    if (cachedHash !== currentHash) return null;
+    // Must have at least some profiles (otherwise it's empty/rate-limited data)
+    if (Object.keys(parsed.profiles).length === 0) return null;
+    return {
+      recommendations: parsed.recommendations || {},
+      priceTargets: parsed.priceTargets || {},
+      profiles: parsed.profiles || {}
+    };
+  } catch { /* corrupted cache, ignore */ }
+  return null;
+}
+
+function saveCachedInsights(data: InsightsData, positions: Position[]) {
+  try {
+    const toSave = { ...data, _portfolioHash: getPortfolioHash(positions) };
+    localStorage.setItem(INSIGHTS_CACHE_KEY, JSON.stringify(toSave));
+  } catch { /* storage full, ignore */ }
+}
+
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
 
@@ -181,12 +217,20 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [lastAnalyticsFetch, setLastAnalyticsFetch] = useState<number>(0);
 
-  // Insights State (kept in context so it survives tab unmounts)
-  const [insightsData, setInsightsData] = useState<{
-    recommendations: Record<string, RecommendationTrend[]>;
-    priceTargets: Record<string, PriceTarget>;
-    profiles: Record<string, CompanyProfile>;
-  } | null>(null);
+  // Insights State — initialize from localStorage cache for instant display
+  const [insightsData, setInsightsDataRaw] = useState<InsightsData | null>(() => {
+    if (!isAuthenticated) return null;
+    const cachedPositions = loadCachedPositions();
+    return loadCachedInsights(cachedPositions);
+  });
+
+  // Wrapper that also persists to localStorage
+  const setInsightsData = useCallback((data: InsightsData | null) => {
+    setInsightsDataRaw(data);
+    if (data && positions.length > 0) {
+      saveCachedInsights(data, positions);
+    }
+  }, [positions]);
 
   // Fetch positions from backend — FAST: uses batch extended quotes for prices
   const fetchPositions = async () => {
