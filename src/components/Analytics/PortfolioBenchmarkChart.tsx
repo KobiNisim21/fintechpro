@@ -22,9 +22,17 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
 
     const slicedData = useMemo(() => {
         if (!data || data.length === 0) return [];
-        const daysMap = { '1M': 22, '6M': 130, '1Y': 365 };
-        const days = daysMap[range];
-        const sliced = data.slice(Math.max(0, data.length - days));
+
+        // Calculate the cutoff date based on selected range
+        const now = new Date();
+        const cutoffDate = new Date(now);
+        if (range === '1M') cutoffDate.setMonth(cutoffDate.getMonth() - 1);
+        else if (range === '6M') cutoffDate.setMonth(cutoffDate.getMonth() - 6);
+        else cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
+        const cutoffStr = cutoffDate.toISOString().split('T')[0];
+
+        // Filter by actual calendar date, not array position
+        const sliced = data.filter(d => d.date >= cutoffStr);
 
         // Calculate relative returns based on the start of this slice window
         if (sliced.length === 0) return [];
