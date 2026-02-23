@@ -96,7 +96,7 @@ function getMarketStatus(): MarketStatus {
 // LOCAL STORAGE CACHE (stale-while-revalidate)
 // ============================================
 const CACHE_KEY = 'portfolio_positions_cache';
-const ANALYTICS_CACHE_KEY = 'portfolio_analytics_cache';
+const ANALYTICS_CACHE_KEY = 'portfolio_analytics_cache_v2'; // v2: keyed by portfolio hash
 
 function loadCachedPositions(): Position[] {
   try {
@@ -120,22 +120,41 @@ function clearCachedPositions() {
   localStorage.removeItem(CACHE_KEY);
 }
 
-function loadCachedAnalytics(): PortfolioAnalytics | null {
+/** Build a stable hash of the portfolio composition for cache keying */
+function getPortfolioHash(positions: Position[]): string {
+  return positions.map(p => p.symbol).sort().join(',');
+}
+
+/** Check if analytics data contains 50/50/50 backend defaults */
+function isDefaultAnalytics(data: PortfolioAnalytics): boolean {
+  return data.healthScore === 50 &&
+    data.components?.diversification === 50 &&
+    data.components?.volatility === 50 &&
+    data.components?.sentiment === 50;
+}
+
+function loadCachedAnalytics(positions: Position[]): PortfolioAnalytics | null {
   try {
     const raw = localStorage.getItem(ANALYTICS_CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    // Validate structure — must have healthScore
-    if (parsed && typeof parsed.healthScore === 'number') {
-      return parsed;
-    }
+    // Must have healthScore
+    if (!parsed || typeof parsed.healthScore !== 'number') return null;
+    // NEVER load 50/50/50 defaults from cache
+    if (isDefaultAnalytics(parsed)) return null;
+    // Must match the current portfolio composition
+    const cachedHash = parsed._portfolioHash;
+    const currentHash = getPortfolioHash(positions);
+    if (cachedHash !== currentHash) return null;
+    return parsed;
   } catch { /* corrupted cache, ignore */ }
   return null;
 }
 
-function saveCachedAnalytics(analytics: PortfolioAnalytics) {
+function saveCachedAnalytics(analytics: PortfolioAnalytics, positions: Position[]) {
   try {
-    localStorage.setItem(ANALYTICS_CACHE_KEY, JSON.stringify(analytics));
+    const data = { ...analytics, _portfolioHash: getPortfolioHash(positions) };
+    localStorage.setItem(ANALYTICS_CACHE_KEY, JSON.stringify(data));
   } catch { /* storage full, ignore */ }
 }
 
@@ -153,10 +172,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [positionsReady, setPositionsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Analytics State — initialize from localStorage cache for instant display
+  // Analytics State — initialize from localStorage cache ONLY if it matches current positions
   const [portfolioAnalytics, setPortfolioAnalytics] = useState<PortfolioAnalytics | null>(() => {
     if (!isAuthenticated) return null;
-    return loadCachedAnalytics();
+    const cachedPositions = loadCachedPositions();
+    return loadCachedAnalytics(cachedPositions);
   });
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [lastAnalyticsFetch, setLastAnalyticsFetch] = useState<number>(0);
@@ -302,24 +322,14 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       const data = await stocksAPI.getPortfolioAnalytics(symbols, quantities, prices);
 
       // Detect if the backend returned default/placeholder values (cold-start fallback)
-      const isDefault = data?.healthScore === 50 &&
-        data?.components?.diversification === 50 &&
-        data?.components?.volatility === 50 &&
-        data?.components?.sentiment === 50;
-
-      if (isDefault) {
-        // Don't overwrite good cached data with defaults
+      if (isDefaultAnalytics(data)) {
+        // NEVER show or cache 50/50/50 defaults — they are meaningless
         // Don't update lastAnalyticsFetch → allows retry
-        if (!portfolioAnalytics) {
-          // No cache at all — show defaults temporarily
-          setPortfolioAnalytics(data);
-        }
-        // Return 'defaults' flag so caller can retry
         return 'defaults';
       } else {
         setPortfolioAnalytics(data);
         setLastAnalyticsFetch(Date.now());
-        saveCachedAnalytics(data);
+        saveCachedAnalytics(data, positions);
         return 'success';
       }
     } catch (err: any) {

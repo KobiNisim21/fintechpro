@@ -161,6 +161,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
     const priceTargets = insightsData?.priceTargets || {};
     const profiles = insightsData?.profiles || {};
 
+    // TRUE only when batch insights (profiles/sectors) have been loaded from the API
+    const insightsLoaded = insightsData !== null && Object.keys(insightsData.profiles).length > 0;
+
     // ── Analytics (Health Score + Benchmark) ──
     const analytics = portfolioAnalytics;
 
@@ -475,8 +478,18 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                 </Card>
 
                 {/* ── Sector Distribution (Treemap) ── */}
-                {loading ? (
-                    <SkeletonChart />
+                {!insightsLoaded ? (
+                    <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg h-full flex flex-col">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-violet-400" />
+                                Sector Distribution
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 min-h-[340px]">
+                            <div className="w-full h-full bg-white/5 rounded-xl animate-pulse" />
+                        </CardContent>
+                    </Card>
                 ) : (
                     <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg h-full flex flex-col">
                         <CardHeader className="pb-2">
@@ -557,93 +570,90 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     Analyst Recommendations & Price Targets
                 </h3>
 
-                {loading ? (
+                {!insightsLoaded ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
                     </div>
+                ) : analystCards.length === 0 ? (
+                    <p className="text-zinc-500 text-sm">No analyst-rated holdings in your portfolio.</p>
                 ) : (
-                    <>
-                        {analystCards.length === 0 && (
-                            <p className="text-zinc-500 text-sm">No analyst-rated holdings in your portfolio.</p>
-                        )}
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                            {analystCards.map((item) => (
-                                <div key={item.symbol}
-                                    className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/8 transition-all duration-200"
-                                >
-                                    {/* Header */}
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="font-bold text-lg text-white">{item.symbol}</h4>
-                                                <Badge className={`${item.consensusColor} text-white text-[10px] font-semibold border-none px-2 py-0.5`}>
-                                                    {item.consensus}
-                                                </Badge>
-                                            </div>
-                                            <p className="text-sm text-zinc-500 truncate max-w-[180px]">{item.name}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {analystCards.map((item) => (
+                            <div key={item.symbol}
+                                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/8 transition-all duration-200"
+                            >
+                                {/* Header */}
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="font-bold text-lg text-white">{item.symbol}</h4>
+                                            <Badge className={`${item.consensusColor} text-white text-[10px] font-semibold border-none px-2 py-0.5`}>
+                                                {item.consensus}
+                                            </Badge>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Current</div>
-                                            <div className="font-mono text-white font-semibold">${item.price.toFixed(2)}</div>
+                                        <p className="text-sm text-zinc-500 truncate max-w-[180px]">{item.name}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Current</div>
+                                        <div className="font-mono text-white font-semibold">${item.price.toFixed(2)}</div>
+                                    </div>
+                                </div>
+
+                                {/* Target + Potential */}
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                    <div className="bg-white/5 rounded-xl p-3">
+                                        <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Avg Target</div>
+                                        <div className="font-bold text-white text-sm">
+                                            {item.target ? `$${item.target.toFixed(2)}` : 'No Data'}
                                         </div>
                                     </div>
-
-                                    {/* Target + Potential */}
-                                    <div className="grid grid-cols-2 gap-3 mb-4">
-                                        <div className="bg-white/5 rounded-xl p-3">
-                                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Avg Target</div>
-                                            <div className="font-bold text-white text-sm">
-                                                {item.target ? `$${item.target.toFixed(2)}` : 'No Data'}
-                                            </div>
-                                        </div>
-                                        <div className="bg-white/5 rounded-xl p-3">
-                                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Potential</div>
-                                            <div className={`font-bold text-sm flex items-center gap-1 ${item.target
-                                                ? item.upside >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                                                : 'text-zinc-500'
-                                                }`}>
-                                                {item.target ? (
-                                                    <>
-                                                        {item.upside >= 0
-                                                            ? <TrendingUp className="w-3.5 h-3.5" />
-                                                            : <TrendingDown className="w-3.5 h-3.5" />
-                                                        }
-                                                        {item.upside > 0 ? '+' : ''}{item.upside.toFixed(1)}%
-                                                    </>
-                                                ) : 'No Data'}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Rating Bar */}
-                                    <div className="space-y-1.5">
-                                        <div className="flex justify-between text-[10px] text-zinc-500 uppercase tracking-wider">
-                                            <span>Ratings ({item.totalVotes})</span>
-                                        </div>
-                                        <div className="h-1.5 w-full flex rounded-full overflow-hidden bg-white/5">
-                                            {item.buyVotes > 0 && (
-                                                <div style={{ width: `${(item.buyVotes / item.totalVotes) * 100}%` }}
-                                                    className="bg-emerald-500 h-full transition-all duration-500" />
-                                            )}
-                                            {item.holdVotes > 0 && (
-                                                <div style={{ width: `${(item.holdVotes / item.totalVotes) * 100}%` }}
-                                                    className="bg-amber-500 h-full transition-all duration-500" />
-                                            )}
-                                            {item.sellVotes > 0 && (
-                                                <div style={{ width: `${(item.sellVotes / item.totalVotes) * 100}%` }}
-                                                    className="bg-rose-500 h-full transition-all duration-500" />
-                                            )}
-                                        </div>
-                                        <div className="flex justify-between text-[10px] text-zinc-500">
-                                            <span>Buy {item.buyVotes}</span>
-                                            <span>Hold {item.holdVotes}</span>
-                                            <span>Sell {item.sellVotes}</span>
+                                    <div className="bg-white/5 rounded-xl p-3">
+                                        <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Potential</div>
+                                        <div className={`font-bold text-sm flex items-center gap-1 ${item.target
+                                            ? item.upside >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                                            : 'text-zinc-500'
+                                            }`}>
+                                            {item.target ? (
+                                                <>
+                                                    {item.upside >= 0
+                                                        ? <TrendingUp className="w-3.5 h-3.5" />
+                                                        : <TrendingDown className="w-3.5 h-3.5" />
+                                                    }
+                                                    {item.upside > 0 ? '+' : ''}{item.upside.toFixed(1)}%
+                                                </>
+                                            ) : 'No Data'}
                                         </div>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    </>
+
+                                {/* Rating Bar */}
+                                <div className="space-y-1.5">
+                                    <div className="flex justify-between text-[10px] text-zinc-500 uppercase tracking-wider">
+                                        <span>Ratings ({item.totalVotes})</span>
+                                    </div>
+                                    <div className="h-1.5 w-full flex rounded-full overflow-hidden bg-white/5">
+                                        {item.buyVotes > 0 && (
+                                            <div style={{ width: `${(item.buyVotes / item.totalVotes) * 100}%` }}
+                                                className="bg-emerald-500 h-full transition-all duration-500" />
+                                        )}
+                                        {item.holdVotes > 0 && (
+                                            <div style={{ width: `${(item.holdVotes / item.totalVotes) * 100}%` }}
+                                                className="bg-amber-500 h-full transition-all duration-500" />
+                                        )}
+                                        {item.sellVotes > 0 && (
+                                            <div style={{ width: `${(item.sellVotes / item.totalVotes) * 100}%` }}
+                                                className="bg-rose-500 h-full transition-all duration-500" />
+                                        )}
+                                    </div>
+                                    <div className="flex justify-between text-[10px] text-zinc-500">
+                                        <span>Buy {item.buyVotes}</span>
+                                        <span>Hold {item.holdVotes}</span>
+                                        <span>Sell {item.sellVotes}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 )}
             </div>
         </div>
