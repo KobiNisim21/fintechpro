@@ -43,12 +43,12 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                     <span className="text-[10px] text-white/30 ml-auto">30-day Pearson</span>
                 </CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center justify-center">
+            <CardContent>
                 {!content ? (
                     <div className="w-full h-[280px] bg-white/5 rounded-xl animate-pulse" />
                 ) : (
-                    <div className="overflow-x-auto overflow-y-hidden w-full py-2 pb-12 max-h-[380px] flex justify-center">
-                        <div style={{ display: 'inline-block' }}>
+                    <div className="overflow-x-auto overflow-y-hidden w-full py-2 pb-4 max-h-[420px]">
+                        <div style={{ display: 'block', width: 'fit-content', margin: '0 auto' }}>
                             {/* Header row */}
                             <div className="flex" style={{ paddingLeft: content.labelSize }}>
                                 {content.corrSymbols.map(sym => (

@@ -551,7 +551,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                         paddingAngle={2}
                                         dataKey="value" stroke="none" minAngle={3}
                                         label={renderCustomLabel} labelLine={false}
-                                        isAnimationActive={true} animationDuration={800}
+                                        isAnimationActive={false}
                                     >
                                         {distributionData.map((_, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
