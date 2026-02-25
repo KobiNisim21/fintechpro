@@ -1,244 +1,75 @@
 export const israeliCatalog = [
-    {
-        "symbol": "TEVA.TA",
-        "hebrewName": "טבע תעשיות פרמצבטיות",
-        "englishName": "Teva Pharmaceutical",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "LUMI.TA",
-        "hebrewName": "בנק לאומי",
-        "englishName": "Bank Leumi",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "POLI.TA",
-        "hebrewName": "בנק הפועלים",
-        "englishName": "Bank Hapoalim",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "DSCT.TA",
-        "hebrewName": "קבוצת דיסקונט",
-        "englishName": "Discount Bank",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "MZRN.TA",
-        "hebrewName": "מזרחי טפחות",
-        "englishName": "Mizrahi Tefahot",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FIBI.TA",
-        "hebrewName": "הבינלאומי",
-        "englishName": "FIBI",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "ICL.TA",
-        "hebrewName": "איי.סי.אל גרופ",
-        "englishName": "ICL Group",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "NICE.TA",
-        "hebrewName": "נייס",
-        "englishName": "NICE Ltd",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "ENOG.TA",
-        "hebrewName": "אנרג'יאן",
-        "englishName": "Energean",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "BEZQ.TA",
-        "hebrewName": "בזק",
-        "englishName": "Bezeq",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "AZRG.TA",
-        "hebrewName": "קבוצת עזריאלי",
-        "englishName": "Azrieli Group",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "MELI.TA",
-        "hebrewName": "מליסרון",
-        "englishName": "Melisron",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "ESLT.TA",
-        "hebrewName": "אלביט מערכות",
-        "englishName": "Elbit Systems",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "NVMI.TA",
-        "hebrewName": "נובה",
-        "englishName": "Nova",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "TSEM.TA",
-        "hebrewName": "טאואר סמיקונדקטור",
-        "englishName": "Tower Semiconductor",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "ALHE.TA",
-        "hebrewName": "אלוני חץ",
-        "englishName": "Alony Hetz",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "SPEN.TA",
-        "hebrewName": "שפיר הנדסה",
-        "englishName": "Shapir Engineering",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "DLOM.TA",
-        "hebrewName": "דלק קבוצה",
-        "englishName": "Delek Group",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "ARPT.TA",
-        "hebrewName": "אירפורט סיטי",
-        "englishName": "Airport City",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FTAL.TA",
-        "hebrewName": "פתאל החזקות",
-        "englishName": "Fattal Holdings",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "STRA.TA",
-        "hebrewName": "שטראוס גרופ",
-        "englishName": "Strauss Group",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "SHFR.TA",
-        "hebrewName": "שופרסל",
-        "englishName": "Shufersal",
-        "type": "stock",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:5131417",
-        "fundId": "5131417",
-        "hebrewName": "מיטב כספית שקלית",
-        "englishName": "Meitav Shekel Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:5131581",
-        "fundId": "5131581",
-        "hebrewName": "מיטב כספית דולרית",
-        "englishName": "Meitav USD Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:5115204",
-        "fundId": "5115204",
-        "hebrewName": "הראל כספית שקלית",
-        "englishName": "Harel Shekel Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:5105262",
-        "fundId": "5105262",
-        "hebrewName": "אלטשולר שחם כספית שקלית",
-        "englishName": "Altshuler Shaham Shekel Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:5122739",
-        "fundId": "5122739",
-        "hebrewName": "קסם כספית שקלית",
-        "englishName": "Ksm Shekel Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:5132209",
-        "fundId": "5132209",
-        "hebrewName": "מור כספית שקלית",
-        "englishName": "More Shekel Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:5100065",
-        "fundId": "5100065",
-        "hebrewName": "ילין לפידות כספית",
-        "englishName": "Yelin Lapidot Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:5130757",
-        "fundId": "5130757",
-        "hebrewName": "איילון כספית שקלית",
-        "englishName": "Ayalon Shekel Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:5104521",
-        "fundId": "5104521",
-        "hebrewName": "מגדל כספית שקלית",
-        "englishName": "Migdal Shekel Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:5121434",
-        "fundId": "5121434",
-        "hebrewName": "אי.בי.אי כספית שקלית",
-        "englishName": "IBI Shekel Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    },
-    {
-        "symbol": "FUND:1159285",
-        "fundId": "1159285",
-        "hebrewName": "MTF כספית",
-        "englishName": "MTF Money Market",
-        "type": "fund",
-        "exchange": "TASE"
-    }
+    { "symbol": "TEVA.TA", "hebrewName": "טבע תעשיות פרמצבטיות", "englishName": "Teva Pharmaceutical", "type": "stock", "exchange": "TASE" },
+    { "symbol": "LUMI.TA", "hebrewName": "בנק לאומי", "englishName": "Bank Leumi", "type": "stock", "exchange": "TASE" },
+    { "symbol": "POLI.TA", "hebrewName": "בנק הפועלים", "englishName": "Bank Hapoalim", "type": "stock", "exchange": "TASE" },
+    { "symbol": "DSCT.TA", "hebrewName": "קבוצת דיסקונט", "englishName": "Discount Bank", "type": "stock", "exchange": "TASE" },
+    { "symbol": "MZRN.TA", "hebrewName": "מזרחי טפחות", "englishName": "Mizrahi Tefahot", "type": "stock", "exchange": "TASE" },
+    { "symbol": "FIBI.TA", "hebrewName": "הבינלאומי", "englishName": "FIBI", "type": "stock", "exchange": "TASE" },
+    { "symbol": "ICL.TA", "hebrewName": "איי.סי.אל גרופ", "englishName": "ICL Group", "type": "stock", "exchange": "TASE" },
+    { "symbol": "NICE.TA", "hebrewName": "נייס", "englishName": "NICE Ltd", "type": "stock", "exchange": "TASE" },
+    { "symbol": "ENOG.TA", "hebrewName": "אנרג'יאן", "englishName": "Energean", "type": "stock", "exchange": "TASE" },
+    { "symbol": "BEZQ.TA", "hebrewName": "בזק", "englishName": "Bezeq", "type": "stock", "exchange": "TASE" },
+    { "symbol": "AZRG.TA", "hebrewName": "קבוצת עזריאלי", "englishName": "Azrieli Group", "type": "stock", "exchange": "TASE" },
+    { "symbol": "MELI.TA", "hebrewName": "מליסרון", "englishName": "Melisron", "type": "stock", "exchange": "TASE" },
+    { "symbol": "ESLT.TA", "hebrewName": "אלביט מערכות", "englishName": "Elbit Systems", "type": "stock", "exchange": "TASE" },
+    { "symbol": "NVMI.TA", "hebrewName": "נובה", "englishName": "Nova", "type": "stock", "exchange": "TASE" },
+    { "symbol": "TSEM.TA", "hebrewName": "טאואר סמיקונדקטור", "englishName": "Tower Semiconductor", "type": "stock", "exchange": "TASE" },
+    { "symbol": "ALHE.TA", "hebrewName": "אלוני חץ", "englishName": "Alony Hetz", "type": "stock", "exchange": "TASE" },
+    { "symbol": "SPEN.TA", "hebrewName": "שפיר הנדסה", "englishName": "Shapir Engineering", "type": "stock", "exchange": "TASE" },
+    { "symbol": "DLOM.TA", "hebrewName": "דלק קבוצה", "englishName": "Delek Group", "type": "stock", "exchange": "TASE" },
+    { "symbol": "ARPT.TA", "hebrewName": "אירפורט סיטי", "englishName": "Airport City", "type": "stock", "exchange": "TASE" },
+    { "symbol": "FTAL.TA", "hebrewName": "פתאל החזקות", "englishName": "Fattal Holdings", "type": "stock", "exchange": "TASE" },
+    { "symbol": "STRA.TA", "hebrewName": "שטראוס גרופ", "englishName": "Strauss Group", "type": "stock", "exchange": "TASE" },
+    { "symbol": "SHFR.TA", "hebrewName": "שופרסל", "englishName": "Shufersal", "type": "stock", "exchange": "TASE" },
+    { "symbol": "FUND:5131417", "fundId": "5131417", "hebrewName": "מיטב כספית שקלית", "englishName": "Meitav Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5131581", "fundId": "5131581", "hebrewName": "מיטב כספית דולרית", "englishName": "Meitav USD Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5115204", "fundId": "5115204", "hebrewName": "הראל כספית שקלית", "englishName": "Harel Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5105262", "fundId": "5105262", "hebrewName": "אלטשולר שחם כספית שקלית", "englishName": "Altshuler Shaham Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5122739", "fundId": "5122739", "hebrewName": "קסם כספית שקלית", "englishName": "Ksm Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132209", "fundId": "5132209", "hebrewName": "מור כספית שקלית", "englishName": "More Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5100065", "fundId": "5100065", "hebrewName": "ילין לפידות כספית", "englishName": "Yelin Lapidot Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5130757", "fundId": "5130757", "hebrewName": "איילון כספית שקלית", "englishName": "Ayalon Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5104521", "fundId": "5104521", "hebrewName": "מגדל כספית שקלית", "englishName": "Migdal Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5121434", "fundId": "5121434", "hebrewName": "אי.בי.אי כספית שקלית", "englishName": "IBI Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:1159285", "fundId": "1159285", "hebrewName": "MTF כספית", "englishName": "MTF Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5131425", "fundId": "5131425", "hebrewName": "מיטב כספית ניהול נזילות", "englishName": "Meitav Liquidity Management", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132514", "fundId": "5132514", "hebrewName": "הראל כספית ניהול נזילות", "englishName": "Harel Liquidity Management", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132399", "fundId": "5132399", "hebrewName": "מגדל כספית ניהול נזילות", "englishName": "Migdal Liquidity Management", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133603", "fundId": "5133603", "hebrewName": "קסם כספית ניהול נזילות", "englishName": "Ksm Liquidity Management", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5134106", "fundId": "5134106", "hebrewName": "אי.בי.אי. כספית ניהול נזילות", "englishName": "IBI Liquidity Management", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133488", "fundId": "5133488", "hebrewName": "מור כספית ניהול נזילות", "englishName": "More Liquidity Management", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132647", "fundId": "5132647", "hebrewName": "אלטשולר שחם כספית ניהול נזילות", "englishName": "Altshuler Shaham Liquidity", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133744", "fundId": "5133744", "hebrewName": "ילין לפידות כספית ניהול נזילות", "englishName": "Yelin Lapidot Liquidity", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5122713", "fundId": "5122713", "hebrewName": "פסגות כספית ניהול נזילות", "englishName": "Psagot Liquidity Management", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132480", "fundId": "5132480", "hebrewName": "הראל כספית דולרית", "englishName": "Harel USD Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132449", "fundId": "5132449", "hebrewName": "אלטשולר שחם כספית דולרית", "englishName": "Altshuler Shaham USD", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5125369", "fundId": "5125369", "hebrewName": "קסם כספית דולרית", "englishName": "Ksm USD Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132894", "fundId": "5132894", "hebrewName": "מור כספית דולרית", "englishName": "More USD Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133611", "fundId": "5133611", "hebrewName": "ילין לפידות כספית דולרית", "englishName": "Yelin Lapidot USD", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132530", "fundId": "5132530", "hebrewName": "מגדל כספית דולרית", "englishName": "Migdal USD Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132712", "fundId": "5132712", "hebrewName": "אי.בי.אי כספית דולרית", "englishName": "IBI USD Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5122697", "fundId": "5122697", "hebrewName": "פסגות כספית שקלית", "englishName": "Psagot Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132605", "fundId": "5132605", "hebrewName": "פסגות כספית דולרית", "englishName": "Psagot USD Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133066", "fundId": "5133066", "hebrewName": "איילון כספית דולרית", "englishName": "Ayalon USD Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132472", "fundId": "5132472", "hebrewName": "הפניקס כספית שקלית", "englishName": "Phoenix Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132688", "fundId": "5132688", "hebrewName": "הפניקס כספית דולרית", "englishName": "Phoenix USD Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133793", "fundId": "5133793", "hebrewName": "הפניקס כספית ניהול נזילות", "englishName": "Phoenix Liquidity Management", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132969", "fundId": "5132969", "hebrewName": "תמיר פישמן כספית שקלית", "englishName": "Tamir Fishman Shekel", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133124", "fundId": "5133124", "hebrewName": "אנליסט כספית שקלית", "englishName": "Analyst Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133884", "fundId": "5133884", "hebrewName": "אנליסט כספית ניהול נזילות", "englishName": "Analyst Liquidity Management", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132803", "fundId": "5132803", "hebrewName": "רוטשילד כספית שקלית", "englishName": "Rothschild Shekel Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133462", "fundId": "5133462", "hebrewName": "מיטב כספית אירופית", "englishName": "Meitav EUR Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133918", "fundId": "5133918", "hebrewName": "הראל כספית אירופית", "englishName": "Harel EUR Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5134015", "fundId": "5134015", "hebrewName": "מגדל כספית אירו", "englishName": "Migdal EUR Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133934", "fundId": "5133934", "hebrewName": "קסם כספית אירו", "englishName": "Ksm EUR Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5133504", "fundId": "5133504", "hebrewName": "אי.בי.אי כספית אירו", "englishName": "IBI EUR Money Market", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132175", "fundId": "5132175", "hebrewName": "מור כספית ללא מניות", "englishName": "More Money Market No Stocks", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5131805", "fundId": "5131805", "hebrewName": "מיטב כספית ללא חשיפה למניות", "englishName": "Meitav Money Market No Stocks", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132043", "fundId": "5132043", "hebrewName": "הראל כספית שקלית ללא חשיפה למניות", "englishName": "Harel Shekel No Stocks", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5131912", "fundId": "5131912", "hebrewName": "קסם כספית שקלית ללא חשיפה", "englishName": "Ksm Shekel No Stocks", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132100", "fundId": "5132100", "hebrewName": "מגדל כספית ללא חשיפה למניות", "englishName": "Migdal Money Market No Stocks", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132191", "fundId": "5132191", "hebrewName": "אלטשולר שחם כספית ללא מניות", "englishName": "Altshuler Shaham No Stocks", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5131870", "fundId": "5131870", "hebrewName": "אי.בי.אי. כספית שקלית ללא מניות", "englishName": "IBI Shekel No Stocks", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132241", "fundId": "5132241", "hebrewName": "ילין לפידות כספית שקלית ללא מניות", "englishName": "Yelin Lapidot Shekel No Stocks", "type": "fund", "exchange": "TASE" },
+    { "symbol": "FUND:5132332", "fundId": "5132332", "hebrewName": "פסגות כספית שקלית ללא חשיפה למניות", "englishName": "Psagot Shekel No Stocks", "type": "fund", "exchange": "TASE" }
 ];
