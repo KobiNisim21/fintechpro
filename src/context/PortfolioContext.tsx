@@ -290,6 +290,12 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
               extendedPrice = extendedQuote.preMarketPrice;
               extendedChange = extendedQuote.preMarketChange || 0;
               extendedChangePercent = extendedQuote.preMarketChangePercent || 0;
+            } else if (extendedQuote.postMarketPrice) {
+              // Pre-market hasn't started yet — show last AH price (like Yahoo/Google Finance do)
+              marketStatus = 'after-hours';
+              extendedPrice = extendedQuote.postMarketPrice;
+              extendedChange = extendedQuote.postMarketChange || 0;
+              extendedChangePercent = extendedQuote.postMarketChangePercent || 0;
             }
           } else if (extendedQuote.marketState === 'POST' || extendedQuote.marketState === 'POSTPOST') {
             marketStatus = 'after-hours';
