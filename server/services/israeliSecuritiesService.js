@@ -16,13 +16,22 @@ function loadCatalog() {
             catalog = JSON.parse(data);
         } catch (error) {
             try {
-                // Vercel Serverless fallback
+                // Vercel Serverless fallback 1
                 const catalogPathBase = path.join(process.cwd(), 'server', 'data', 'israeli_securities_catalog.json');
                 const data2 = fs.readFileSync(catalogPathBase, 'utf8');
                 catalog = JSON.parse(data2);
+                console.log('[DEBUG] Catalog loaded via fallback 1 (server/data):', catalog.length);
             } catch (fallbackError) {
-                console.error('[IsraeliSecurities] Failed to load catalog from all paths:', error.message, fallbackError.message);
-                catalog = []; // Fallback to empty so it doesn't crash the search
+                try {
+                    // Vercel Serverless fallback 2 (as requested by user)
+                    const catalogPathBase2 = path.join(process.cwd(), 'data', 'israeli_securities_catalog.json');
+                    const data3 = fs.readFileSync(catalogPathBase2, 'utf8');
+                    catalog = JSON.parse(data3);
+                    console.log('[DEBUG] Catalog loaded via fallback 2 (data):', catalog.length);
+                } catch (fallbackError2) {
+                    console.error('[IsraeliSecurities] Failed to load catalog from all paths', fallbackError2.message);
+                    catalog = []; // Fallback to empty so it doesn't crash the search
+                }
             }
         }
     }
@@ -34,27 +43,44 @@ function loadCatalog() {
  */
 export function searchIsraeliSecurities(query) {
     const data = loadCatalog();
+    console.log("[DEBUG] Catalog Size:", data.length);
+
     if (!query) return [];
 
     const lowerQuery = query.toLowerCase().trim();
 
-    // Split the query into words for better matching
-    const queryWords = lowerQuery.split(/\s+/);
-
-    const results = data.filter(item => {
-        const hName = (item.hebrewName || '').toLowerCase();
-        const eName = (item.englishName || '').toLowerCase();
-        const symbol = (item.symbol || '').toLowerCase();
-        const fundId = (item.fundId || '').toLowerCase();
-
-        // Check if all words in the query exist somewhere in the name or symbol
-        return queryWords.every(word =>
-            hName.includes(word) ||
-            eName.includes(word) ||
-            symbol.includes(word) ||
-            fundId.includes(word)
-        );
+    // Check if user is searching for an exact fund ID directly
+    const directMatch = data.filter(item => {
+        const symbol = String(item.symbol || '').toLowerCase();
+        const fundId = String(item.fundId || '').toLowerCase();
+        return symbol.includes(lowerQuery) || fundId.includes(lowerQuery);
     });
+
+    let results = [];
+    if (directMatch.length > 0 && /^\d+$/.test(lowerQuery)) {
+        // Numeric ID search is prioritized
+        results = directMatch;
+    } else {
+        // Split the query into words for better matching
+        const queryWords = lowerQuery.split(/\s+/);
+
+        results = data.filter(item => {
+            const hName = String(item.hebrewName || '').toLowerCase();
+            const eName = String(item.englishName || '').toLowerCase();
+            const symbol = String(item.symbol || '').toLowerCase();
+            const fundId = String(item.fundId || '').toLowerCase();
+
+            // Check if all words in the query exist somewhere
+            return queryWords.every(word =>
+                hName.includes(word) ||
+                eName.includes(word) ||
+                symbol.includes(word) ||
+                fundId.includes(word)
+            );
+        });
+    }
+
+    console.log(`[DEBUG] Query "${lowerQuery}" found ${results.length} matches locally.`);
 
     // Format results to match Finnhub API structure so the frontend consumes it transparently
     // Increased slice limit from 10 to 25 to show more results for common queries
