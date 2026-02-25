@@ -196,6 +196,54 @@ export async function getQuote(symbol) {
         });
     }
 
+    // HANDLE ISRAELI MUTUAL FUNDS via TASE API
+    if (symbol.startsWith('FUND:')) {
+        const fundId = symbol.split(':')[1];
+        return dedupedFetch(cacheKey, async () => {
+            console.log(`🇮🇱 Fetching TASE NAV for Mutual Fund ${fundId} in getQuote...`);
+            try {
+                // Fetch NAV and forex rate in parallel
+                const [navData, forexData] = await Promise.all([
+                    fetchFundNAV(fundId),
+                    getForexRate()
+                ]);
+
+                if (!navData || navData.price === undefined) {
+                    throw new Error(`No NAV data for fund ${fundId}`);
+                }
+
+                // navData.price is already ILS (Agorot / 100).
+                const priceInILS = navData.price;
+                const changeInILS = navData.change || 0;
+
+                const usdRate = forexData.rate || 3.65;
+                const priceInUSD = priceInILS / usdRate;
+                const changeInUSD = changeInILS / usdRate;
+
+                // For Debug Logging (Requested by User)
+                const priceAgorot = priceInILS * 100;
+                console.log(`[PRICE DEBUG] Asset: ${fundId} | Price (Agorot): ${priceAgorot} | USD: ${priceInUSD.toFixed(4)}`);
+
+                const result = {
+                    c: priceInUSD,
+                    d: changeInUSD,
+                    dp: navData.changePercent || 0,
+                    h: priceInUSD,
+                    l: priceInUSD,
+                    o: priceInUSD,
+                    pc: priceInUSD - changeInUSD,
+                    t: navData.timestamp || Math.floor(Date.now() / 1000)
+                };
+
+                setCache(cacheKey, result);
+                return result;
+            } catch (error) {
+                console.error(`❌ TASE Fund error for ${symbol}:`, error.message);
+                throw error;
+            }
+        });
+    }
+
     // STANDARD US STOCKS via FINNHUB
     // Deduped fetch
     return dedupedFetch(cacheKey, async () => {
@@ -271,6 +319,52 @@ export async function getExtendedQuote(symbol) {
 
     const cached = getCached(cacheKey, CACHE_DURATIONS.extendedQuote);
     if (cached) return cached;
+
+    // HANDLE ISRAELI MUTUAL FUNDS
+    if (symbol.startsWith('FUND:')) {
+        const fundId = symbol.split(':')[1];
+        return dedupedFetch(cacheKey, async () => {
+            try {
+                const [navData, forexData] = await Promise.all([
+                    fetchFundNAV(fundId),
+                    getForexRate()
+                ]);
+
+                if (!navData || navData.price === undefined) {
+                    throw new Error(`No NAV data for fund ${fundId}`);
+                }
+
+                const priceInILS = navData.price;
+                const changeInILS = navData.change || 0;
+
+                const usdRate = forexData.rate || 3.65;
+                const priceInUSD = priceInILS / usdRate;
+                const changeInUSD = changeInILS / usdRate;
+
+                const result = {
+                    symbol: symbol,
+                    regularMarketPrice: priceInUSD,
+                    regularMarketPreviousClose: priceInUSD - changeInUSD,
+                    regularMarketChange: changeInUSD,
+                    regularMarketChangePercent: navData.changePercent || 0,
+                    preMarketPrice: null,
+                    preMarketChange: null,
+                    preMarketChangePercent: null,
+                    postMarketPrice: null,
+                    postMarketChange: null,
+                    postMarketChangePercent: null,
+                    marketState: 'CLOSED', // Mutual funds are end-of-day
+                    exchangeTimezoneName: 'Asia/Jerusalem'
+                };
+
+                setCache(cacheKey, result);
+                return result;
+            } catch (error) {
+                console.error(`❌ TASE Fund Extended Quote error for ${symbol}:`, error.message);
+                throw error;
+            }
+        });
+    }
 
     return dedupedFetch(cacheKey, async () => {
         const quote = await yahooFinance.quote(symbol);
@@ -362,6 +456,10 @@ export async function getBatchExtendedQuotes(symbols) {
                 // Convert to USD (since NAV is parsed into ILS in the service)
                 const priceInUSD = navData.price * ilsToUsdRate;
                 const changeInUSD = navData.change * ilsToUsdRate;
+
+                // For Debug Logging (Requested by User)
+                const priceAgorot = navData.price * 100;
+                console.log(`[PRICE DEBUG] Asset: ${fundId} | Price (Agorot): ${priceAgorot} | USD: ${priceInUSD.toFixed(4)}`);
 
                 const result = {
                     symbol: symbol,
