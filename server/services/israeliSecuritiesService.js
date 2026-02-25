@@ -63,12 +63,57 @@ export function searchIsraeliSecurities(query) {
  * Fetch the latest Daily NAV (Net Asset Value / שע"נ) for an Israeli mutual fund.
  * Uses the official TASE Data Hub API securely on the server-side.
  */
+let taseAccessToken = null;
+let taseTokenExpiresAt = 0;
+
+/**
+ * Fetch OAuth2 Access Token for TASE Data Hub API
+ */
+async function getTaseAccessToken() {
+    const clientId = process.env.TASE_CLIENT_ID;
+    const clientSecret = process.env.TASE_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+        throw new Error('TASE_CLIENT_ID or TASE_CLIENT_SECRET not configured');
+    }
+
+    if (taseAccessToken && Date.now() < taseTokenExpiresAt - 60000) {
+        return taseAccessToken;
+    }
+
+    const tokenUrl = process.env.TASE_TOKEN_URL || 'https://openapigw.tase.co.il/tase/prod/oauth2/token';
+    const params = new URLSearchParams();
+    params.append('grant_type', 'client_credentials');
+    params.append('scope', 'tase');
+
+    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params.toString()
+    });
+
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to fetch TASE access token: ${response.status} - ${errText}`);
+    }
+
+    const data = await response.json();
+    taseAccessToken = data.access_token;
+    taseTokenExpiresAt = Date.now() + ((data.expires_in || 3600) * 1000);
+    return taseAccessToken;
+}
+
 export async function fetchFundNAV(fundId) {
-    const apiKey = process.env.TASE_API_KEY;
+    const clientId = process.env.TASE_CLIENT_ID;
+    const clientSecret = process.env.TASE_CLIENT_SECRET;
 
     // Fallback to mock if API key isn't provided yet
-    if (!apiKey) {
-        console.warn(`[IsraeliSecurities] TASE_API_KEY not configured. Using mock NAV for ${fundId}.`);
+    if (!clientId || !clientSecret) {
+        console.warn(`[IsraeliSecurities] TASE_CLIENT_ID or TASE_CLIENT_SECRET not configured. Using mock NAV for ${fundId}.`);
         return {
             price: 100.0,
             change: 0.0,
@@ -78,13 +123,14 @@ export async function fetchFundNAV(fundId) {
     }
 
     try {
+        const token = await getTaseAccessToken();
+
         // TASE Data Hub format for comprehensive mutual fund data
-        // They typically use Bearer token auth
         const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${fundId}`;
 
         const response = await fetch(url, {
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'Authorization': `Bearer ${token}`,
                 'Accept-Language': 'en-US,en;q=0.9',
             }
         });
