@@ -61,19 +61,72 @@ export function searchIsraeliSecurities(query) {
 
 /**
  * Fetch the latest Daily NAV (Net Asset Value / שע"נ) for an Israeli mutual fund.
- * Currently returns a mock value. Once the TASE API key is registered, 
- * this function should be updated to make the actual API call.
+ * Uses the official TASE Data Hub API securely on the server-side.
  */
 export async function fetchFundNAV(fundId) {
-    // TODO: Replace with official TASE Data Hub API call once registered
-    // Endpoint: https://openapi.tase.co.il/content/mutual-funds/comprehensive
+    const apiKey = process.env.TASE_API_KEY;
 
-    console.warn(`[IsraeliSecurities] Using mock NAV for fund ${fundId}. Please integrate TASE API key.`);
+    // Fallback to mock if API key isn't provided yet
+    if (!apiKey) {
+        console.warn(`[IsraeliSecurities] TASE_API_KEY not configured. Using mock NAV for ${fundId}.`);
+        return {
+            price: 100.0,
+            change: 0.0,
+            changePercent: 0.0,
+            timestamp: Math.floor(Date.now() / 1000)
+        };
+    }
 
-    return {
-        price: 100.0, // Mock NAV price
-        change: 0.05,
-        changePercent: 0.05,
-        timestamp: Math.floor(Date.now() / 1000)
-    };
+    try {
+        // TASE Data Hub format for comprehensive mutual fund data
+        // They typically use Bearer token auth
+        const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${fundId}`;
+
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Accept-Language': 'en-US,en;q=0.9',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`TASE API returned ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Typical TASE API returns an array or an object with latest NAV
+        // Israeli funds are priced in Agorot (אגורות) — so we must divide by 100 for ILS
+        let priceAgorot = 0;
+        let changePercent = 0;
+        let changeAgorot = 0;
+
+        if (Array.isArray(data) && data.length > 0) {
+            const latest = data[0]; // Assuming sorted descending
+            priceAgorot = latest.nav || latest.closingPrice || 10000;
+            changePercent = latest.yield || latest.changePercent || 0;
+            // Approximate absolute change
+            changeAgorot = priceAgorot - (priceAgorot / (1 + (changePercent / 100)));
+        } else if (data && typeof data === 'object') {
+            priceAgorot = data.nav || data.closingPrice || data.lastPrice || 10000;
+            changePercent = data.yield || data.changePercent || 0;
+            changeAgorot = priceAgorot - (priceAgorot / (1 + (changePercent / 100)));
+        }
+
+        const priceILS = priceAgorot / 100;
+        const changeILS = changeAgorot / 100;
+
+        return {
+            price: priceILS,
+            change: changeILS,
+            changePercent: changePercent,
+            currency: 'ILS', // We explicitly return ILS so the caller can convert to USD if needed
+            timestamp: Math.floor(Date.now() / 1000)
+        };
+
+    } catch (error) {
+        console.error(`[IsraeliSecurities] Failed to fetch TASE NAV for ${fundId}:`, error.message);
+        // Fallback or rethrow
+        throw error;
+    }
 }

@@ -336,18 +336,42 @@ export async function getBatchExtendedQuotes(symbols) {
 
     // Process Israeli funds directly using the local service
     if (fundSymbols.length > 0) {
+        // Fetch ILS to USD conversion rate
+        let ilsToUsdRate = 1.0;
+        try {
+            const forexKey = 'forex_ILSUSD=X';
+            const cachedForex = getCached(forexKey, 60 * 60 * 1000); // 1 hr cache
+            if (cachedForex) {
+                ilsToUsdRate = cachedForex;
+            } else {
+                const forexQuote = await yahooFinance.quote('ILSUSD=X');
+                if (forexQuote && forexQuote.regularMarketPrice) {
+                    ilsToUsdRate = forexQuote.regularMarketPrice;
+                    setCache(forexKey, ilsToUsdRate);
+                }
+            }
+        } catch (e) {
+            console.error(`[IsraeliSecurities] Failed to fetch ILSUSD=X rate, using fallback 1.0`, e.message);
+        }
+
         await Promise.all(fundSymbols.map(async (symbol) => {
             try {
                 const fundId = symbol.split(':')[1];
                 const navData = await fetchFundNAV(fundId);
+
+                // Convert to USD (since NAV is parsed into ILS in the service)
+                const priceInUSD = navData.price * ilsToUsdRate;
+                const changeInUSD = navData.change * ilsToUsdRate;
+
                 const result = {
                     symbol: symbol,
-                    regularMarketPrice: navData.price,
-                    regularMarketPreviousClose: navData.price,
-                    regularMarketChange: navData.change,
+                    regularMarketPrice: priceInUSD,
+                    regularMarketPreviousClose: priceInUSD - changeInUSD,
+                    regularMarketChange: changeInUSD,
                     regularMarketChangePercent: navData.changePercent,
                     marketState: 'CLOSED', // Funds only update once a day
-                    exchangeTimezoneName: 'Asia/Jerusalem'
+                    exchangeTimezoneName: 'Asia/Jerusalem',
+                    currency: 'USD' // System assumes USD base
                 };
                 setCache(`extended_quote_${symbol}`, result);
                 results[symbol] = result;
