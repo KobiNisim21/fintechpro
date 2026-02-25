@@ -60,6 +60,7 @@ export function AddPositionDialog() {
                                 (s.description || '').toLowerCase().includes(searchValue.toLowerCase()))
                         );
 
+                        // Merge strategy: Local matches first, then API matches
                         const all = [...existingIsraeli, ...(results || [])];
                         const seen = new Set();
                         const finalResults = all.filter(s => {
@@ -83,7 +84,7 @@ export function AddPositionDialog() {
                     }
                     console.error('Search failed', err);
                     if (isMounted) {
-                        // Preserve any existing local results if API crashes
+                        // DO NOT clear the results state. Keep the localMatches visible.
                         setSearchResults(prev => prev.filter(s => s.israeliData));
                     }
                 } finally {
@@ -205,7 +206,7 @@ export function AddPositionDialog() {
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-[300px] p-0 bg-[#1a1a1f] border-white/10 text-white">
-                                    <Command className="bg-transparent">
+                                    <Command className="bg-transparent" shouldFilter={false}>
                                         <CommandInput
                                             placeholder="Search symbol..."
                                             value={searchValue}

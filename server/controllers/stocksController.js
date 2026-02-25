@@ -54,7 +54,8 @@ export const searchStocks = async (req, res) => {
         res.json(data);
     } catch (error) {
         console.error('[Search] Search endpoint critical failure:', error);
-        res.status(500).json({ message: 'Internal server error during search' });
+        // Silent Failure: return empty array [] to the frontend instead of 500 error
+        res.json([]);
     }
 };
 
