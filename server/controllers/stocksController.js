@@ -1,5 +1,6 @@
 import Position from '../models/Position.js';
 import * as stockData from '../services/stockDataService.js';
+import { searchIsraeliSecurities } from '../services/israeliSecuritiesService.js';
 
 // ============================================
 // LEGACY: Keep local cache only for candles (Yahoo chart API)
@@ -16,7 +17,29 @@ export const searchStocks = async (req, res) => {
         if (!q) {
             return res.status(400).json({ message: 'Missing search query' });
         }
-        const data = await stockData.searchStocks(q);
+        let data = [];
+
+        // Auto-detect Hebrew characters
+        if (/[\u0590-\u05FF]/.test(q)) {
+            data = searchIsraeliSecurities(q);
+        } else {
+            // Search locally first for Israeli stocks/funds with English names
+            const localData = searchIsraeliSecurities(q);
+
+            // Search global Finnhub API
+            const finnhubData = await stockData.searchStocks(q);
+
+            // Combine, deduplicate by symbol, taking local first
+            const seen = new Set(localData.map(d => d.symbol));
+            const filteredFinnhub = finnhubData.filter(d => {
+                if (seen.has(d.symbol)) return false;
+                seen.add(d.symbol);
+                return true;
+            });
+
+            data = [...localData, ...filteredFinnhub];
+        }
+
         res.json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });

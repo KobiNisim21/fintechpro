@@ -197,7 +197,14 @@ export function AddPositionDialog() {
                                                             )}
                                                         />
                                                         <div className="flex flex-col">
-                                                            <span className="font-bold">{stock.displaySymbol}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-bold">{stock.displaySymbol}</span>
+                                                                {stock.israeliData && (
+                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-medium whitespace-nowrap">
+                                                                        {stock.israeliData.type === 'fund' ? 'קרן כספית 🇮🇱' : 'TASE 🇮🇱'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             <span className="text-xs text-white/50">{stock.description}</span>
                                                         </div>
                                                     </CommandItem>

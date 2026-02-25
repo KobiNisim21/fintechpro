@@ -12,6 +12,7 @@ import YahooFinance from 'yahoo-finance2';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { fetchFundNAV } from './israeliSecuritiesService.js';
 const yahooFinance = new YahooFinance();
 
 const __filename_service = fileURLToPath(import.meta.url);
@@ -320,14 +321,40 @@ export async function getBatchExtendedQuotes(symbols) {
     // Filter out symbols that are already cached
     const uncachedSymbols = [];
     const results = {};
+    const fundSymbols = []; // Symbols that start with FUND:
 
     for (const symbol of symbols) {
         const cached = getCached(`extended_quote_${symbol}`, CACHE_DURATIONS.extendedQuote);
         if (cached) {
             results[symbol] = cached;
+        } else if (symbol.startsWith('FUND:')) {
+            fundSymbols.push(symbol);
         } else {
             uncachedSymbols.push(symbol);
         }
+    }
+
+    // Process Israeli funds directly using the local service
+    if (fundSymbols.length > 0) {
+        await Promise.all(fundSymbols.map(async (symbol) => {
+            try {
+                const fundId = symbol.split(':')[1];
+                const navData = await fetchFundNAV(fundId);
+                const result = {
+                    symbol: symbol,
+                    regularMarketPrice: navData.price,
+                    regularMarketPreviousClose: navData.price,
+                    regularMarketChange: navData.change,
+                    regularMarketChangePercent: navData.changePercent,
+                    marketState: 'CLOSED', // Funds only update once a day
+                    exchangeTimezoneName: 'Asia/Jerusalem'
+                };
+                setCache(`extended_quote_${symbol}`, result);
+                results[symbol] = result;
+            } catch (err) {
+                console.error(`[IsraeliSecurities] Failed to fetch NAV for ${symbol}:`, err);
+            }
+        }));
     }
 
     // If all cached, return immediately
@@ -746,6 +773,11 @@ const ETF_SYMBOLS = new Set([
  * Returns { dates: string[], closes: number[] }
  */
 async function fetchYahooChart(symbol, startDate = null) {
+    // Israeli mutual funds don't have historical chart data from Yahoo Finance
+    if (symbol.startsWith('FUND:')) {
+        return { dates: [], closes: [] };
+    }
+
     // Calculate period1 (start timestamp)
     const now = Math.floor(Date.now() / 1000);
     const startTimestamp = startDate
