@@ -57,7 +57,8 @@ export function searchIsraeliSecurities(query) {
     });
 
     // Format results to match Finnhub API structure so the frontend consumes it transparently
-    return results.slice(0, 10).map(item => ({
+    // Increased slice limit from 10 to 25 to show more results for common queries
+    return results.slice(0, 25).map(item => ({
         description: `${item.hebrewName} | ${item.englishName}`,
         displaySymbol: item.symbol,
         symbol: item.symbol,

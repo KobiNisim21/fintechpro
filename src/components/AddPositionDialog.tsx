@@ -213,7 +213,7 @@ export function AddPositionDialog() {
                                             onValueChange={setSearchValue}
                                             className="text-white"
                                         />
-                                        <CommandList>
+                                        <CommandList className="max-h-[300px] overflow-y-auto w-full">
                                             <CommandEmpty>
                                                 {searching ? 'Searching...' : 'No stock found.'}
                                             </CommandEmpty>
