@@ -40,9 +40,10 @@ export const stocksAPI = {
         return response.data;
     },
 
-    search: async (query: string) => {
+    search: async (query: string, options?: { signal?: AbortSignal }) => {
         const response = await apiClient.get('/stocks/search', {
-            params: { q: query }
+            params: { q: query },
+            signal: options?.signal
         });
         return response.data;
     },

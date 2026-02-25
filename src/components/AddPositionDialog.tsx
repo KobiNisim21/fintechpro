@@ -40,26 +40,67 @@ export function AddPositionDialog() {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [searching, setSearching] = useState(false);
 
-    // Debounced search
+    // Debounced search with AbortController and result merging
     useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+
         const delayDebounceFn = setTimeout(async () => {
             if (searchValue && searchValue.length > 1) {
                 setSearching(true);
                 try {
-                    const results = await stocksAPI.search(searchValue);
-                    setSearchResults(results);
-                } catch (err) {
+                    const results = await stocksAPI.search(searchValue, { signal: controller.signal });
+                    if (!isMounted) return;
+
+                    // Keep valid local results in case API returns empty or was rate-limited
+                    setSearchResults(prev => {
+                        const existingIsraeli = prev.filter(s =>
+                            s.israeliData &&
+                            (s.symbol.toLowerCase().includes(searchValue.toLowerCase()) ||
+                                (s.description || '').toLowerCase().includes(searchValue.toLowerCase()))
+                        );
+
+                        const all = [...existingIsraeli, ...(results || [])];
+                        const seen = new Set();
+                        const finalResults = all.filter(s => {
+                            if (!s || !s.symbol) return false;
+                            if (seen.has(s.symbol)) return false;
+                            seen.add(s.symbol);
+                            return true;
+                        });
+
+                        // Priority: Israeli matches at the top
+                        return finalResults.sort((a, b) => {
+                            if (a.israeliData && !b.israeliData) return -1;
+                            if (!a.israeliData && b.israeliData) return 1;
+                            return 0; // maintain original relative order otherwise
+                        });
+                    });
+                } catch (err: any) {
+                    if (err?.name === 'CanceledError' || err?.message === 'canceled') {
+                        // Ignored aborted network request
+                        return;
+                    }
                     console.error('Search failed', err);
-                    setSearchResults([]);
+                    if (isMounted) {
+                        // Preserve any existing local results if API crashes
+                        setSearchResults(prev => prev.filter(s => s.israeliData));
+                    }
                 } finally {
-                    setSearching(false);
+                    if (isMounted) {
+                        setSearching(false);
+                    }
                 }
             } else {
                 setSearchResults([]);
             }
         }, 300);
 
-        return () => clearTimeout(delayDebounceFn);
+        return () => {
+            isMounted = false;
+            controller.abort();
+            clearTimeout(delayDebounceFn);
+        };
     }, [searchValue]);
 
     const handleSubmit = async (e: React.FormEvent) => {
