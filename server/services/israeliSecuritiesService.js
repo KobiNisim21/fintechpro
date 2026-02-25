@@ -2,21 +2,28 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Load the local catalog lazily
 let catalog = null;
 
 function loadCatalog() {
     if (!catalog) {
         try {
+            // Standard approach
+            const __filename = fileURLToPath(import.meta.url);
+            const __dirname = path.dirname(__filename);
             const catalogPath = path.join(__dirname, '../data/israeli_securities_catalog.json');
             const data = fs.readFileSync(catalogPath, 'utf8');
             catalog = JSON.parse(data);
         } catch (error) {
-            console.error('[IsraeliSecurities] Failed to load catalog:', error);
-            catalog = [];
+            try {
+                // Vercel Serverless fallback
+                const catalogPathBase = path.join(process.cwd(), 'server', 'data', 'israeli_securities_catalog.json');
+                const data2 = fs.readFileSync(catalogPathBase, 'utf8');
+                catalog = JSON.parse(data2);
+            } catch (fallbackError) {
+                console.error('[IsraeliSecurities] Failed to load catalog from all paths:', error.message, fallbackError.message);
+                catalog = []; // Fallback to empty so it doesn't crash the search
+            }
         }
     }
     return catalog;
@@ -151,12 +158,14 @@ export async function fetchFundNAV(fundId) {
             const latest = data[0]; // Assuming sorted descending
             priceAgorot = latest.nav || latest.closingPrice || 10000;
             changePercent = latest.yield || latest.changePercent || 0;
-            // Approximate absolute change
-            changeAgorot = priceAgorot - (priceAgorot / (1 + (changePercent / 100)));
+            // Approximate absolute change safely (prevent divide by zero)
+            const divisor = 1 + (changePercent / 100);
+            changeAgorot = divisor === 0 ? priceAgorot : priceAgorot - (priceAgorot / divisor);
         } else if (data && typeof data === 'object') {
             priceAgorot = data.nav || data.closingPrice || data.lastPrice || 10000;
             changePercent = data.yield || data.changePercent || 0;
-            changeAgorot = priceAgorot - (priceAgorot / (1 + (changePercent / 100)));
+            const divisor = 1 + (changePercent / 100);
+            changeAgorot = divisor === 0 ? priceAgorot : priceAgorot - (priceAgorot / divisor);
         }
 
         const priceILS = priceAgorot / 100;

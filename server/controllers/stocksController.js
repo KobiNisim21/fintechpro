@@ -19,19 +19,30 @@ export const searchStocks = async (req, res) => {
         }
         let data = [];
 
-        // Auto-detect Hebrew characters
-        if (/[\u0590-\u05FF]/.test(q)) {
-            data = searchIsraeliSecurities(q);
-        } else {
-            // Search locally first for Israeli stocks/funds with English names
-            const localData = searchIsraeliSecurities(q);
+        // Use separate try/catch blocks so one failure doesn't crash the whole endpoint
+        let localData = [];
+        try {
+            localData = searchIsraeliSecurities(q) || [];
+        } catch (err) {
+            console.error('[Search] Failed to search local Israeli catalog:', err.message);
+        }
 
-            // Search global Finnhub API
-            const finnhubData = await stockData.searchStocks(q);
+        // Auto-detect Hebrew characters - if so, only use local data
+        if (/[\u0590-\u05FF]/.test(q)) {
+            data = localData;
+        } else {
+            // Search global Finnhub API safely
+            let finnhubData = [];
+            try {
+                finnhubData = await stockData.searchStocks(q) || [];
+            } catch (err) {
+                console.error('[Search] Failed to search Finnhub API:', err.message);
+            }
 
             // Combine, deduplicate by symbol, taking local first
             const seen = new Set(localData.map(d => d.symbol));
             const filteredFinnhub = finnhubData.filter(d => {
+                if (!d || !d.symbol) return false;
                 if (seen.has(d.symbol)) return false;
                 seen.add(d.symbol);
                 return true;
@@ -42,7 +53,8 @@ export const searchStocks = async (req, res) => {
 
         res.json(data);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Search] Search endpoint critical failure:', error);
+        res.status(500).json({ message: 'Internal server error during search' });
     }
 };
 
