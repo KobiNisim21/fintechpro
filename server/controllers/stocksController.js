@@ -62,6 +62,16 @@ export const searchStocks = async (req, res) => {
     }
 };
 
+// Temporary endpoint for debugging Vercel catalog bundling
+export const listAllIsraeli = async (req, res) => {
+    try {
+        const { israeliCatalog } = await import('../data/israeliCatalog.js');
+        res.json(israeliCatalog.slice(0, 5));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 // ... (other exports) ...
 
 // @desc    Get portfolio health score & benchmark comparison

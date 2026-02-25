@@ -1,48 +1,10 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Load the local catalog lazily
-let catalog = null;
-
-function loadCatalog() {
-    if (!catalog) {
-        try {
-            // Standard approach
-            const __filename = fileURLToPath(import.meta.url);
-            const __dirname = path.dirname(__filename);
-            const catalogPath = path.join(__dirname, '../data/israeli_securities_catalog.json');
-            const data = fs.readFileSync(catalogPath, 'utf8');
-            catalog = JSON.parse(data);
-        } catch (error) {
-            try {
-                // Vercel Serverless fallback 1
-                const catalogPathBase = path.join(process.cwd(), 'server', 'data', 'israeli_securities_catalog.json');
-                const data2 = fs.readFileSync(catalogPathBase, 'utf8');
-                catalog = JSON.parse(data2);
-                console.log('[DEBUG] Catalog loaded via fallback 1 (server/data):', catalog.length);
-            } catch (fallbackError) {
-                try {
-                    // Vercel Serverless fallback 2 (as requested by user)
-                    const catalogPathBase2 = path.join(process.cwd(), 'data', 'israeli_securities_catalog.json');
-                    const data3 = fs.readFileSync(catalogPathBase2, 'utf8');
-                    catalog = JSON.parse(data3);
-                    console.log('[DEBUG] Catalog loaded via fallback 2 (data):', catalog.length);
-                } catch (fallbackError2) {
-                    console.error('[IsraeliSecurities] Failed to load catalog from all paths', fallbackError2.message);
-                    catalog = []; // Fallback to empty so it doesn't crash the search
-                }
-            }
-        }
-    }
-    return catalog;
-}
+import { israeliCatalog } from '../data/israeliCatalog.js';
 
 /**
  * Perform a simple fuzzy search on Hebrew/English names in the catalog
  */
 export function searchIsraeliSecurities(query) {
-    const data = loadCatalog();
+    const data = israeliCatalog;
     console.log("[DEBUG] Catalog Size:", data.length);
 
     if (!query) return [];
@@ -51,9 +13,10 @@ export function searchIsraeliSecurities(query) {
 
     // Check if user is searching for an exact fund ID directly
     const directMatch = data.filter(item => {
-        const symbol = String(item.symbol || '').toLowerCase();
-        const fundId = String(item.fundId || '').toLowerCase();
-        return symbol.includes(lowerQuery) || fundId.includes(lowerQuery);
+        const symbol = String(item.symbol || '').toLowerCase().trim();
+        const fundId = String(item.fundId || '').toLowerCase().trim();
+        const safeQuery = String(query).toLowerCase().trim();
+        return symbol === safeQuery || fundId === safeQuery;
     });
 
     let results = [];
