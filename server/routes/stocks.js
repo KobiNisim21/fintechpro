@@ -4,6 +4,9 @@ import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Public routes (No auth required)
+router.get('/list-all', listAllIsraeli); // Debug catalog bundling
+
 // Protect all routes (require authentication)
 router.use(protect);
 
@@ -15,7 +18,6 @@ router.get('/market-calendar', getMarketCalendar);
 router.get('/market/news', getMarketNews);
 router.get('/forex/usd-ils', getForexRate);
 router.get('/search', searchStocks); // Add Search Route
-router.get('/list-all', listAllIsraeli); // Debug catalog bundling
 
 router.get('/:symbol/quote', getQuote);
 router.get('/:symbol/news', getNews);
