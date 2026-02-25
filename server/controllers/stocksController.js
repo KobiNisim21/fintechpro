@@ -66,7 +66,7 @@ export const searchStocks = async (req, res) => {
 export const listAllIsraeli = async (req, res) => {
     try {
         const { israeliCatalog } = await import('../data/israeliCatalog.js');
-        res.json(israeliCatalog.slice(0, 5));
+        res.json({ count: israeliCatalog.length, sample: israeliCatalog.slice(0, 10) });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
