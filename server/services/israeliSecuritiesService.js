@@ -105,12 +105,16 @@ async function getTaseAccessToken() {
 
     if (!response.ok) {
         const errText = await response.text();
-        throw new Error(`Failed to fetch TASE access token: ${response.status} - ${errText}`);
+        const errMsg = `Failed to fetch TASE access token: ${response.status} - ${errText}`;
+        console.error(`[TASE API] Auth Failed: ${errMsg}`);
+        throw new Error(errMsg);
     }
 
     const data = await response.json();
     taseAccessToken = data.access_token;
     taseTokenExpiresAt = Date.now() + ((data.expires_in || 3600) * 1000);
+
+    console.log('[TASE API] Auth Success: Token received');
     return taseAccessToken;
 }
 

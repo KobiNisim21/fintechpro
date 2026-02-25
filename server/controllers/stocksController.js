@@ -27,8 +27,11 @@ export const searchStocks = async (req, res) => {
             console.error('[Search] Failed to search local Israeli catalog:', err.message);
         }
 
-        // Auto-detect Hebrew characters - if so, only use local data
+        // If local catalog fails completely, we still want to return empty array cleanly,
+        // but let's ensure the auto-detect Hebrew works.
         if (/[\u0590-\u05FF]/.test(q)) {
+            // It's Hebrew. Return local catalog matches. 
+            // Finnhub doesn't support Hebrew ticker search, so we stop here.
             data = localData;
         } else {
             // Search global Finnhub API safely
