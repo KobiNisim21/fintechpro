@@ -84,14 +84,35 @@ async function getTaseAccessToken() {
     params.append('scope', 'tase');
 
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-    const response = await fetch(tokenUrl, {
+    let response = await fetch(tokenUrl, {
         method: 'POST',
         headers: {
             'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+            'Cache-Control': 'no-cache'
         },
         body: params.toString()
     });
+
+    if (!response.ok && (response.status === 403 || response.status === 503)) {
+        console.warn(`[TASE API] Token fetch blocked (${response.status}). Retrying in 2s...`);
+        await new Promise(r => setTimeout(r, 2000));
+        response = await fetch(tokenUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Basic ${credentials}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+                'Cache-Control': 'no-cache'
+            },
+            body: params.toString()
+        });
+    }
 
     if (!response.ok) {
         const errText = await response.text();
@@ -129,12 +150,29 @@ export async function fetchFundNAV(fundId) {
         // TASE Data Hub format for comprehensive mutual fund data
         const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${fundId}`;
 
-        const response = await fetch(url, {
+        let response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                'Accept-Language': 'en-US,en;q=0.9',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+                'Cache-Control': 'no-cache'
             }
         });
+
+        if (!response.ok && (response.status === 403 || response.status === 503)) {
+            console.warn(`[TASE API] Data fetch blocked (${response.status}). Retrying in 2s...`);
+            await new Promise(r => setTimeout(r, 2000));
+            response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+                    'Cache-Control': 'no-cache'
+                }
+            });
+        }
 
         if (!response.ok) {
             const errText = await response.text();

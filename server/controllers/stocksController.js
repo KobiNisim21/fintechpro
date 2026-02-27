@@ -95,14 +95,36 @@ export const testTaseRaw = async (req, res) => {
         params.append('scope', 'tase');
 
         const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-        const tokenRes = await fetch(tokenUrl, {
+
+        let tokenRes = await fetch(tokenUrl, {
             method: 'POST',
             headers: {
                 'Authorization': `Basic ${credentials}`,
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+                'Cache-Control': 'no-cache'
             },
             body: params.toString()
         });
+
+        if (!tokenRes.ok && (tokenRes.status === 403 || tokenRes.status === 503)) {
+            console.warn(`[TASE Raw Test] Token fetch blocked (${tokenRes.status}). Retrying in 2s...`);
+            await new Promise(r => setTimeout(r, 2000));
+            tokenRes = await fetch(tokenUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${credentials}`,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+                    'Cache-Control': 'no-cache'
+                },
+                body: params.toString()
+            });
+        }
 
         if (!tokenRes.ok) {
             const errText = await tokenRes.text();
@@ -117,12 +139,29 @@ export const testTaseRaw = async (req, res) => {
         const token = tokenData.access_token;
 
         const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${id}`;
-        const taseRes = await fetch(url, {
+        let taseRes = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${token}`,
-                'Accept-Language': 'en-US,en;q=0.9',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+                'Cache-Control': 'no-cache'
             }
         });
+
+        if (!taseRes.ok && (taseRes.status === 403 || taseRes.status === 503)) {
+            console.warn(`[TASE Raw Test] Data fetch blocked (${taseRes.status}). Retrying in 2s...`);
+            await new Promise(r => setTimeout(r, 2000));
+            taseRes = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+                    'Cache-Control': 'no-cache'
+                }
+            });
+        }
 
         if (!taseRes.ok) {
             const errText = await taseRes.text();
