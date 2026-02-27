@@ -62,6 +62,7 @@ export function searchIsraeliSecurities(query) {
  */
 let taseAccessToken = null;
 let taseTokenExpiresAt = 0;
+let taseCookies = '';
 
 /**
  * Fetch OAuth2 Access Token for TASE Data Hub API
@@ -92,7 +93,9 @@ async function getTaseAccessToken() {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'application/json, text/plain, */*',
             'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-            'Cache-Control': 'no-cache'
+            'Cache-Control': 'no-cache',
+            'Origin': 'https://openapi.tase.co.il',
+            'Referer': 'https://openapi.tase.co.il/'
         },
         body: params.toString()
     });
@@ -108,10 +111,18 @@ async function getTaseAccessToken() {
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/json, text/plain, */*',
                 'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache',
+                'Origin': 'https://openapi.tase.co.il',
+                'Referer': 'https://openapi.tase.co.il/'
             },
             body: params.toString()
         });
+    }
+
+    // Capture Cookies
+    const rawCookies = response.headers.get('set-cookie');
+    if (rawCookies) {
+        taseCookies = rawCookies.split(',').map(c => c.split(';')[0]).join('; ');
     }
 
     if (!response.ok) {
@@ -156,7 +167,10 @@ export async function fetchFundNAV(fundId) {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/json, text/plain, */*',
                 'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache',
+                'Origin': 'https://openapi.tase.co.il',
+                'Referer': 'https://openapi.tase.co.il/',
+                ...(taseCookies ? { 'Cookie': taseCookies } : {})
             }
         });
 
@@ -169,7 +183,10 @@ export async function fetchFundNAV(fundId) {
                     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                     'Accept': 'application/json, text/plain, */*',
                     'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                    'Cache-Control': 'no-cache'
+                    'Cache-Control': 'no-cache',
+                    'Origin': 'https://openapi.tase.co.il',
+                    'Referer': 'https://openapi.tase.co.il/',
+                    ...(taseCookies ? { 'Cookie': taseCookies } : {})
                 }
             });
         }

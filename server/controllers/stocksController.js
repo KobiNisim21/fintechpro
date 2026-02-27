@@ -104,7 +104,9 @@ export const testTaseRaw = async (req, res) => {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/json, text/plain, */*',
                 'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache',
+                'Origin': 'https://openapi.tase.co.il',
+                'Referer': 'https://openapi.tase.co.il/'
             },
             body: params.toString()
         });
@@ -120,10 +122,21 @@ export const testTaseRaw = async (req, res) => {
                     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                     'Accept': 'application/json, text/plain, */*',
                     'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                    'Cache-Control': 'no-cache'
+                    'Cache-Control': 'no-cache',
+                    'Origin': 'https://openapi.tase.co.il',
+                    'Referer': 'https://openapi.tase.co.il/'
                 },
                 body: params.toString()
             });
+        }
+
+        // Capture Cookies for persistence
+        const cookies = tokenRes.headers.get('set-cookie') || '';
+        let passCookies = '';
+        if (cookies) {
+            // Basic parsing if multiple cookies returned
+            passCookies = cookies.split(',').map(c => c.split(';')[0]).join('; ');
+            console.log(`[TASE Raw Test] Captured Cookies: ${passCookies}`);
         }
 
         if (!tokenRes.ok) {
@@ -131,7 +144,8 @@ export const testTaseRaw = async (req, res) => {
             return res.status(tokenRes.status).json({
                 error: 'OAuth Token Failed',
                 status: tokenRes.status,
-                details: errText
+                details: errText,
+                incapsula_headers: { cookies }
             });
         }
 
@@ -145,7 +159,10 @@ export const testTaseRaw = async (req, res) => {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'application/json, text/plain, */*',
                 'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                'Cache-Control': 'no-cache'
+                'Cache-Control': 'no-cache',
+                'Origin': 'https://openapi.tase.co.il',
+                'Referer': 'https://openapi.tase.co.il/',
+                'Cookie': passCookies
             }
         });
 
@@ -158,7 +175,10 @@ export const testTaseRaw = async (req, res) => {
                     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                     'Accept': 'application/json, text/plain, */*',
                     'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                    'Cache-Control': 'no-cache'
+                    'Cache-Control': 'no-cache',
+                    'Origin': 'https://openapi.tase.co.il',
+                    'Referer': 'https://openapi.tase.co.il/',
+                    'Cookie': passCookies
                 }
             });
         }
@@ -178,7 +198,8 @@ export const testTaseRaw = async (req, res) => {
             tase_environment: {
                 client_id_length: clientId.length,
                 secret_length: clientSecret.length,
-                has_token: !!token
+                has_token: !!token,
+                passed_cookies: passCookies !== ''
             },
             raw_data: data
         });
