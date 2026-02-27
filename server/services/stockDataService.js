@@ -436,22 +436,22 @@ export async function getBatchExtendedQuotes(symbols) {
 
     // Process Israeli funds directly using the local service
     if (fundSymbols.length > 0) {
-        // Fetch ILS to USD conversion rate
-        let ilsToUsdRate = 1.0;
+        // Fetch USD to ILS conversion rate (e.g. 3.65)
+        let usdIlsRate = 3.65;
         try {
-            const forexKey = 'forex_ILSUSD=X';
+            const forexKey = 'forex_usd_ils';
             const cachedForex = getCached(forexKey, 60 * 60 * 1000); // 1 hr cache
-            if (cachedForex) {
-                ilsToUsdRate = cachedForex;
+            if (cachedForex && cachedForex.rate) {
+                usdIlsRate = cachedForex.rate;
             } else {
-                const forexQuote = await yahooFinance.quote('ILSUSD=X');
+                const forexQuote = await yahooFinance.quote('ILS=X');
                 if (forexQuote && forexQuote.regularMarketPrice) {
-                    ilsToUsdRate = forexQuote.regularMarketPrice;
-                    setCache(forexKey, ilsToUsdRate);
+                    usdIlsRate = forexQuote.regularMarketPrice;
+                    setCache(forexKey, { rate: usdIlsRate, source: 'yahoo' });
                 }
             }
         } catch (e) {
-            console.error(`[IsraeliSecurities] Failed to fetch ILSUSD=X rate, using fallback 1.0`, e.message);
+            console.error(`[IsraeliSecurities] Failed to fetch ILS=X rate, using fallback 3.65`, e.message);
         }
 
         await Promise.all(fundSymbols.map(async (symbol) => {
@@ -460,8 +460,9 @@ export async function getBatchExtendedQuotes(symbols) {
                 const navData = await fetchFundNAV(fundId);
 
                 // Convert to USD (since NAV is parsed into ILS in the service)
-                const priceInUSD = navData.price * ilsToUsdRate;
-                const changeInUSD = navData.change * ilsToUsdRate;
+                // Price_USD = Price_ILS / Rate_ILS_per_USD
+                const priceInUSD = navData.price / usdIlsRate;
+                const changeInUSD = navData.change / usdIlsRate;
 
                 // For Debug Logging (Requested by User)
                 const priceAgorot = navData.price * 100;
@@ -1159,10 +1160,13 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             );
 
             // VALIDATION: STRICT "All or Nothing" for Score Stability
-            const validChartsCount = symbolCharts.filter(c => c && c.closes && c.closes.length > 0).length;
-            if (validChartsCount < symbols.length && symbols.length > 0) {
-                const missingNames = symbols.filter((_, i) => !symbolCharts[i] || !symbolCharts[i].closes || symbolCharts[i].closes.length === 0);
-                console.warn(`[Health] Critical data missing: only ${validChartsCount}/${symbols.length} charts loaded. Missing: ${missingNames.join(', ')}`);
+            // Exclude FUNDS from this strict check since they don't have Yahoo Finance charts
+            const expectedChartsCount = symbols.filter(s => !s.startsWith('FUND:')).length;
+            const validChartsCount = symbolCharts.filter((c, i) => !symbols[i].startsWith('FUND:') && c && c.closes && c.closes.length > 0).length;
+
+            if (validChartsCount < expectedChartsCount && expectedChartsCount > 0) {
+                const missingNames = symbols.filter((s, i) => !s.startsWith('FUND:') && (!symbolCharts[i] || !symbolCharts[i].closes || symbolCharts[i].closes.length === 0));
+                console.warn(`[Health] Critical data missing: only ${validChartsCount}/${expectedChartsCount} charts loaded. Missing: ${missingNames.join(', ')}`);
                 // THROW to prevent partial score update
                 throw new Error(`Incomplete data for: ${missingNames.join(', ')}`);
             }

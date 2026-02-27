@@ -145,24 +145,30 @@ export async function fetchFundNAV(fundId) {
         const data = await response.json();
 
         // Typical TASE API returns an array or an object with latest NAV
+        // Often wraps arrays inside a 'results' or 'history' object
+        let list = data;
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+            if (Array.isArray(data.history)) list = data.history;
+            else if (Array.isArray(data.results)) list = data.results;
+            else if (Array.isArray(data.data)) list = data.data;
+        }
+
         // Israeli funds are priced in Agorot (אגורות) — so we must divide by 100 for ILS
         let priceAgorot = 0;
         let changePercent = 0;
         let changeAgorot = 0;
 
-        if (Array.isArray(data) && data.length > 0) {
-            const latest = data[0]; // Assuming sorted descending
-            priceAgorot = latest.nav || latest.closingPrice || 0;
+        if (Array.isArray(list) && list.length > 0) {
+            const latest = list[0]; // Assuming sorted descending
+            priceAgorot = latest.nav || latest.closingPrice || latest.lastPrice || 0;
             changePercent = latest.yield || latest.changePercent || 0;
-            // Approximate absolute change safely (prevent divide by zero)
-            const divisor = 1 + (changePercent / 100);
-            changeAgorot = divisor === 0 ? priceAgorot : priceAgorot - (priceAgorot / divisor);
         } else if (data && typeof data === 'object') {
             priceAgorot = data.nav || data.closingPrice || data.lastPrice || 0;
             changePercent = data.yield || data.changePercent || 0;
-            const divisor = 1 + (changePercent / 100);
-            changeAgorot = divisor === 0 ? priceAgorot : priceAgorot - (priceAgorot / divisor);
         }
+
+        const divisor = 1 + (changePercent / 100);
+        changeAgorot = divisor === 0 ? priceAgorot : priceAgorot - (priceAgorot / divisor);
 
         if (priceAgorot === 0) {
             console.error(`[TASE API FALLBACK] Price parsed as 0 for ${fundId}. Exact API Response JSON:`, JSON.stringify(data));

@@ -167,6 +167,12 @@ export const getStockCandles = async (req, res) => {
             return res.status(400).json({ message: 'Missing from/to parameters' });
         }
 
+        // TASE Mutual Funds don't have historical data on Yahoo Finance.
+        if (symbol.startsWith('FUND:')) {
+            console.log(`[HISTORY] Skipping Yahoo Finance history block for ${symbol}`);
+            return res.json({ c: [], t: [], s: 'no_data' });
+        }
+
         const cacheKey = `candles_yahoo_${symbol}_${from}_${to}`;
 
         // Check cache (1 hour)
