@@ -72,6 +72,83 @@ export const listAllIsraeli = async (req, res) => {
     }
 };
 
+// @desc    Direct raw TASE API connection test for debugging production keys
+// @route   GET /api/stocks/tase-raw-test
+// @access  Public
+export const testTaseRaw = async (req, res) => {
+    try {
+        const { id } = req.query;
+        if (!id) {
+            return res.status(400).json({ error: 'Missing id parameter (e.g. ?id=5131425)' });
+        }
+
+        const clientId = process.env.TASE_CLIENT_ID;
+        const clientSecret = process.env.TASE_CLIENT_SECRET;
+
+        if (!clientId || !clientSecret) {
+            return res.status(500).json({ error: 'TASE_CLIENT_ID or TASE_CLIENT_SECRET not configured on this server.' });
+        }
+
+        const tokenUrl = process.env.TASE_TOKEN_URL || 'https://openapigw.tase.co.il/tase/prod/oauth2/token';
+        const params = new URLSearchParams();
+        params.append('grant_type', 'client_credentials');
+        params.append('scope', 'tase');
+
+        const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+        const tokenRes = await fetch(tokenUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Basic ${credentials}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params.toString()
+        });
+
+        if (!tokenRes.ok) {
+            const errText = await tokenRes.text();
+            return res.status(tokenRes.status).json({
+                error: 'OAuth Token Failed',
+                status: tokenRes.status,
+                details: errText
+            });
+        }
+
+        const tokenData = await tokenRes.json();
+        const token = tokenData.access_token;
+
+        const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${id}`;
+        const taseRes = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept-Language': 'en-US,en;q=0.9',
+            }
+        });
+
+        if (!taseRes.ok) {
+            const errText = await taseRes.text();
+            return res.status(taseRes.status).json({
+                error: 'Data Fetch Failed',
+                status: taseRes.status,
+                details: errText
+            });
+        }
+
+        const data = await taseRes.json();
+        res.json({
+            success: true,
+            tase_environment: {
+                client_id_length: clientId.length,
+                secret_length: clientSecret.length,
+                has_token: !!token
+            },
+            raw_data: data
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message, stack: err.stack });
+    }
+};
+
 // ... (other exports) ...
 
 // @desc    Get portfolio health score & benchmark comparison
