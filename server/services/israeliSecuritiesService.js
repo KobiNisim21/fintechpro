@@ -137,7 +137,9 @@ export async function fetchFundNAV(fundId) {
         });
 
         if (!response.ok) {
-            throw new Error(`TASE API returned ${response.status} ${response.statusText}`);
+            const errText = await response.text();
+            console.error(`[TASE API EXACT ERROR] Status: ${response.status}, Response: ${errText}`);
+            throw new Error(`TASE API returned ${response.status} - ${errText}`);
         }
 
         const data = await response.json();
@@ -150,16 +152,20 @@ export async function fetchFundNAV(fundId) {
 
         if (Array.isArray(data) && data.length > 0) {
             const latest = data[0]; // Assuming sorted descending
-            priceAgorot = latest.nav || latest.closingPrice || 10000;
+            priceAgorot = latest.nav || latest.closingPrice || 0;
             changePercent = latest.yield || latest.changePercent || 0;
             // Approximate absolute change safely (prevent divide by zero)
             const divisor = 1 + (changePercent / 100);
             changeAgorot = divisor === 0 ? priceAgorot : priceAgorot - (priceAgorot / divisor);
         } else if (data && typeof data === 'object') {
-            priceAgorot = data.nav || data.closingPrice || data.lastPrice || 10000;
+            priceAgorot = data.nav || data.closingPrice || data.lastPrice || 0;
             changePercent = data.yield || data.changePercent || 0;
             const divisor = 1 + (changePercent / 100);
             changeAgorot = divisor === 0 ? priceAgorot : priceAgorot - (priceAgorot / divisor);
+        }
+
+        if (priceAgorot === 0) {
+            console.error(`[TASE API FALLBACK] Price parsed as 0 for ${fundId}. Exact API Response JSON:`, JSON.stringify(data));
         }
 
         const priceILS = priceAgorot / 100;
