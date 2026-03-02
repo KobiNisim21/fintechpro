@@ -1,6 +1,7 @@
 import Position from '../models/Position.js';
 import * as stockData from '../services/stockDataService.js';
 import { searchIsraeliSecurities } from '../services/israeliSecuritiesService.js';
+import { makeProxyRequest } from '../utils/proxyUtils.js';
 
 // ============================================
 // LEGACY: Keep local cache only for candles (Yahoo chart API)
@@ -103,29 +104,6 @@ export const testTaseRaw = async (req, res) => {
             const params = new URLSearchParams();
             params.append('grant_type', 'client_credentials');
             const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-            const proxyApiKey = process.env.PROXY_API_KEY;
-
-            const makeTaseRequest = async (targetUrl, method, headers, body) => {
-                if (proxyApiKey) {
-                    const scrapingAntUrl = `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(targetUrl)}&x-api-key=${proxyApiKey}&browser=true`;
-
-                    const proxyHeaders = {};
-                    for (const [key, value] of Object.entries(headers)) {
-                        proxyHeaders[`Ant-${key}`] = value;
-                    }
-
-                    const options = { method, headers: proxyHeaders };
-                    if (body) {
-                        options.body = body;
-                        // ScrapingAnt requires POST for sending body
-                        options.method = 'POST';
-                    }
-
-                    return fetch(scrapingAntUrl, options);
-                } else {
-                    return fetch(targetUrl, { method, headers, body });
-                }
-            };
 
             const taseHeaders = {
                 'Authorization': `Basic ${credentials}`,
@@ -138,14 +116,7 @@ export const testTaseRaw = async (req, res) => {
                 'Referer': 'https://openapi.tase.co.il/'
             };
 
-            let tokenRes = await makeTaseRequest(tokenUrl, 'POST', taseHeaders, params.toString());
-
-            if (!tokenRes.ok && (tokenRes.status === 403 || tokenRes.status === 503 || tokenRes.status === 409)) {
-                console.warn(`[TASE Raw Test] Token fetch blocked/concurrency (${tokenRes.status}). Retrying in 2s with proxy/Mac UA...`);
-                await new Promise(r => setTimeout(r, 2000));
-                taseHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-                tokenRes = await makeTaseRequest(tokenUrl, 'POST', taseHeaders, params.toString());
-            }
+            let tokenRes = await makeProxyRequest(tokenUrl, 'POST', taseHeaders, params.toString());
 
             // Capture Cookies for persistence
             const cookies = tokenRes.headers.get('set-cookie') || '';
@@ -188,40 +159,9 @@ export const testTaseRaw = async (req, res) => {
             taseTokenExpiresAt = Date.now() + ((tokenData.expires_in || 3600) * 1000);
 
             console.log('[TASE Raw Test] Auth Success: Token fetched & cached.');
-
-            // MUST delay before the next proxy call to avoid ScrapingAnt Free Tier 409 Concurrency Error
-            if (proxyApiKey) {
-                console.log('[TASE Raw Test] Delaying 1500ms to avoid Proxy Concurrency limits...');
-                await new Promise(r => setTimeout(r, 1500));
-            }
         } else {
             console.log(`[TASE Raw Test] Using existing cached OAuth Token.`);
         }
-
-        const proxyApiKey = process.env.PROXY_API_KEY;
-        const makeTaseRequest = async (targetUrl, method, headers, body) => {
-            if (proxyApiKey) {
-                const scrapingAntUrl = `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(targetUrl)}&x-api-key=${proxyApiKey}&browser=true`;
-
-                const proxyHeaders = {};
-                for (const [key, value] of Object.entries(headers)) {
-                    proxyHeaders[`Ant-${key}`] = value;
-                }
-
-                const options = { method, headers: proxyHeaders };
-                if (body) {
-                    options.body = body;
-                    options.method = 'POST';
-                }
-
-                return fetch(scrapingAntUrl, options);
-            } else {
-                return fetch(targetUrl, { method, headers, body });
-            }
-        };
-
-
-
         const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${id}`;
         const taseDataHeaders = {
             'Authorization': `Bearer ${token}`,
@@ -234,14 +174,7 @@ export const testTaseRaw = async (req, res) => {
             'Cookie': passCookies
         };
 
-        let taseRes = await makeTaseRequest(url, 'GET', taseDataHeaders);
-
-        if (!taseRes.ok && (taseRes.status === 403 || taseRes.status === 503 || taseRes.status === 409)) {
-            console.warn(`[TASE Raw Test] Data fetch blocked/concurrency (${taseRes.status}). Retrying in 2s...`);
-            await new Promise(r => setTimeout(r, 2000));
-            taseDataHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-            taseRes = await makeTaseRequest(url, 'GET', taseDataHeaders);
-        }
+        let taseRes = await makeProxyRequest(url, 'GET', taseDataHeaders);
 
         if (!taseRes.ok) {
             const errText = await taseRes.text();

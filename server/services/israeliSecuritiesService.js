@@ -1,4 +1,5 @@
 import { israeliCatalog } from '../data/israeliCatalog.js';
+import { makeProxyRequest } from '../utils/proxyUtils.js';
 
 /**
  * Perform a simple fuzzy search on Hebrew/English names in the catalog
@@ -85,38 +86,24 @@ async function getTaseAccessToken() {
     params.append('scope', 'tase');
 
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-    let response = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-            'Cache-Control': 'no-cache',
-            'Origin': 'https://openapi.tase.co.il',
-            'Referer': 'https://openapi.tase.co.il/'
-        },
-        body: params.toString()
-    });
+    const tokenHeaders = {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+        'Cache-Control': 'no-cache',
+        'Origin': 'https://openapi.tase.co.il',
+        'Referer': 'https://openapi.tase.co.il/'
+    };
+
+    let response = await makeProxyRequest(tokenUrl, 'POST', tokenHeaders, params.toString());
 
     if (!response.ok && (response.status === 403 || response.status === 503)) {
-        console.warn(`[TASE API] Token fetch blocked (${response.status}). Retrying in 2s...`);
+        console.warn(`[TASE API] Token fetch blocked (${response.status}). Retrying in 2s with Mac UA...`);
         await new Promise(r => setTimeout(r, 2000));
-        response = await fetch(tokenUrl, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Basic ${credentials}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                'Cache-Control': 'no-cache',
-                'Origin': 'https://openapi.tase.co.il',
-                'Referer': 'https://openapi.tase.co.il/'
-            },
-            body: params.toString()
-        });
+        tokenHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+        response = await makeProxyRequest(tokenUrl, 'POST', tokenHeaders, params.toString());
     }
 
     // Capture Cookies
@@ -158,37 +145,25 @@ export async function fetchFundNAV(fundId) {
     try {
         const token = await getTaseAccessToken();
 
-        // TASE Data Hub format for comprehensive mutual fund data
         const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${fundId}`;
+        const taseHeaders = {
+            'Authorization': `Bearer ${token}`,
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Origin': 'https://openapi.tase.co.il',
+            'Referer': 'https://openapi.tase.co.il/',
+            ...(taseCookies ? { 'Cookie': taseCookies } : {})
+        };
 
-        let response = await fetch(url, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                'Cache-Control': 'no-cache',
-                'Origin': 'https://openapi.tase.co.il',
-                'Referer': 'https://openapi.tase.co.il/',
-                ...(taseCookies ? { 'Cookie': taseCookies } : {})
-            }
-        });
+        let response = await makeProxyRequest(url, 'GET', taseHeaders);
 
         if (!response.ok && (response.status === 403 || response.status === 503)) {
-            console.warn(`[TASE API] Data fetch blocked (${response.status}). Retrying in 2s...`);
+            console.warn(`[TASE API] Data fetch blocked (${response.status}). Retrying in 2s with Mac UA...`);
             await new Promise(r => setTimeout(r, 2000));
-            response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'application/json, text/plain, */*',
-                    'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                    'Cache-Control': 'no-cache',
-                    'Origin': 'https://openapi.tase.co.il',
-                    'Referer': 'https://openapi.tase.co.il/',
-                    ...(taseCookies ? { 'Cookie': taseCookies } : {})
-                }
-            });
+            taseHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+            response = await makeProxyRequest(url, 'GET', taseHeaders);
         }
 
         if (!response.ok) {
@@ -197,15 +172,26 @@ export async function fetchFundNAV(fundId) {
             throw new Error(`TASE API returned ${response.status} - ${errText}`);
         }
 
-        const data = await response.json();
+        let parsedData;
+        try {
+            const textResponse = await response.text();
+            parsedData = JSON.parse(textResponse);
+            // sometimes scraping proxy returns {"content": "..."} as a string
+            if (parsedData && parsedData.content && typeof parsedData.content === 'string') {
+                try { parsedData = JSON.parse(parsedData.content); } catch (e) { }
+            }
+        } catch (err) {
+            console.error('[TASE API] Failed to parse response as JSON');
+            throw err;
+        }
 
         // Typical TASE API returns an array or an object with latest NAV
         // Often wraps arrays inside a 'results' or 'history' object
-        let list = data;
-        if (data && typeof data === 'object' && !Array.isArray(data)) {
-            if (Array.isArray(data.history)) list = data.history;
-            else if (Array.isArray(data.results)) list = data.results;
-            else if (Array.isArray(data.data)) list = data.data;
+        let list = parsedData;
+        if (parsedData && typeof parsedData === 'object' && !Array.isArray(parsedData)) {
+            if (Array.isArray(parsedData.history)) list = parsedData.history;
+            else if (Array.isArray(parsedData.results)) list = parsedData.results;
+            else if (Array.isArray(parsedData.data)) list = parsedData.data;
         }
 
         // Israeli funds are priced in Agorot (אגורות) — so we must divide by 100 for ILS
@@ -217,16 +203,16 @@ export async function fetchFundNAV(fundId) {
             const latest = list[0]; // Assuming sorted descending
             priceAgorot = latest.nav || latest.closingPrice || latest.lastPrice || 0;
             changePercent = latest.yield || latest.changePercent || 0;
-        } else if (data && typeof data === 'object') {
-            priceAgorot = data.nav || data.closingPrice || data.lastPrice || 0;
-            changePercent = data.yield || data.changePercent || 0;
+        } else if (parsedData && typeof parsedData === 'object') {
+            priceAgorot = parsedData.nav || parsedData.closingPrice || parsedData.lastPrice || 0;
+            changePercent = parsedData.yield || parsedData.changePercent || 0;
         }
 
         const divisor = 1 + (changePercent / 100);
         changeAgorot = divisor === 0 ? priceAgorot : priceAgorot - (priceAgorot / divisor);
 
         if (priceAgorot === 0) {
-            console.error(`[TASE API FALLBACK] Price parsed as 0 for ${fundId}. Exact API Response JSON:`, JSON.stringify(data));
+            console.error(`[TASE API FALLBACK] Price parsed as 0 for ${fundId}. Exact API Response JSON:`, JSON.stringify(parsedData));
         }
 
         const priceILS = priceAgorot / 100;

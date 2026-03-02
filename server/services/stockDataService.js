@@ -463,7 +463,7 @@ export async function getBatchExtendedQuotes(symbols) {
 
     if (fundSymbols.length > 0) {
 
-        await Promise.all(fundSymbols.map(async (symbol) => {
+        for (const symbol of fundSymbols) {
             try {
                 const fundId = symbol.split(':')[1];
                 const navData = await fetchFundNAV(fundId);
@@ -492,7 +492,7 @@ export async function getBatchExtendedQuotes(symbols) {
             } catch (err) {
                 console.error(`[IsraeliSecurities] Failed to fetch NAV for ${symbol}:`, err);
             }
-        }));
+        }
     }
 
     // If all cached, return immediately

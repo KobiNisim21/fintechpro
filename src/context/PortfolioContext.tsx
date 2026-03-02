@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { positionsAPI } from '../api/positions';
 import { stocksAPI, PortfolioAnalytics, RecommendationTrend, PriceTarget, CompanyProfile } from '../api/stocks';
 import { useAuth } from './AuthContext';
@@ -232,14 +232,22 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     }
   }, [positions]);
 
+  const isFetchingPositionsRef = useRef(false);
+
   // Fetch positions from backend — FAST: uses batch extended quotes for prices
   const fetchPositions = async () => {
+    if (isFetchingPositionsRef.current) {
+      console.log('fetchPositions already in-flight, skipping to prevent duplicate API hits.');
+      return;
+    }
+
     if (!isAuthenticated) {
       setPositions([]);
       clearCachedPositions();
       return;
     }
 
+    isFetchingPositionsRef.current = true;
     const hasCachedData = positions.length > 0;
 
     try {
@@ -347,6 +355,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching positions:', err);
     } finally {
       setLoading(false);
+      isFetchingPositionsRef.current = false;
     }
   };
 
