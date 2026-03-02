@@ -72,6 +72,11 @@ export const listAllIsraeli = async (req, res) => {
     }
 };
 
+// Global variables for caching token specifically for testTaseRaw
+let taseAccessToken = null;
+let taseTokenExpiresAt = 0;
+let taseCookies = '';
+
 // @desc    Direct raw TASE API connection test for debugging production keys
 // @route   GET /api/stocks/tase-raw-test
 // @access  Public
@@ -90,16 +95,114 @@ export const testTaseRaw = async (req, res) => {
         }
 
         const tokenUrl = process.env.TASE_TOKEN_URL || 'https://openapigw.tase.co.il/tase/prod/oauth2/token';
-        const params = new URLSearchParams();
-        params.append('grant_type', 'client_credentials');
-        const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-        const proxyApiKey = process.env.PROXY_API_KEY;
+        let token = taseAccessToken;
+        let passCookies = taseCookies;
 
+        if (!token || Date.now() >= taseTokenExpiresAt - 60000) {
+            console.log(`[TASE Raw Test] Token missing or expired. Fetching new token via proxy...`);
+            const params = new URLSearchParams();
+            params.append('grant_type', 'client_credentials');
+            const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+            const proxyApiKey = process.env.PROXY_API_KEY;
+
+            const makeTaseRequest = async (targetUrl, method, headers, body) => {
+                if (proxyApiKey) {
+                    const scrapingAntUrl = `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(targetUrl)}&x-api-key=${proxyApiKey}&browser=true`;
+
+                    const proxyHeaders = {};
+                    for (const [key, value] of Object.entries(headers)) {
+                        proxyHeaders[`Ant-${key}`] = value;
+                    }
+
+                    const options = { method, headers: proxyHeaders };
+                    if (body) {
+                        options.body = body;
+                        // ScrapingAnt requires POST for sending body
+                        options.method = 'POST';
+                    }
+
+                    return fetch(scrapingAntUrl, options);
+                } else {
+                    return fetch(targetUrl, { method, headers, body });
+                }
+            };
+
+            const taseHeaders = {
+                'Authorization': `Basic ${credentials}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+                'Cache-Control': 'no-cache',
+                'Origin': 'https://openapi.tase.co.il',
+                'Referer': 'https://openapi.tase.co.il/'
+            };
+
+            let tokenRes = await makeTaseRequest(tokenUrl, 'POST', taseHeaders, params.toString());
+
+            if (!tokenRes.ok && (tokenRes.status === 403 || tokenRes.status === 503 || tokenRes.status === 409)) {
+                console.warn(`[TASE Raw Test] Token fetch blocked/concurrency (${tokenRes.status}). Retrying in 2s with proxy/Mac UA...`);
+                await new Promise(r => setTimeout(r, 2000));
+                taseHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+                tokenRes = await makeTaseRequest(tokenUrl, 'POST', taseHeaders, params.toString());
+            }
+
+            // Capture Cookies for persistence
+            const cookies = tokenRes.headers.get('set-cookie') || '';
+            passCookies = '';
+            if (cookies) {
+                // Basic parsing if multiple cookies returned
+                passCookies = cookies.split(',').map(c => c.split(';')[0]).join('; ');
+                console.log(`[TASE Raw Test] Captured Cookies: ${passCookies}`);
+            }
+
+            if (!tokenRes.ok) {
+                const errText = await tokenRes.text();
+                let parsedErr = errText;
+                try { parsedErr = JSON.parse(errText); } catch (e) { }
+
+                // If proxy is used, actual response is sometimes nested or errors are from the proxy
+                return res.status(tokenRes.status).json({
+                    error: 'OAuth Token Failed',
+                    status: tokenRes.status,
+                    details: parsedErr,
+                    incapsula_headers: { cookies: passCookies }
+                });
+            }
+
+            let tokenData;
+            try {
+                const rawBody = await tokenRes.text();
+                // ScrapingAnt sometimes returns HTML wrapped JSON if browser=true. Try to extract it if needed, 
+                // but usually the API returns raw text. Let's start basic:
+                tokenData = JSON.parse(rawBody);
+            } catch (e) {
+                return res.status(500).json({ error: 'Failed to parse token JSON', details: e.message });
+            }
+
+            token = tokenData.access_token;
+
+            // Update global cache
+            taseAccessToken = token;
+            taseCookies = passCookies;
+            taseTokenExpiresAt = Date.now() + ((tokenData.expires_in || 3600) * 1000);
+
+            console.log('[TASE Raw Test] Auth Success: Token fetched & cached.');
+
+            // MUST delay before the next proxy call to avoid ScrapingAnt Free Tier 409 Concurrency Error
+            if (proxyApiKey) {
+                console.log('[TASE Raw Test] Delaying 1500ms to avoid Proxy Concurrency limits...');
+                await new Promise(r => setTimeout(r, 1500));
+            }
+        } else {
+            console.log(`[TASE Raw Test] Using existing cached OAuth Token.`);
+        }
+
+        const proxyApiKey = process.env.PROXY_API_KEY;
         const makeTaseRequest = async (targetUrl, method, headers, body) => {
             if (proxyApiKey) {
                 const scrapingAntUrl = `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(targetUrl)}&x-api-key=${proxyApiKey}&browser=true`;
 
-                // We send headers to the target by prefixing them with Ant-
                 const proxyHeaders = {};
                 for (const [key, value] of Object.entries(headers)) {
                     proxyHeaders[`Ant-${key}`] = value;
@@ -108,7 +211,6 @@ export const testTaseRaw = async (req, res) => {
                 const options = { method, headers: proxyHeaders };
                 if (body) {
                     options.body = body;
-                    // ScrapingAnt requires POST for sending body
                     options.method = 'POST';
                 }
 
@@ -118,59 +220,7 @@ export const testTaseRaw = async (req, res) => {
             }
         };
 
-        const taseHeaders = {
-            'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-            'Cache-Control': 'no-cache',
-            'Origin': 'https://openapi.tase.co.il',
-            'Referer': 'https://openapi.tase.co.il/'
-        };
 
-        let tokenRes = await makeTaseRequest(tokenUrl, 'POST', taseHeaders, params.toString());
-
-        if (!tokenRes.ok && (tokenRes.status === 403 || tokenRes.status === 503)) {
-            console.warn(`[TASE Raw Test] Token fetch blocked (${tokenRes.status}). Retrying in 2s with proxy/Mac UA...`);
-            await new Promise(r => setTimeout(r, 2000));
-            taseHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-            tokenRes = await makeTaseRequest(tokenUrl, 'POST', taseHeaders, params.toString());
-        }
-
-        // Capture Cookies for persistence
-        const cookies = tokenRes.headers.get('set-cookie') || '';
-        let passCookies = '';
-        if (cookies) {
-            // Basic parsing if multiple cookies returned
-            passCookies = cookies.split(',').map(c => c.split(';')[0]).join('; ');
-            console.log(`[TASE Raw Test] Captured Cookies: ${passCookies}`);
-        }
-
-        if (!tokenRes.ok) {
-            const errText = await tokenRes.text();
-            let parsedErr = errText;
-            try { parsedErr = JSON.parse(errText); } catch (e) { }
-
-            // If proxy is used, actual response is sometimes nested or errors are from the proxy
-            return res.status(tokenRes.status).json({
-                error: 'OAuth Token Failed',
-                status: tokenRes.status,
-                details: parsedErr,
-                incapsula_headers: { cookies: passCookies }
-            });
-        }
-
-        let tokenData;
-        try {
-            const rawBody = await tokenRes.text();
-            // ScrapingAnt sometimes returns HTML wrapped JSON if browser=true. Try to extract it if needed, 
-            // but usually the API returns raw text. Let's start basic:
-            tokenData = JSON.parse(rawBody);
-        } catch (e) {
-            return res.status(500).json({ error: 'Failed to parse token JSON', details: e.message });
-        }
-        const token = tokenData.access_token;
 
         const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${id}`;
         const taseDataHeaders = {
@@ -186,8 +236,8 @@ export const testTaseRaw = async (req, res) => {
 
         let taseRes = await makeTaseRequest(url, 'GET', taseDataHeaders);
 
-        if (!taseRes.ok && (taseRes.status === 403 || taseRes.status === 503)) {
-            console.warn(`[TASE Raw Test] Data fetch blocked (${taseRes.status}). Retrying in 2s...`);
+        if (!taseRes.ok && (taseRes.status === 403 || taseRes.status === 503 || taseRes.status === 409)) {
+            console.warn(`[TASE Raw Test] Data fetch blocked/concurrency (${taseRes.status}). Retrying in 2s...`);
             await new Promise(r => setTimeout(r, 2000));
             taseDataHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
             taseRes = await makeTaseRequest(url, 'GET', taseDataHeaders);
