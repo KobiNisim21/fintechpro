@@ -92,42 +92,50 @@ export const testTaseRaw = async (req, res) => {
         const tokenUrl = process.env.TASE_TOKEN_URL || 'https://openapigw.tase.co.il/tase/prod/oauth2/token';
         const params = new URLSearchParams();
         params.append('grant_type', 'client_credentials');
-        params.append('scope', 'tase');
-
         const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+        const proxyApiKey = process.env.PROXY_API_KEY;
 
-        let tokenRes = await fetch(tokenUrl, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Basic ${credentials}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                'Cache-Control': 'no-cache',
-                'Origin': 'https://openapi.tase.co.il',
-                'Referer': 'https://openapi.tase.co.il/'
-            },
-            body: params.toString()
-        });
+        const makeTaseRequest = async (targetUrl, method, headers, body) => {
+            if (proxyApiKey) {
+                const scrapingAntUrl = `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(targetUrl)}&x-api-key=${proxyApiKey}&browser=true`;
+
+                // We send headers to the target by prefixing them with Ant-
+                const proxyHeaders = {};
+                for (const [key, value] of Object.entries(headers)) {
+                    proxyHeaders[`Ant-${key}`] = value;
+                }
+
+                const options = { method, headers: proxyHeaders };
+                if (body) {
+                    options.body = body;
+                    // ScrapingAnt requires POST for sending body
+                    options.method = 'POST';
+                }
+
+                return fetch(scrapingAntUrl, options);
+            } else {
+                return fetch(targetUrl, { method, headers, body });
+            }
+        };
+
+        const taseHeaders = {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Origin': 'https://openapi.tase.co.il',
+            'Referer': 'https://openapi.tase.co.il/'
+        };
+
+        let tokenRes = await makeTaseRequest(tokenUrl, 'POST', taseHeaders, params.toString());
 
         if (!tokenRes.ok && (tokenRes.status === 403 || tokenRes.status === 503)) {
-            console.warn(`[TASE Raw Test] Token fetch blocked (${tokenRes.status}). Retrying in 2s...`);
+            console.warn(`[TASE Raw Test] Token fetch blocked (${tokenRes.status}). Retrying in 2s with proxy/Mac UA...`);
             await new Promise(r => setTimeout(r, 2000));
-            tokenRes = await fetch(tokenUrl, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Basic ${credentials}`,
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'application/json, text/plain, */*',
-                    'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                    'Cache-Control': 'no-cache',
-                    'Origin': 'https://openapi.tase.co.il',
-                    'Referer': 'https://openapi.tase.co.il/'
-                },
-                body: params.toString()
-            });
+            taseHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+            tokenRes = await makeTaseRequest(tokenUrl, 'POST', taseHeaders, params.toString());
         }
 
         // Capture Cookies for persistence
@@ -141,58 +149,72 @@ export const testTaseRaw = async (req, res) => {
 
         if (!tokenRes.ok) {
             const errText = await tokenRes.text();
+            let parsedErr = errText;
+            try { parsedErr = JSON.parse(errText); } catch (e) { }
+
+            // If proxy is used, actual response is sometimes nested or errors are from the proxy
             return res.status(tokenRes.status).json({
                 error: 'OAuth Token Failed',
                 status: tokenRes.status,
-                details: errText,
-                incapsula_headers: { cookies }
+                details: parsedErr,
+                incapsula_headers: { cookies: passCookies }
             });
         }
 
-        const tokenData = await tokenRes.json();
+        let tokenData;
+        try {
+            const rawBody = await tokenRes.text();
+            // ScrapingAnt sometimes returns HTML wrapped JSON if browser=true. Try to extract it if needed, 
+            // but usually the API returns raw text. Let's start basic:
+            tokenData = JSON.parse(rawBody);
+        } catch (e) {
+            return res.status(500).json({ error: 'Failed to parse token JSON', details: e.message });
+        }
         const token = tokenData.access_token;
 
         const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${id}`;
-        let taseRes = await fetch(url, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                'Cache-Control': 'no-cache',
-                'Origin': 'https://openapi.tase.co.il',
-                'Referer': 'https://openapi.tase.co.il/',
-                'Cookie': passCookies
-            }
-        });
+        const taseDataHeaders = {
+            'Authorization': `Bearer ${token}`,
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Origin': 'https://openapi.tase.co.il',
+            'Referer': 'https://openapi.tase.co.il/',
+            'Cookie': passCookies
+        };
+
+        let taseRes = await makeTaseRequest(url, 'GET', taseDataHeaders);
 
         if (!taseRes.ok && (taseRes.status === 403 || taseRes.status === 503)) {
             console.warn(`[TASE Raw Test] Data fetch blocked (${taseRes.status}). Retrying in 2s...`);
             await new Promise(r => setTimeout(r, 2000));
-            taseRes = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'application/json, text/plain, */*',
-                    'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                    'Cache-Control': 'no-cache',
-                    'Origin': 'https://openapi.tase.co.il',
-                    'Referer': 'https://openapi.tase.co.il/',
-                    'Cookie': passCookies
-                }
-            });
+            taseDataHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+            taseRes = await makeTaseRequest(url, 'GET', taseDataHeaders);
         }
 
         if (!taseRes.ok) {
             const errText = await taseRes.text();
+            let parsedErr = errText;
+            try { parsedErr = JSON.parse(errText); } catch (e) { }
             return res.status(taseRes.status).json({
                 error: 'Data Fetch Failed',
                 status: taseRes.status,
-                details: errText
+                details: parsedErr
             });
         }
 
-        const data = await taseRes.json();
+        let data;
+        try {
+            const rawBody = await taseRes.text();
+            data = JSON.parse(rawBody);
+            // sometimes scraping proxy returns {"content": "..."} as a string
+            if (data.content && typeof data.content === 'string') {
+                try { data = JSON.parse(data.content); } catch (e) { }
+            }
+        } catch (e) {
+            return res.status(500).json({ error: 'Failed to parse Data JSON', details: e.message });
+        }
         res.json({
             success: true,
             tase_environment: {

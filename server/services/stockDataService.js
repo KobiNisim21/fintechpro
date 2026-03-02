@@ -385,17 +385,33 @@ export async function getExtendedQuote(symbol) {
             regularMarketPreviousClose: quote.regularMarketPreviousClose,
             regularMarketChange: quote.regularMarketChange,
             regularMarketChangePercent: quote.regularMarketChangePercent,
-            preMarketPrice: quote.preMarketPrice || null,
-            preMarketChange: quote.preMarketChange || null,
-            preMarketChangePercent: quote.preMarketChangePercent || null,
-            postMarketPrice: quote.postMarketPrice || null,
             postMarketChange: quote.postMarketChange || null,
             postMarketChangePercent: quote.postMarketChangePercent || null,
             marketState: quote.marketState,
             exchangeTimezoneName: quote.exchangeTimezoneName,
             fiftyTwoWeekLow: quote.fiftyTwoWeekLow || null,
             earningsTimestamp: quote.earningsTimestamp || null,
+            currency: quote.currency || 'USD',
         };
+
+        if (result.currency === 'ILA' || result.currency === 'ILS') {
+            const divisor = result.currency === 'ILA' ? 100 : 1;
+            try {
+                const forexData = await getForexRate();
+                const usdIlsRate = forexData.rate || 3.65;
+                result.regularMarketPrice = (result.regularMarketPrice / divisor) / usdIlsRate;
+                if (result.regularMarketPreviousClose) result.regularMarketPreviousClose = (result.regularMarketPreviousClose / divisor) / usdIlsRate;
+                if (result.regularMarketChange) result.regularMarketChange = (result.regularMarketChange / divisor) / usdIlsRate;
+                if (result.preMarketPrice) result.preMarketPrice = (result.preMarketPrice / divisor) / usdIlsRate;
+                if (result.preMarketChange) result.preMarketChange = (result.preMarketChange / divisor) / usdIlsRate;
+                if (result.postMarketPrice) result.postMarketPrice = (result.postMarketPrice / divisor) / usdIlsRate;
+                if (result.postMarketChange) result.postMarketChange = (result.postMarketChange / divisor) / usdIlsRate;
+                if (result.fiftyTwoWeekLow) result.fiftyTwoWeekLow = (result.fiftyTwoWeekLow / divisor) / usdIlsRate;
+                result.currency = 'USD';
+            } catch (e) {
+                console.error(`[IsraeliSecurities] Failed to fetch ILS=X rate for ${symbol}, prices remain in base currency.`, e.message);
+            }
+        }
 
         // Fallback for past earnings
         const nowSecs = Date.now() / 1000;
@@ -435,24 +451,17 @@ export async function getBatchExtendedQuotes(symbols) {
     }
 
     // Process Israeli funds directly using the local service
-    if (fundSymbols.length > 0) {
-        // Fetch USD to ILS conversion rate (e.g. 3.65)
-        let usdIlsRate = 3.65;
-        try {
-            const forexKey = 'forex_usd_ils';
-            const cachedForex = getCached(forexKey, 60 * 60 * 1000); // 1 hr cache
-            if (cachedForex && cachedForex.rate) {
-                usdIlsRate = cachedForex.rate;
-            } else {
-                const forexQuote = await yahooFinance.quote('ILS=X');
-                if (forexQuote && forexQuote.regularMarketPrice) {
-                    usdIlsRate = forexQuote.regularMarketPrice;
-                    setCache(forexKey, { rate: usdIlsRate, source: 'yahoo' });
-                }
-            }
-        } catch (e) {
-            console.error(`[IsraeliSecurities] Failed to fetch ILS=X rate, using fallback 3.65`, e.message);
+    let usdIlsRate = 3.65;
+    try {
+        const forexData = await getForexRate();
+        if (forexData && forexData.rate) {
+            usdIlsRate = forexData.rate;
         }
+    } catch (e) {
+        console.error(`[IsraeliSecurities] Failed to fetch ILS=X rate, using fallback 3.65`, e.message);
+    }
+
+    if (fundSymbols.length > 0) {
 
         await Promise.all(fundSymbols.map(async (symbol) => {
             try {
@@ -525,6 +534,7 @@ export async function getBatchExtendedQuotes(symbols) {
                     exchangeTimezoneName: quote.exchangeTimezoneName,
                     fiftyTwoWeekLow: quote.fiftyTwoWeekLow || null,
                     earningsTimestamp: quote.earningsTimestamp || null,
+                    currency: quote.currency || 'USD',
                 };
 
                 // Cache each result individually
@@ -532,17 +542,33 @@ export async function getBatchExtendedQuotes(symbols) {
                 batchData[quote.symbol] = result;
             }
 
-            // Post-process: Fallback for past earnings in parallel
+            // Post-process: Currency conversion and fallback for past earnings in parallel
             const nowSecs = Date.now() / 1000;
             await Promise.all(Object.keys(batchData).map(async (sym) => {
                 const b = batchData[sym];
+
+                if (b.currency === 'ILA' || b.currency === 'ILS') {
+                    const divisor = b.currency === 'ILA' ? 100 : 1;
+                    b.regularMarketPrice = (b.regularMarketPrice / divisor) / usdIlsRate;
+                    if (b.regularMarketPreviousClose) b.regularMarketPreviousClose = (b.regularMarketPreviousClose / divisor) / usdIlsRate;
+                    if (b.regularMarketChange) b.regularMarketChange = (b.regularMarketChange / divisor) / usdIlsRate;
+                    if (b.preMarketPrice) b.preMarketPrice = (b.preMarketPrice / divisor) / usdIlsRate;
+                    if (b.preMarketChange) b.preMarketChange = (b.preMarketChange / divisor) / usdIlsRate;
+                    if (b.postMarketPrice) b.postMarketPrice = (b.postMarketPrice / divisor) / usdIlsRate;
+                    if (b.postMarketChange) b.postMarketChange = (b.postMarketChange / divisor) / usdIlsRate;
+                    if (b.fiftyTwoWeekLow) b.fiftyTwoWeekLow = (b.fiftyTwoWeekLow / divisor) / usdIlsRate;
+                    b.currency = 'USD';
+                }
+
                 if (!b.earningsTimestamp || b.earningsTimestamp < nowSecs) {
                     const futureTs = await getFutureEarningsDate(sym);
                     if (futureTs) {
                         b.earningsTimestamp = futureTs;
-                        setCache(`extended_quote_${sym}`, b);
                     }
                 }
+
+                // Re-save converted/updated result to cache
+                setCache(`extended_quote_${sym}`, b);
             }));
 
             console.log(`✅ Batch extended quotes: ${Object.keys(batchData).length} fetched, ${symbols.length - uncachedSymbols.length} from cache`);
