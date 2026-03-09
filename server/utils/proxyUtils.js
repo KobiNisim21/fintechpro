@@ -1,11 +1,12 @@
 /**
  * Global Proxy Utility — ScrapingAnt integration for TASE API
  * 
- * Key design decisions for Vercel (30s max):
+ * Key design decisions for Vercel (60s max):
  * - NO jitter delays (mutex ensures serialization)
- * - NO browser=true (raw mode is 2-5x faster) 
+ * - browser=true REQUIRED (Incapsula WAF needs JS execution)
+ * - timeout=25s per ScrapingAnt request
  * - Short backoff (2s, max 2 retries)
- * - Minimal post-release delay (200ms)
+ * - Queue-based mutex lock (no polling)
  */
 
 let proxyLockBusy = false;
@@ -57,8 +58,8 @@ export const makeProxyRequest = async (targetUrl, method, headers, body) => {
     const startTime = Date.now();
 
     try {
-        // Build ScrapingAnt URL — NO browser=true (saves 10-15s!), timeout=15s
-        const scrapingAntUrl = `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(targetUrl)}&x-api-key=${proxyApiKey}&timeout=15`;
+        // Build ScrapingAnt URL — browser=true REQUIRED for Incapsula WAF bypass, timeout=25s
+        const scrapingAntUrl = `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(targetUrl)}&x-api-key=${proxyApiKey}&browser=true&timeout=25`;
 
         const proxyHeaders = {};
         for (const [key, value] of Object.entries(headers)) {
