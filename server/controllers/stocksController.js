@@ -117,20 +117,14 @@ export const testTaseRaw = async (req, res) => {
                 'Referer': 'https://openapi.tase.co.il/'
             };
 
-            // Try token WITHOUT browser first (faster). If 423 → retry WITH browser.
-            console.log(`[TASE Raw Test] Trying token fetch WITHOUT browser mode...`);
-            let tokenRes = await makeProxyRequest(tokenUrl, 'POST', taseHeaders, params.toString(), { useBrowser: false });
-
-            if (tokenRes.status === 423 || tokenRes.status === 403) {
-                console.log(`[TASE Raw Test] Token blocked (${tokenRes.status}) without browser. Retrying WITH browser=true...`);
-                tokenRes = await makeProxyRequest(tokenUrl, 'POST', taseHeaders, params.toString(), { useBrowser: true });
-            }
+            // SINGLE proxy call for token — always browser=true (Incapsula needs it)
+            console.log(`[TASE Raw Test] Fetching token via proxy (browser=true)...`);
+            let tokenRes = await makeProxyRequest(tokenUrl, 'POST', taseHeaders, params.toString());
 
             // Capture Cookies for persistence
             const cookies = tokenRes.headers.get('set-cookie') || '';
             passCookies = '';
             if (cookies) {
-                // Basic parsing if multiple cookies returned
                 passCookies = cookies.split(',').map(c => c.split(';')[0]).join('; ');
                 console.log(`[TASE Raw Test] Captured Cookies: ${passCookies}`);
             }
@@ -140,10 +134,10 @@ export const testTaseRaw = async (req, res) => {
                 let parsedErr = errText;
                 try { parsedErr = JSON.parse(errText); } catch (e) { }
 
-                // If proxy is used, actual response is sometimes nested or errors are from the proxy
                 return res.status(tokenRes.status).json({
                     error: 'OAuth Token Failed',
                     status: tokenRes.status,
+                    elapsed_ms: Date.now() - startTime,
                     details: parsedErr,
                     incapsula_headers: { cookies: passCookies }
                 });
@@ -152,11 +146,13 @@ export const testTaseRaw = async (req, res) => {
             let tokenData;
             try {
                 const rawBody = await tokenRes.text();
-                // ScrapingAnt sometimes returns HTML wrapped JSON if browser=true. Try to extract it if needed, 
-                // but usually the API returns raw text. Let's start basic:
                 tokenData = JSON.parse(rawBody);
+                // ScrapingAnt may wrap in {content: "..."}
+                if (tokenData.content && typeof tokenData.content === 'string') {
+                    try { tokenData = JSON.parse(tokenData.content); } catch (e) { }
+                }
             } catch (e) {
-                return res.status(500).json({ error: 'Failed to parse token JSON', details: e.message });
+                return res.status(500).json({ error: 'Failed to parse token JSON', elapsed_ms: Date.now() - startTime, details: e.message });
             }
 
             token = tokenData.access_token;
@@ -170,6 +166,12 @@ export const testTaseRaw = async (req, res) => {
         } else {
             console.log(`[TASE Raw Test] Using existing cached OAuth Token.`);
         }
+
+        // *** STRICT 1.5s DELAY between token and data ***
+        // ScrapingAnt concurrency=1 — must wait for slot to fully release
+        console.log(`[TASE Raw Test] Waiting 1.5s before data fetch (concurrency safety)...`);
+        await new Promise(r => setTimeout(r, 1500));
+
         const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${id}`;
         const taseDataHeaders = {
             'Authorization': `Bearer ${token}`,
@@ -182,8 +184,8 @@ export const testTaseRaw = async (req, res) => {
             'Cookie': passCookies
         };
 
-        console.log(`[TASE Raw Test] Fetching data for fundId=${id} WITH browser=true...`);
-        let taseRes = await makeProxyRequest(url, 'GET', taseDataHeaders, null, { useBrowser: true });
+        console.log(`[TASE Raw Test] Fetching data for fundId=${id}...`);
+        let taseRes = await makeProxyRequest(url, 'GET', taseDataHeaders);
 
         if (!taseRes.ok) {
             const errText = await taseRes.text();

@@ -97,13 +97,7 @@ async function getTaseAccessToken() {
         'Referer': 'https://openapi.tase.co.il/'
     };
 
-    let response = await makeProxyRequest(tokenUrl, 'POST', tokenHeaders, params.toString(), { useBrowser: false });
-
-    // If blocked without browser, retry with browser=true
-    if (response.status === 423 || response.status === 403) {
-        console.warn(`[TASE API] Token blocked (${response.status}) without browser. Retrying WITH browser...`);
-        response = await makeProxyRequest(tokenUrl, 'POST', tokenHeaders, params.toString(), { useBrowser: true });
-    }
+    let response = await makeProxyRequest(tokenUrl, 'POST', tokenHeaders, params.toString());
 
     // Capture Cookies
     const rawCookies = response.headers.get('set-cookie');
@@ -156,7 +150,11 @@ export async function fetchFundNAV(fundId) {
             ...(taseCookies ? { 'Cookie': taseCookies } : {})
         };
 
-        let response = await makeProxyRequest(url, 'GET', taseHeaders, null, { useBrowser: true });
+        // Strict 1.5s delay between token and data (ScrapingAnt concurrency=1)
+        console.log(`[TASE API] Waiting 1.5s before data fetch (concurrency safety)...`);
+        await new Promise(r => setTimeout(r, 1500));
+
+        let response = await makeProxyRequest(url, 'GET', taseHeaders);
 
         if (!response.ok) {
             const errText = await response.text();
@@ -220,7 +218,14 @@ export async function fetchFundNAV(fundId) {
 
     } catch (error) {
         console.error(`[IsraeliSecurities] Failed to fetch TASE NAV for ${fundId}:`, error.message);
-        // Fallback or rethrow
-        throw error;
+        // Analytics Guard: return last known price on failure to prevent $0.00 dashboard crashes
+        return {
+            price: 0,
+            change: 0,
+            changePercent: 0,
+            currency: 'ILS',
+            timestamp: Math.floor(Date.now() / 1000),
+            error: error.message
+        };
     }
 }

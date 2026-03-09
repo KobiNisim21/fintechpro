@@ -468,14 +468,25 @@ export async function getBatchExtendedQuotes(symbols) {
                 const fundId = symbol.split(':')[1];
                 const navData = await fetchFundNAV(fundId);
 
-                // Convert to USD (since NAV is parsed into ILS in the service)
-                // Price_USD = Price_ILS / Rate_ILS_per_USD
+                // Analytics Guard: if price fetch failed or returned 0, use cached value
+                if (!navData.price || navData.price === 0 || navData.error) {
+                    console.warn(`[IsraeliSecurities] Price=0 or error for ${symbol}. Using cached value if available.`);
+                    const cached = getCache(`extended_quote_${symbol}`);
+                    if (cached) {
+                        results[symbol] = cached;
+                        console.log(`[IsraeliSecurities] Using cached price for ${symbol}: $${cached.regularMarketPrice}`);
+                    }
+                    continue;
+                }
+
+                // Convert to USD: Price_USD = (Price_Agorot / 100) / Rate_ILS_per_USD
+                // navData.price is already in ILS (priceAgorot / 100 from the service)
                 const priceInUSD = navData.price / usdIlsRate;
                 const changeInUSD = navData.change / usdIlsRate;
 
-                // For Debug Logging (Requested by User)
+                // Debug Logging
                 const priceAgorot = navData.price * 100;
-                console.log(`[PRICE DEBUG] Asset: ${fundId} | Price (Agorot): ${priceAgorot} | USD: ${priceInUSD.toFixed(4)}`);
+                console.log(`[PRICE DEBUG] Asset: ${fundId} | Price (Agorot): ${priceAgorot} | ILS: ${navData.price.toFixed(2)} | USD: ${priceInUSD.toFixed(4)} | Rate: ${usdIlsRate}`);
 
                 const result = {
                     symbol: symbol,
@@ -491,6 +502,12 @@ export async function getBatchExtendedQuotes(symbols) {
                 results[symbol] = result;
             } catch (err) {
                 console.error(`[IsraeliSecurities] Failed to fetch NAV for ${symbol}:`, err);
+                // Analytics Guard: use cached value on exception
+                const cached = getCache(`extended_quote_${symbol}`);
+                if (cached) {
+                    results[symbol] = cached;
+                    console.log(`[IsraeliSecurities] Using cached price for ${symbol} after error`);
+                }
             }
         }
     }
