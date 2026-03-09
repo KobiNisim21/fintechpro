@@ -1,6 +1,6 @@
 import Position from '../models/Position.js';
 import * as stockData from '../services/stockDataService.js';
-import { searchIsraeliSecurities } from '../services/israeliSecuritiesService.js';
+import { searchIsraeliSecurities, setCachedPrice, refreshFundPriceViaProxy, getAllCachedPrices } from '../services/israeliSecuritiesService.js';
 import { makeProxyRequest } from '../utils/proxyUtils.js';
 
 // ============================================
@@ -224,6 +224,67 @@ export const testTaseRaw = async (req, res) => {
 
     } catch (err) {
         res.status(500).json({ error: err.message, elapsed_ms: Date.now() - startTime, stack: err.stack });
+    }
+};
+
+// @desc    Manually set the cached price for an Israeli fund
+// @route   POST /api/stocks/set-israeli-price
+// @access  Public (for admin use — add auth later)
+export const setIsraeliPrice = async (req, res) => {
+    try {
+        const { fundId, priceILS, exchangeRate, name } = req.body;
+
+        if (!fundId || !priceILS) {
+            return res.status(400).json({ error: 'Missing fundId or priceILS in body' });
+        }
+
+        const rate = exchangeRate || 3.65;
+        const result = await setCachedPrice(fundId, priceILS, rate, { name, source: 'manual' });
+
+        res.json({
+            success: true,
+            message: `Price cached for fund ${fundId}`,
+            data: result
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// @desc    Get all cached Israeli fund prices
+// @route   GET /api/stocks/israeli-prices
+// @access  Public
+export const getIsraeliPrices = async (req, res) => {
+    try {
+        const prices = await getAllCachedPrices();
+        res.json({ success: true, count: prices.length, data: prices });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// @desc    Refresh Israeli fund price via TASE proxy (slow — background use only)
+// @route   POST /api/stocks/refresh-israeli-prices
+// @access  Public (for admin use)
+export const refreshIsraeliPrices = async (req, res) => {
+    try {
+        const { fundId, exchangeRate } = req.body || {};
+
+        if (!fundId) {
+            return res.status(400).json({ error: 'Missing fundId in body' });
+        }
+
+        const rate = exchangeRate || 3.65;
+        console.log(`[Refresh] Starting proxy refresh for fund ${fundId}...`);
+        const result = await refreshFundPriceViaProxy(fundId, rate);
+
+        res.json({
+            success: true,
+            message: `Price refreshed for fund ${fundId}`,
+            data: result
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message, stack: err.stack });
     }
 };
 

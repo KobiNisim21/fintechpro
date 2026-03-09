@@ -1,12 +1,15 @@
 import express from 'express';
-import { getQuote, getNews, getMarketNews, getForexRate, getStockCandles, getExtendedQuote, getBatchExtendedQuote, searchStocks, listAllIsraeli, testTaseRaw, getAnalystRecommendations, getPriceTarget, getCompanyProfile, getBatchInsights, getPortfolioAnalytics, getMarketCalendar } from '../controllers/stocksController.js';
+import { getQuote, getNews, getMarketNews, getForexRate, getStockCandles, getExtendedQuote, getBatchExtendedQuote, searchStocks, listAllIsraeli, testTaseRaw, setIsraeliPrice, getIsraeliPrices, refreshIsraeliPrices, getAnalystRecommendations, getPriceTarget, getCompanyProfile, getBatchInsights, getPortfolioAnalytics, getMarketCalendar } from '../controllers/stocksController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Public routes (No auth required)
-router.get('/list-all', listAllIsraeli); // Debug catalog bundling
-router.get('/tase-raw-test', testTaseRaw); // Raw direct TASE API test
+router.get('/list-all', listAllIsraeli);
+router.get('/tase-raw-test', testTaseRaw);
+router.get('/israeli-prices', getIsraeliPrices);
+router.post('/set-israeli-price', setIsraeliPrice);
+router.post('/refresh-israeli-prices', refreshIsraeliPrices);
 
 // Protect all routes (require authentication)
 router.use(protect);
