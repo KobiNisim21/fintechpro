@@ -97,7 +97,13 @@ async function getTaseAccessToken() {
         'Referer': 'https://openapi.tase.co.il/'
     };
 
-    let response = await makeProxyRequest(tokenUrl, 'POST', tokenHeaders, params.toString());
+    let response = await makeProxyRequest(tokenUrl, 'POST', tokenHeaders, params.toString(), { useBrowser: false });
+
+    // If blocked without browser, retry with browser=true
+    if (response.status === 423 || response.status === 403) {
+        console.warn(`[TASE API] Token blocked (${response.status}) without browser. Retrying WITH browser...`);
+        response = await makeProxyRequest(tokenUrl, 'POST', tokenHeaders, params.toString(), { useBrowser: true });
+    }
 
     // Capture Cookies
     const rawCookies = response.headers.get('set-cookie');
@@ -150,7 +156,7 @@ export async function fetchFundNAV(fundId) {
             ...(taseCookies ? { 'Cookie': taseCookies } : {})
         };
 
-        let response = await makeProxyRequest(url, 'GET', taseHeaders);
+        let response = await makeProxyRequest(url, 'GET', taseHeaders, null, { useBrowser: true });
 
         if (!response.ok) {
             const errText = await response.text();

@@ -117,7 +117,14 @@ export const testTaseRaw = async (req, res) => {
                 'Referer': 'https://openapi.tase.co.il/'
             };
 
-            let tokenRes = await makeProxyRequest(tokenUrl, 'POST', taseHeaders, params.toString());
+            // Try token WITHOUT browser first (faster). If 423 → retry WITH browser.
+            console.log(`[TASE Raw Test] Trying token fetch WITHOUT browser mode...`);
+            let tokenRes = await makeProxyRequest(tokenUrl, 'POST', taseHeaders, params.toString(), { useBrowser: false });
+
+            if (tokenRes.status === 423 || tokenRes.status === 403) {
+                console.log(`[TASE Raw Test] Token blocked (${tokenRes.status}) without browser. Retrying WITH browser=true...`);
+                tokenRes = await makeProxyRequest(tokenUrl, 'POST', taseHeaders, params.toString(), { useBrowser: true });
+            }
 
             // Capture Cookies for persistence
             const cookies = tokenRes.headers.get('set-cookie') || '';
@@ -175,7 +182,8 @@ export const testTaseRaw = async (req, res) => {
             'Cookie': passCookies
         };
 
-        let taseRes = await makeProxyRequest(url, 'GET', taseDataHeaders);
+        console.log(`[TASE Raw Test] Fetching data for fundId=${id} WITH browser=true...`);
+        let taseRes = await makeProxyRequest(url, 'GET', taseDataHeaders, null, { useBrowser: true });
 
         if (!taseRes.ok) {
             const errText = await taseRes.text();
