@@ -99,13 +99,6 @@ async function getTaseAccessToken() {
 
     let response = await makeProxyRequest(tokenUrl, 'POST', tokenHeaders, params.toString());
 
-    if (!response.ok && (response.status === 403 || response.status === 503)) {
-        console.warn(`[TASE API] Token fetch blocked (${response.status}). Retrying in 2s with Mac UA...`);
-        await new Promise(r => setTimeout(r, 2000));
-        tokenHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-        response = await makeProxyRequest(tokenUrl, 'POST', tokenHeaders, params.toString());
-    }
-
     // Capture Cookies
     const rawCookies = response.headers.get('set-cookie');
     if (rawCookies) {
@@ -158,13 +151,6 @@ export async function fetchFundNAV(fundId) {
         };
 
         let response = await makeProxyRequest(url, 'GET', taseHeaders);
-
-        if (!response.ok && (response.status === 403 || response.status === 503)) {
-            console.warn(`[TASE API] Data fetch blocked (${response.status}). Retrying in 2s with Mac UA...`);
-            await new Promise(r => setTimeout(r, 2000));
-            taseHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-            response = await makeProxyRequest(url, 'GET', taseHeaders);
-        }
 
         if (!response.ok) {
             const errText = await response.text();

@@ -82,6 +82,7 @@ let taseCookies = '';
 // @route   GET /api/stocks/tase-raw-test
 // @access  Public
 export const testTaseRaw = async (req, res) => {
+    const startTime = Date.now();
     try {
         const { id } = req.query;
         if (!id) {
@@ -200,6 +201,8 @@ export const testTaseRaw = async (req, res) => {
         }
         res.json({
             success: true,
+            elapsed_ms: Date.now() - startTime,
+            proxy_enabled: !!process.env.PROXY_API_KEY,
             tase_environment: {
                 client_id_length: clientId.length,
                 secret_length: clientSecret.length,
@@ -210,7 +213,7 @@ export const testTaseRaw = async (req, res) => {
         });
 
     } catch (err) {
-        res.status(500).json({ error: err.message, stack: err.stack });
+        res.status(500).json({ error: err.message, elapsed_ms: Date.now() - startTime, stack: err.stack });
     }
 };
 
