@@ -57,8 +57,8 @@ export const makeProxyRequest = async (targetUrl, method, headers, body) => {
     const startTime = Date.now();
 
     try {
-        // Build ScrapingAnt URL — NO browser=true (saves 10-15s!)
-        const scrapingAntUrl = `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(targetUrl)}&x-api-key=${proxyApiKey}`;
+        // Build ScrapingAnt URL — NO browser=true (saves 10-15s!), timeout=15s
+        const scrapingAntUrl = `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(targetUrl)}&x-api-key=${proxyApiKey}&timeout=15`;
 
         const proxyHeaders = {};
         for (const [key, value] of Object.entries(headers)) {
