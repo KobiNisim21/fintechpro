@@ -1,5 +1,5 @@
 import express from 'express';
-import { getQuote, getNews, getMarketNews, getForexRate, getStockCandles, getExtendedQuote, getBatchExtendedQuote, searchStocks, listAllIsraeli, testTaseRaw, setIsraeliPrice, getIsraeliPrices, refreshIsraeliPrices, getAnalystRecommendations, getPriceTarget, getCompanyProfile, getBatchInsights, getPortfolioAnalytics, getMarketCalendar } from '../controllers/stocksController.js';
+import { getQuote, getNews, getMarketNews, getForexRate, getStockCandles, getExtendedQuote, getBatchExtendedQuote, searchStocks, listAllIsraeli, testTaseRaw, setIsraeliPrice, getIsraeliPrices, refreshIsraeliPrices, adminFixPosition, getAnalystRecommendations, getPriceTarget, getCompanyProfile, getBatchInsights, getPortfolioAnalytics, getMarketCalendar } from '../controllers/stocksController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -10,6 +10,7 @@ router.get('/tase-raw-test', testTaseRaw);
 router.get('/israeli-prices', getIsraeliPrices);
 router.post('/set-israeli-price', setIsraeliPrice);
 router.post('/refresh-israeli-prices', refreshIsraeliPrices);
+router.post('/admin-fix-position', adminFixPosition);
 
 // Protect all routes (require authentication)
 router.use(protect);

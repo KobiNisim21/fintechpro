@@ -205,6 +205,58 @@ export const refreshIsraeliPrices = async (req, res) => {
     }
 };
 
+// @desc    Admin one-time fix: update position data directly
+// @route   POST /api/stocks/admin-fix-position
+// @access  Public (TEMPORARY — remove after use)
+export const adminFixPosition = async (req, res) => {
+    try {
+        const { oldSymbol, newSymbol, newName, quantity, averagePrice } = req.body;
+
+        if (!oldSymbol) {
+            return res.status(400).json({ error: 'Missing oldSymbol' });
+        }
+
+        // Find position with old symbol
+        const position = await Position.findOne({ symbol: oldSymbol.toUpperCase() });
+        if (!position) {
+            return res.status(404).json({ error: `Position not found for symbol ${oldSymbol}` });
+        }
+
+        // Apply fixes
+        if (newSymbol) position.symbol = newSymbol.toUpperCase();
+        if (newName) position.name = newName;
+        if (quantity !== undefined) position.quantity = quantity;
+        if (averagePrice !== undefined) position.averagePrice = averagePrice;
+
+        // Update lots to match new values
+        if (quantity !== undefined && averagePrice !== undefined) {
+            position.lots = [{
+                quantity: quantity,
+                price: averagePrice,
+                date: position.lots?.[0]?.date || new Date()
+            }];
+            position.markModified('lots');
+        }
+
+        const saved = await position.save();
+
+        res.json({
+            success: true,
+            message: `Position updated: ${oldSymbol} → ${saved.symbol}`,
+            position: {
+                id: saved._id,
+                symbol: saved.symbol,
+                name: saved.name,
+                quantity: saved.quantity,
+                averagePrice: saved.averagePrice,
+                lots: saved.lots
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 // ... (other exports) ...
 
 // @desc    Get portfolio health score & benchmark comparison
