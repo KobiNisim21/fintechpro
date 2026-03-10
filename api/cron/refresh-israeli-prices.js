@@ -11,6 +11,7 @@ import { dbConnection } from '../../server/app.js';
 import Position from '../../server/models/Position.js';
 import CachedPrice from '../../server/models/CachedPrice.js';
 import { refreshFundPriceViaProxy, setCachedPrice } from '../../server/services/israeliSecuritiesService.js';
+import { getForexRate } from '../../server/services/stockDataService.js';
 
 export default async function handler(req, res) {
     const startTime = Date.now();
@@ -48,19 +49,17 @@ export default async function handler(req, res) {
 
         console.log(`[Cron] Found ${allFundIds.length} funds to refresh: ${allFundIds.join(', ')}`);
 
-        // 2. Get current USD/ILS rate
+        // 2. Get live USD/ILS rate from Yahoo Finance (same source as the dashboard)
         let exchangeRate = 3.65;
         try {
-            const forexRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-            if (forexRes.ok) {
-                const forex = await forexRes.json();
-                if (forex.rates && forex.rates.ILS) {
-                    exchangeRate = forex.rates.ILS;
-                }
+            const forexData = await getForexRate();
+            if (forexData && forexData.rate) {
+                exchangeRate = forexData.rate;
             }
         } catch (e) {
             console.warn('[Cron] Forex fetch failed, using fallback rate 3.65');
         }
+        console.log(`[Cron] Using USD/ILS rate: ${exchangeRate}`);
 
         // 3. Refresh each fund sequentially (ScrapingAnt concurrency = 1)
         const results = [];

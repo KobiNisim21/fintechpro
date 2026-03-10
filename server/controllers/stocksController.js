@@ -89,6 +89,11 @@ export const testTaseRaw = async (req, res) => {
             return res.status(400).json({ error: 'Missing id parameter (e.g. ?id=5131425)' });
         }
 
+        // Get live USD/ILS rate from Yahoo Finance (cached 6h)
+        const forexData = await stockData.getForexRate();
+        const liveRate = forexData?.rate || 3.65;
+        console.log(`[TASE Raw Test] Live USD/ILS rate: ${liveRate}`);
+
         // === CACHE-FIRST: Read from MongoDB instantly ===
         const { fetchFundNAV: getFundFromCache } = await import('../services/israeliSecuritiesService.js');
         const cached = await getFundFromCache(id);
@@ -101,7 +106,8 @@ export const testTaseRaw = async (req, res) => {
                 elapsed_ms: Date.now() - startTime,
                 fund_id: id,
                 price_ils: cached.price,
-                price_usd: cached.price / 3.65,
+                price_usd: cached.price / liveRate,
+                exchange_rate: liveRate,
                 change_percent: cached.changePercent,
                 age_hours: cached.ageHours || 'unknown',
                 from_cache: true,
@@ -114,7 +120,7 @@ export const testTaseRaw = async (req, res) => {
 
         try {
             const { refreshFundPriceViaProxy } = await import('../services/israeliSecuritiesService.js');
-            const result = await refreshFundPriceViaProxy(id, 3.65);
+            const result = await refreshFundPriceViaProxy(id, liveRate);
 
             return res.json({
                 success: true,
@@ -155,7 +161,12 @@ export const setIsraeliPrice = async (req, res) => {
             return res.status(400).json({ error: 'Missing fundId or priceILS in body' });
         }
 
-        const rate = exchangeRate || 3.65;
+        // Use live rate if not explicitly provided
+        let rate = exchangeRate;
+        if (!rate) {
+            const forexData = await stockData.getForexRate();
+            rate = forexData?.rate || 3.65;
+        }
         const result = await setCachedPrice(fundId, priceILS, rate, { name, source: 'manual' });
 
         res.json({
@@ -191,8 +202,13 @@ export const refreshIsraeliPrices = async (req, res) => {
             return res.status(400).json({ error: 'Missing fundId in body' });
         }
 
-        const rate = exchangeRate || 3.65;
-        console.log(`[Refresh] Starting proxy refresh for fund ${fundId}...`);
+        // Use live rate if not explicitly provided
+        let rate = exchangeRate;
+        if (!rate) {
+            const forexData = await stockData.getForexRate();
+            rate = forexData?.rate || 3.65;
+        }
+        console.log(`[Refresh] Starting proxy refresh for fund ${fundId} with rate ${rate}...`);
         const result = await refreshFundPriceViaProxy(fundId, rate);
 
         res.json({
