@@ -12,6 +12,15 @@
     "functions": {
         "api/index.js": {
             "maxDuration": 60
+        },
+        "api/cron/refresh-israeli-prices.js": {
+            "maxDuration": 60
         }
-    }
+    },
+    "crons": [
+        {
+            "path": "/api/cron/refresh-israeli-prices",
+            "schedule": "0 14 * * 0-4"
+        }
+    ]
 }
