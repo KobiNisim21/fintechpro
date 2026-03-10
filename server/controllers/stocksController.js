@@ -84,146 +84,63 @@ let taseCookies = '';
 export const testTaseRaw = async (req, res) => {
     const startTime = Date.now();
     try {
-        const { id } = req.query;
+        const { id, refresh } = req.query;
         if (!id) {
             return res.status(400).json({ error: 'Missing id parameter (e.g. ?id=5131425)' });
         }
 
-        const clientId = process.env.TASE_CLIENT_ID;
-        const clientSecret = process.env.TASE_CLIENT_SECRET;
+        // === CACHE-FIRST: Read from MongoDB instantly ===
+        const { fetchFundNAV: getFundFromCache } = await import('../services/israeliSecuritiesService.js');
+        const cached = await getFundFromCache(id);
 
-        if (!clientId || !clientSecret) {
-            return res.status(500).json({ error: 'TASE_CLIENT_ID or TASE_CLIENT_SECRET not configured on this server.' });
-        }
-
-        const tokenUrl = process.env.TASE_TOKEN_URL || 'https://openapigw.tase.co.il/tase/prod/oauth2/token';
-        let token = taseAccessToken;
-        let passCookies = taseCookies;
-
-        if (!token || Date.now() >= taseTokenExpiresAt - 60000) {
-            console.log(`[TASE Raw Test] Token missing or expired. Fetching new token via proxy...`);
-            const params = new URLSearchParams();
-            params.append('grant_type', 'client_credentials');
-            const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
-            const taseHeaders = {
-                'Authorization': `Basic ${credentials}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-                'Cache-Control': 'no-cache',
-                'Origin': 'https://openapi.tase.co.il',
-                'Referer': 'https://openapi.tase.co.il/'
-            };
-
-            // SINGLE proxy call for token — always browser=true (Incapsula needs it)
-            console.log(`[TASE Raw Test] Fetching token via proxy (browser=true)...`);
-            let tokenRes = await makeProxyRequest(tokenUrl, 'POST', taseHeaders, params.toString());
-
-            // Capture Cookies for persistence
-            const cookies = tokenRes.headers.get('set-cookie') || '';
-            passCookies = '';
-            if (cookies) {
-                passCookies = cookies.split(',').map(c => c.split(';')[0]).join('; ');
-                console.log(`[TASE Raw Test] Captured Cookies: ${passCookies}`);
-            }
-
-            if (!tokenRes.ok) {
-                const errText = await tokenRes.text();
-                let parsedErr = errText;
-                try { parsedErr = JSON.parse(errText); } catch (e) { }
-
-                return res.status(tokenRes.status).json({
-                    error: 'OAuth Token Failed',
-                    status: tokenRes.status,
-                    elapsed_ms: Date.now() - startTime,
-                    details: parsedErr,
-                    incapsula_headers: { cookies: passCookies }
-                });
-            }
-
-            let tokenData;
-            try {
-                const rawBody = await tokenRes.text();
-                tokenData = JSON.parse(rawBody);
-                // ScrapingAnt may wrap in {content: "..."}
-                if (tokenData.content && typeof tokenData.content === 'string') {
-                    try { tokenData = JSON.parse(tokenData.content); } catch (e) { }
-                }
-            } catch (e) {
-                return res.status(500).json({ error: 'Failed to parse token JSON', elapsed_ms: Date.now() - startTime, details: e.message });
-            }
-
-            token = tokenData.access_token;
-
-            // Update global cache
-            taseAccessToken = token;
-            taseCookies = passCookies;
-            taseTokenExpiresAt = Date.now() + ((tokenData.expires_in || 3600) * 1000);
-
-            console.log('[TASE Raw Test] Auth Success: Token fetched & cached.');
-        } else {
-            console.log(`[TASE Raw Test] Using existing cached OAuth Token.`);
-        }
-
-        // *** STRICT 1.5s DELAY between token and data ***
-        // ScrapingAnt concurrency=1 — must wait for slot to fully release
-        console.log(`[TASE Raw Test] Waiting 1.5s before data fetch (concurrency safety)...`);
-        await new Promise(r => setTimeout(r, 1500));
-
-        const url = `https://openapi.tase.co.il/api/mutual-fund/history?fundId=${id}`;
-        const taseDataHeaders = {
-            'Authorization': `Bearer ${token}`,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-            'Cache-Control': 'no-cache',
-            'Origin': 'https://openapi.tase.co.il',
-            'Referer': 'https://openapi.tase.co.il/',
-            'Cookie': passCookies
-        };
-
-        console.log(`[TASE Raw Test] Fetching data for fundId=${id}...`);
-        let taseRes = await makeProxyRequest(url, 'GET', taseDataHeaders);
-
-        if (!taseRes.ok) {
-            const errText = await taseRes.text();
-            let parsedErr = errText;
-            try { parsedErr = JSON.parse(errText); } catch (e) { }
-            return res.status(taseRes.status).json({
-                error: 'Data Fetch Failed',
-                status: taseRes.status,
-                details: parsedErr
+        if (cached && cached.price > 0 && !cached.error && refresh !== 'true') {
+            // Return cached data immediately (< 100ms)
+            return res.json({
+                success: true,
+                source: 'db_cache',
+                elapsed_ms: Date.now() - startTime,
+                fund_id: id,
+                price_ils: cached.price,
+                price_usd: cached.price / 3.65,
+                change_percent: cached.changePercent,
+                age_hours: cached.ageHours || 'unknown',
+                from_cache: true,
+                hint: 'Add ?refresh=true to force a proxy refresh (slow, ~30s)'
             });
         }
 
-        let data;
+        // === If no cache OR refresh=true, try proxy refresh ===
+        console.log(`[TASE Raw Test] No cache or refresh requested for fund ${id}. Trying proxy...`);
+
         try {
-            const rawBody = await taseRes.text();
-            data = JSON.parse(rawBody);
-            // sometimes scraping proxy returns {"content": "..."} as a string
-            if (data.content && typeof data.content === 'string') {
-                try { data = JSON.parse(data.content); } catch (e) { }
-            }
-        } catch (e) {
-            return res.status(500).json({ error: 'Failed to parse Data JSON', details: e.message });
+            const { refreshFundPriceViaProxy } = await import('../services/israeliSecuritiesService.js');
+            const result = await refreshFundPriceViaProxy(id, 3.65);
+
+            return res.json({
+                success: true,
+                source: 'proxy_refresh',
+                elapsed_ms: Date.now() - startTime,
+                fund_id: id,
+                price_ils: result.priceILS,
+                price_usd: result.priceUSD,
+                price_agorot: result.priceAgorot,
+                change_percent: result.changePercent,
+                hint: 'Price has been saved to DB cache for instant future access'
+            });
+        } catch (proxyErr) {
+            // Proxy failed — return whatever we have (even if price=0)
+            return res.status(502).json({
+                error: 'Proxy refresh failed',
+                proxy_error: proxyErr.message,
+                elapsed_ms: Date.now() - startTime,
+                fund_id: id,
+                cached_data: cached || null,
+                hint: 'Use POST /api/stocks/set-israeli-price to manually set the price'
+            });
         }
-        res.json({
-            success: true,
-            elapsed_ms: Date.now() - startTime,
-            proxy_enabled: !!process.env.PROXY_API_KEY,
-            tase_environment: {
-                client_id_length: clientId.length,
-                secret_length: clientSecret.length,
-                has_token: !!token,
-                passed_cookies: passCookies !== ''
-            },
-            raw_data: data
-        });
 
     } catch (err) {
-        res.status(500).json({ error: err.message, elapsed_ms: Date.now() - startTime, stack: err.stack });
+        res.status(500).json({ error: err.message, elapsed_ms: Date.now() - startTime });
     }
 };
 
