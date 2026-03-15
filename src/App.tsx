@@ -21,9 +21,18 @@ function Dashboard() {
   const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist' | 'calendar'>('holdings');
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#0f0f12]">
-      {/* Mobile Navigation - Fixed at top for mobile only */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50">
+    <div className="flex h-screen w-full overflow-hidden bg-[var(--color-clay-canvas)] text-[var(--color-clay-fg)] relative z-0">
+      {/* Background Blobs Layer */}
+      <div className="clay-blob-bg">
+        <div className="absolute h-[60vh] w-[60vh] rounded-full blur-3xl bg-violet-400/10 -top-[10%] -left-[10%] animate-clay-float" />
+        <div className="absolute h-[60vh] w-[60vh] rounded-full blur-3xl bg-pink-400/10 -top-[10%] -right-[10%] animate-clay-float-delayed animation-delay-2000" />
+        <div className="absolute h-[50vh] w-[50vh] rounded-full blur-3xl bg-sky-400/10 top-[30%] -left-[5%] animate-clay-float-slow animation-delay-4000" />
+      </div>
+
+      {/* Main UI Container */}
+      <div className="flex h-full w-full relative z-10">
+        {/* Mobile Navigation - Fixed at top for mobile only */}
+        <div className="md:hidden fixed top-0 left-0 right-0 z-50">
         <MobileNav />
       </div>
 
@@ -32,9 +41,9 @@ function Dashboard() {
         <Sidebar />
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 h-full overflow-y-auto px-4 pb-4 md:p-8 space-y-6 md:space-y-8 w-full min-w-0 pt-28 md:pt-8 pb-32">
-        {/* Hero Card */}
+        {/* Main Content */}
+        <main className="flex-1 h-full overflow-y-auto px-4 pb-4 md:p-8 space-y-6 md:space-y-8 w-full min-w-0 pt-28 md:pt-8 pb-32">
+          {/* Hero Card */}
         <PortfolioHero />
 
         {/* Portfolio Content */}
@@ -116,10 +125,11 @@ function Dashboard() {
         {/* Statistics & Analytics (Always visible or maybe hide in insights mode?) */}
         {/* Keeping it visible as it provides total value history which is distinct from allocation */}
         <section>
-          <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 text-white/90">Performance History</h2>
-          <PortfolioChart />
-        </section>
-      </main>
+            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-[var(--color-clay-fg)] font-display">Performance History</h2>
+            <PortfolioChart />
+          </section>
+        </main>
+      </div>
     </div>
   );
 }
@@ -130,8 +140,8 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f0f12] flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="min-h-screen bg-[var(--color-clay-canvas)] flex items-center justify-center">
+        <div className="text-[var(--color-clay-fg)] text-xl font-display font-medium">Loading...</div>
       </div>
     );
   }
@@ -158,7 +168,7 @@ export default function App() {
       <PortfolioProvider>
         <MarketNewsProvider>
           <LiveAlertsProvider>
-            <div className="min-h-screen bg-[#0f0f12] text-white font-sans">
+            <div className="min-h-screen bg-[var(--color-clay-canvas)] text-[var(--color-clay-fg)] font-body">
               <AppContent />
             </div>
           </LiveAlertsProvider>

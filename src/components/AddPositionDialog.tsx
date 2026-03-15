@@ -138,66 +138,44 @@ export function AddPositionDialog() {
         <>
             <Button
                 onClick={() => setOpen(true)}
-                className="bg-white/10 hover:bg-white/20 text-white border border-white/10 shadow-lg backdrop-blur-sm transition-all duration-300"
+                className="rounded-[20px] bg-white shadow-clayOrb hover:shadow-clayCard hover:-translate-y-1 active:scale-[0.92] active:shadow-clayPressed text-[var(--color-clay-fg)] font-bold px-6 h-12 transition-all duration-300"
             >
-                <Plus className="w-4 h-4" />
-                Add Position
+                <Plus className="w-5 h-5 mr-2" strokeWidth={2.5} />
+                <span className="font-display tracking-wide">Add Position</span>
             </Button>
 
             <SimpleDialog open={open} onClose={() => setOpen(false)}>
-                <div style={{ position: 'relative' }}>
+                <div className="relative px-2">
                     <button
                         onClick={() => setOpen(false)}
-                        style={{
-                            position: 'absolute',
-                            top: '-4px',
-                            right: '-4px',
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            cursor: 'pointer',
-                            padding: '4px',
-                            borderRadius: '4px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.color = 'white';
-                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
+                        className="absolute -top-2 -right-2 w-10 h-10 flex items-center justify-center rounded-[16px] text-[var(--color-clay-muted)] hover:text-rose-500 hover:bg-rose-50 active:scale-[0.92] transition-all"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-5 h-5" strokeWidth={2.5} />
                     </button>
 
-                    <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
+                    <h2 className="text-2xl font-black font-display text-[var(--color-clay-fg)] mb-2">
                         Add New Position
                     </h2>
-                    <p style={{ fontSize: '14px', color: '#a1a1aa', marginBottom: '16px' }}>
+                    <p className="text-[14px] font-bold text-[var(--color-clay-muted)] mb-8">
                         Enter the details of the stock you want to add to your portfolio.
                     </p>
 
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                         {error && (
-                            <div style={{ padding: '12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.5)', borderRadius: '8px', color: '#f87171', fontSize: '14px' }}>
+                            <div className="p-4 bg-rose-50 text-rose-600 border border-rose-200 rounded-[16px] text-sm font-bold shadow-sm">
                                 {error}
                             </div>
                         )}
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center', gap: '16px' }}>
-                            <Label htmlFor="symbol" className="text-right text-white/70">Symbol</Label>
+                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                            <Label htmlFor="symbol" className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display text-right block">Symbol</Label>
                             <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
                                         role="combobox"
                                         aria-expanded={openCombobox}
-                                        className="w-full justify-between bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white"
+                                        className="w-full justify-between h-12 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed border-none text-[var(--color-clay-fg)] font-bold px-4 hover:bg-[var(--color-clay-input-bg)] hover:text-[var(--color-clay-fg)] active:scale-[0.98]"
                                     >
                                         {formData.symbol
                                             ? formData.symbol
@@ -205,16 +183,16 @@ export function AddPositionDialog() {
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[300px] p-0 bg-[#1a1a1f] border-white/10 text-white">
+                                <PopoverContent className="w-[300px] p-2 bg-[var(--color-clay-canvas)] border-none rounded-[24px] shadow-clayDeep text-[var(--color-clay-fg)] z-[10010]">
                                     <Command className="bg-transparent" shouldFilter={false}>
                                         <CommandInput
                                             placeholder="Search symbol..."
                                             value={searchValue}
                                             onValueChange={setSearchValue}
-                                            className="text-white"
+                                            className="text-[var(--color-clay-fg)] font-bold placeholder-[var(--color-clay-muted)]"
                                         />
-                                        <CommandList className="max-h-[300px] overflow-y-auto w-full">
-                                            <CommandEmpty>
+                                        <CommandList className="max-h-[300px] overflow-y-auto w-full custom-scrollbar">
+                                            <CommandEmpty className="py-6 text-center text-[13px] font-bold text-[var(--color-clay-muted)]">
                                                 {searching ? 'Searching...' : 'No stock found.'}
                                             </CommandEmpty>
                                             <CommandGroup>
@@ -230,24 +208,24 @@ export function AddPositionDialog() {
                                                             });
                                                             setOpenCombobox(false);
                                                         }}
-                                                        className="text-white aria-selected:bg-white/10 cursor-pointer"
+                                                        className="text-[var(--color-clay-fg)] aria-selected:bg-[var(--color-clay-fg)]/5 cursor-pointer rounded-[12px] my-1 data-[selected=true]:bg-[var(--color-clay-fg)]/10"
                                                     >
                                                         <Check
                                                             className={cn(
                                                                 "mr-2 h-4 w-4",
-                                                                formData.symbol === stock.symbol ? "opacity-100" : "opacity-0"
+                                                                formData.symbol === stock.symbol ? "opacity-100 text-emerald-500" : "opacity-0"
                                                             )}
                                                         />
                                                         <div className="flex flex-col">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="font-bold">{stock.displaySymbol}</span>
+                                                                <span className="font-black font-display">{stock.displaySymbol}</span>
                                                                 {stock.israeliData && (
-                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-medium whitespace-nowrap">
+                                                                    <span className="text-[10px] px-2 py-0.5 rounded-[8px] bg-blue-100 text-blue-600 font-bold whitespace-nowrap">
                                                                         {stock.israeliData.type === 'fund' ? 'קרן כספית 🇮🇱' : 'TASE 🇮🇱'}
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <span className="text-xs text-white/50">{stock.description}</span>
+                                                            <span className="text-[12px] text-[var(--color-clay-muted)] font-bold">{stock.description}</span>
                                                         </div>
                                                     </CommandItem>
                                                 ))}
@@ -258,36 +236,36 @@ export function AddPositionDialog() {
                             </Popover>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center', gap: '16px' }}>
-                            <Label htmlFor="date" className="text-right text-white/70">Date</Label>
+                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                            <Label htmlFor="date" className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display text-right block">Date</Label>
                             <Input
                                 id="date"
                                 type="date"
-                                className="bg-white/5 border-white/10 text-white dark:scheme-dark"
+                                className="h-12 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed border-none text-[var(--color-clay-fg)] font-bold px-4 scheme-light focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 value={formData.date}
                                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                 required
                             />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center', gap: '16px' }}>
-                            <Label htmlFor="name" className="text-right text-white/70">Name</Label>
+                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                            <Label htmlFor="name" className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display text-right block">Name</Label>
                             <Input
                                 id="name"
-                                className="bg-white/5 border-white/10 text-white"
+                                className="h-12 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed border-none text-[var(--color-clay-fg)] font-bold px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 placeholder="Apple Inc. (optional)"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center', gap: '16px' }}>
-                            <Label htmlFor="quantity" className="text-right text-white/70">Quantity</Label>
+                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                            <Label htmlFor="quantity" className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display text-right block">Quantity</Label>
                             <Input
                                 id="quantity"
                                 type="number"
                                 step="any"
-                                className="bg-white/5 border-white/10 text-white"
+                                className="h-12 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed border-none text-[var(--color-clay-fg)] font-black font-display px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 placeholder="10"
                                 value={formData.quantity}
                                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
@@ -295,13 +273,13 @@ export function AddPositionDialog() {
                             />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', alignItems: 'center', gap: '16px' }}>
-                            <Label htmlFor="avgPrice" className="text-right text-white/70">Avg Price</Label>
+                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                            <Label htmlFor="avgPrice" className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display text-right block">Avg Price</Label>
                             <Input
                                 id="avgPrice"
                                 type="number"
                                 step="any"
-                                className="bg-white/5 border-white/10 text-white"
+                                className="h-12 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed border-none text-[var(--color-clay-fg)] font-black font-display px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 placeholder="150.00"
                                 value={formData.averagePrice}
                                 onChange={(e) => setFormData({ ...formData, averagePrice: e.target.value })}
@@ -309,8 +287,8 @@ export function AddPositionDialog() {
                             />
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
-                            <Button type="submit" disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white disabled:opacity-50">
+                        <div className="flex justify-end mt-4">
+                            <Button type="submit" disabled={loading} className="rounded-[20px] bg-gradient-to-br from-violet-400 to-violet-600 shadow-clayButton hover:shadow-clayButtonHover active:shadow-clayPressed active:scale-[0.92] text-white font-bold font-display tracking-wide h-12 px-8 transition-all duration-200 border-none disabled:opacity-50 disabled:active:scale-100">
                                 {loading ? 'Adding...' : 'Add Stock'}
                             </Button>
                         </div>

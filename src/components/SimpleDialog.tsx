@@ -35,12 +35,8 @@ export function SimpleDialog({ open, onClose, children }: SimpleDialogProps) {
             {/* Overlay */}
             <div
                 onClick={onClose}
+                className="fixed inset-0 z-[9999] bg-[var(--color-clay-fg)]/20 backdrop-blur-sm transition-opacity"
                 style={{
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    backdropFilter: 'blur(4px)',
-                    zIndex: 9999,
                     animation: 'fadeIn 0.2s ease-out',
                 }}
             />
@@ -48,22 +44,8 @@ export function SimpleDialog({ open, onClose, children }: SimpleDialogProps) {
             {/* Content */}
             <div
                 onClick={(e) => e.stopPropagation()}
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] w-[90%] max-w-[500px] max-h-[90vh] overflow-y-auto bg-[var(--color-clay-canvas)] rounded-[32px] p-6 md:p-8 shadow-clayDeep text-[var(--color-clay-fg)] font-body"
                 style={{
-                    position: 'fixed',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    backgroundColor: '#18181b',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    padding: '24px',
-                    zIndex: 10000,
-                    maxWidth: '500px',
-                    width: '90%',
-                    maxHeight: '90vh',
-                    overflow: 'auto',
-                    color: 'white',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
                     animation: 'scaleIn 0.2s ease-out',
                 }}
             >

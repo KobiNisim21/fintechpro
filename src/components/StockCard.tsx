@@ -180,46 +180,44 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
     <>
       <div
         data-ticker={stock.symbol}
-        className={`group relative overflow-hidden rounded-2xl bg-linear-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 p-4 pr-12 hover:border-white/20 hover:from-white/15 hover:to-white/10 transition-all cursor-pointer ${className || ''} ${isNear52wLow ? 'ring-1 ring-inset ring-amber-500/40' : ''}`}
+        className={`group relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] backdrop-blur-xl shadow-clayCard hover:shadow-clayCardHover p-5 pr-12 hover:-translate-y-2 transition-all duration-500 cursor-pointer ${className || ''} ${isNear52wLow ? 'ring-2 ring-inset ring-amber-400' : ''}`}
       >
-        {/* Glassmorphism overlay */}
-        <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent pointer-events-none" />
 
         <div className="relative z-10">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {/* Stock Logo */}
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-white/20 to-white/10 flex items-center justify-center font-bold text-sm text-white border border-white/20">
+              <div className="w-12 h-12 rounded-[24px] bg-gradient-to-br from-violet-400 to-violet-600 shadow-clayOrb flex items-center justify-center font-black text-sm text-white font-display shrink-0">
                 {stock.symbol.slice(0, 2)}
               </div>
               <div>
-                <h3 className="font-bold text-white text-sm truncate max-w-[120px]">{stock.symbol}</h3>
-                <p className="text-xs text-white/50 truncate max-w-[120px]">{stock.name}</p>
+                <h3 className="font-black text-[var(--color-clay-fg)] text-lg truncate max-w-[120px] font-display leading-tight">{stock.symbol}</h3>
+                <p className="text-[13px] font-bold text-[var(--color-clay-muted)] truncate max-w-[120px] font-display">{stock.name}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-1 shrink-0 mr-1">
               {isPositive ? (
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <TrendingUp className="w-5 h-5 text-emerald-600" />
               ) : (
-                <TrendingDown className="w-4 h-4 text-rose-500" />
+                <TrendingDown className="w-5 h-5 text-rose-600" />
               )}
               {stock._id && (
                 <>
                   <button
                     onClick={handleEdit}
-                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/20 text-cyan-400 opacity-100 transition-all z-20"
+                    className="p-2 ml-1 rounded-[16px] bg-white/60 shadow-clayOrb hover:shadow-clayCard hover:-translate-y-1 active:scale-[0.92] active:shadow-clayPressed text-[var(--color-clay-sky)] transition-all z-20"
                     title="Edit position"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-rose-400 transition-colors z-20"
+                    className="p-2 ml-1 rounded-[16px] bg-white/60 shadow-clayOrb hover:shadow-clayCard hover:-translate-y-1 active:scale-[0.92] active:shadow-clayPressed text-rose-400 hover:text-rose-600 transition-all z-20"
                     title="Remove position"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </>
               )}
@@ -227,13 +225,13 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
           </div>
 
           {/* Price & Daily Change */}
-          <div className="mb-4 flex justifyContent-between items-end">
+          <div className="mb-5 flex justifyContent-between items-end">
             <div>
-              <div className="text-2xl font-bold text-white mb-1 flex items-baseline gap-2">
+              <div className="text-3xl font-black text-[var(--color-clay-fg)] mb-1 flex items-baseline gap-2 font-display tracking-tight">
                 <span>${stock.price.toFixed(2)}</span>
                 {/* Extended hours price */}
                 {stock.marketStatus && stock.marketStatus !== 'regular' && stock.extendedPrice && (
-                  <span className="text-sm font-medium" style={{ color: '#fb923c' }}>
+                  <span className="text-[15px] font-bold text-amber-600 font-display tracking-normal">
                     {stock.marketStatus === 'pre-market' && 'PM'}
                     {stock.marketStatus === 'after-hours' && 'AH'}
                     {stock.marketStatus === 'closed' && 'AH'}
@@ -242,9 +240,9 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                 )}
                 {/* Market status badge */}
                 {stock.marketStatus && stock.marketStatus !== 'regular' && !stock.extendedPrice && (
-                  <span className="text-xs font-medium px-1.5 py-0.5 rounded" style={{
-                    backgroundColor: stock.marketStatus === 'closed' ? 'rgba(107, 114, 128, 0.3)' : 'rgba(251, 146, 60, 0.2)',
-                    color: stock.marketStatus === 'closed' ? '#9ca3af' : '#fb923c'
+                  <span className="text-[11px] font-black px-2 py-1.5 rounded-full uppercase tracking-widest font-display" style={{
+                    backgroundColor: stock.marketStatus === 'closed' ? '#EFEBF5' : '#FEF3C7',
+                    color: stock.marketStatus === 'closed' ? '#635F69' : '#D97706'
                   }}>
                     {stock.marketStatus === 'pre-market' && 'Pre-market'}
                     {stock.marketStatus === 'after-hours' && 'After-hours'}
@@ -253,11 +251,11 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                 )}
               </div>
 
-              <div className={`flex items-center gap-2 text-xs font-semibold ${isPositive ? 'text-emerald-400' : 'text-rose-500'}`}>
+              <div className={`flex items-center gap-2 text-[14px] font-black font-display tracking-wide ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                 <span>{isPositive ? '+' : ''}${stock.change.toFixed(2)}</span>
                 <span>({isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%)</span>
                 {stock.marketStatus && stock.marketStatus !== 'regular' && !stock.extendedPrice && (
-                  <span className="text-white/40 font-normal ml-1">at close</span>
+                  <span className="text-[var(--color-clay-muted)] font-bold ml-1 uppercase text-[10px] tracking-widest">at close</span>
                 )}
               </div>
 
@@ -278,16 +276,16 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
           {/* Position Details */}
           {quantity > 0 && (
-            <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-white/5 rounded-xl border border-white/5">
+            <div className="grid grid-cols-2 gap-3 mb-5 p-4 bg-[var(--color-clay-input-bg)] shadow-clayPressed rounded-[24px]">
               <div>
-                <p className="text-xs text-white/40 mb-0.5">Holdings</p>
-                <p className="text-sm font-medium text-white">{quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })} Shares</p>
-                <p className="text-xs text-white/40">Avg: ${avgPrice.toFixed(2)}</p>
+                <p className="text-[11px] font-bold text-[var(--color-clay-muted)] mb-1 uppercase tracking-widest font-display">Holdings</p>
+                <p className="text-[15px] font-black text-[var(--color-clay-fg)] font-display tracking-tight">{quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })} <span className="text-[12px] font-bold text-[var(--color-clay-muted)]">Shares</span></p>
+                <p className="text-[13px] font-bold text-[var(--color-clay-muted)]">Avg: ${avgPrice.toFixed(2)}</p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-white/40 mb-0.5">Total Value</p>
-                <p className="text-sm font-bold text-white">${totalValue.toFixed(2)}</p>
-                <p className={`text-xs ${istotalReturnPositive ? 'text-emerald-400' : 'text-rose-500'}`}>
+                <p className="text-[11px] font-bold text-[var(--color-clay-muted)] mb-1 uppercase tracking-widest font-display">Total Value</p>
+                <p className="text-[15px] font-black text-[var(--color-clay-fg)] font-display tracking-tight">${totalValue.toFixed(2)}</p>
+                <p className={`text-[13px] font-bold tracking-tight ${istotalReturnPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                   {istotalReturnPositive ? '+' : ''}{totalReturn.toFixed(2)} ({totalReturnPercent.toFixed(2)}%)
                 </p>
               </div>
@@ -313,16 +311,16 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
           {/* Special Insights Footer */}
           {(formattedEarnings || isNear52wLow) && (
-            <div className="flex items-center gap-3 pt-3 mt-3 border-t border-white/5 text-[11px] font-medium">
+            <div className="flex items-center gap-3 pt-4 border-t border-[var(--color-clay-input-bg)] text-[12px] font-bold font-display mt-2">
               {isNear52wLow && (
-                <div className="flex items-center gap-1 text-amber-500/90 bg-amber-500/10 px-2 py-0.5 rounded-md">
-                  <TrendingDown className="w-3 h-3" />
+                <div className="flex items-center gap-1 text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full shadow-clayOrb">
+                  <TrendingDown className="w-4 h-4" />
                   Buying Opportunity (Near 52W Low)
                 </div>
               )}
               {formattedEarnings && (
-                <div className="text-white/40">
-                  Next Earnings: <span className="text-white/70">{formattedEarnings}</span>
+                <div className="text-[var(--color-clay-muted)]">
+                  Next Earnings: <span className="text-[var(--color-clay-fg)] font-black">{formattedEarnings}</span>
                 </div>
               )}
             </div>
@@ -332,26 +330,26 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
       {/* Edit Dialog - Multi-Lot Support */}
       <SimpleDialog open={editOpen} onClose={() => setEditOpen(false)}>
-        <div className="max-h-[80vh] overflow-y-auto">
-          <h2 className="text-xl font-bold mb-4">Edit {stock.symbol} Holdings</h2>
+        <div className="max-h-[80vh] overflow-y-auto px-1 pb-2">
+          <h2 className="text-2xl font-black mb-6 font-display text-[var(--color-clay-fg)]">Edit {stock.symbol} Holdings</h2>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Lots List */}
-            <div className="space-y-2">
-              <div className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-2 items-center text-xs text-white/50 px-2">
+            <div className="space-y-3 bg-[var(--color-clay-input-bg)] p-4 rounded-[32px] shadow-clayPressed">
+              <div className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-2 items-center text-[12px] font-bold text-[var(--color-clay-muted)] px-3 uppercase tracking-widest font-display">
                 <span>Date</span>
                 <span className="text-right">Qty</span>
                 <span className="text-right">Price</span>
                 <span className="w-8"></span>
               </div>
               {lots.map((lot, index) => (
-                <div key={index} className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-2 items-center bg-white/5 p-2 rounded-lg border border-white/5 text-sm">
+                <div key={index} className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-2 items-center bg-[var(--color-clay-card-bg)] p-2 rounded-[20px] shadow-clayOrb text-sm transition-transform hover:-translate-y-0.5">
                   {/* Date Input - Editable */}
                   <Input
                     type="date"
                     value={typeof lot.date === 'string' ? lot.date.split('T')[0] : new Date(lot.date).toISOString().split('T')[0]}
                     onChange={(e) => updateLot(index, 'date', e.target.value)}
-                    className="h-8 text-xs bg-transparent border-none focus-visible:ring-0 p-0 text-white/70 dark:scheme-dark"
+                    className="h-9 text-[13px] bg-transparent border-none focus-visible:ring-0 p-1 text-[var(--color-clay-fg)] font-bold scheme-light"
                   />
 
                   {/* Quantity Input - Editable */}
@@ -360,7 +358,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                     step="any"
                     value={lot.quantity}
                     onChange={(e) => updateLot(index, 'quantity', e.target.value)}
-                    className="h-8 text-xs bg-transparent border-none focus-visible:ring-0 p-0 text-right font-medium text-white"
+                    className="h-9 text-[14px] bg-transparent border-none focus-visible:ring-0 p-1 text-right font-black text-[var(--color-clay-fg)] font-display"
                   />
 
                   {/* Price Input - Editable */}
@@ -368,14 +366,14 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                     type="number"
                     value={lot.price}
                     onChange={(e) => updateLot(index, 'price', e.target.value)}
-                    className="h-8 text-xs bg-transparent border-none focus-visible:ring-0 p-0 text-right text-white/70"
+                    className="h-9 text-[14px] bg-transparent border-none focus-visible:ring-0 p-1 text-right font-bold text-[var(--color-clay-fg)] font-display"
                   />
 
                   <button
                     onClick={() => removeLot(index)}
-                    className="w-8 flex justify-center text-white/30 hover:text-rose-500 transition-colors"
+                    className="w-10 h-10 flex items-center justify-center rounded-[16px] text-rose-400 hover:text-rose-600 hover:bg-rose-50 active:scale-[0.92] transition-all"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5" strokeWidth={3} />
                   </button>
                 </div>
               ))}
@@ -383,74 +381,74 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
             {/* Add Lot Form */}
             {showAddLot ? (
-              <div className="bg-white/5 p-3 rounded-xl border border-white/10 space-y-3 animation-fade-in">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="bg-[var(--color-clay-canvas)] p-5 rounded-[24px] shadow-clayOrb space-y-4 animation-fade-in border-2 border-white/50">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-xs text-white/50">Date</Label>
+                    <Label className="text-[11px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display ml-1 mb-1 block">Date</Label>
                     <Input
                       type="date"
                       value={typeof newLot.date === 'string' ? newLot.date : new Date(newLot.date).toISOString().split('T')[0]}
                       onChange={(e) => setNewLot({ ...newLot, date: e.target.value })}
-                      className="h-8 text-xs bg-white/5 border-white/10 dark:scheme-dark"
+                      className="h-11 rounded-[16px] text-[14px] bg-[var(--color-clay-input-bg)] border-none shadow-clayPressed text-[var(--color-clay-fg)] font-bold px-4 scheme-light"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-white/50">Quantity</Label>
+                    <Label className="text-[11px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display ml-1 mb-1 block">Quantity</Label>
                     <Input
                       type="number"
                       step="any"
                       value={newLot.quantity !== undefined ? newLot.quantity : ''}
                       onChange={(e) => setNewLot({ ...newLot, quantity: e.target.value as unknown as number })}
-                      className="h-8 text-xs bg-white/5 border-white/10"
+                      className="h-11 rounded-[16px] text-[14px] bg-[var(--color-clay-input-bg)] border-none shadow-clayPressed text-[var(--color-clay-fg)] font-black font-display px-4 placeholder:text-black/20"
                       placeholder="Qty"
                     />
                   </div>
                   <div className="col-span-2">
-                    <Label className="text-xs text-white/50">Price per Share</Label>
+                    <Label className="text-[11px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display ml-1 mb-1 block">Price per Share</Label>
                     <Input
                       type="number"
                       step="any"
                       value={newLot.price !== undefined ? newLot.price : ''}
                       onChange={(e) => setNewLot({ ...newLot, price: e.target.value as unknown as number })}
-                      className="h-8 text-xs bg-white/5 border-white/10"
+                      className="h-11 rounded-[16px] text-[14px] bg-[var(--color-clay-input-bg)] border-none shadow-clayPressed text-[var(--color-clay-fg)] font-black font-display px-4 placeholder:text-black/20"
                       placeholder="Price"
                     />
                   </div>
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => setShowAddLot(false)} className="h-7 text-xs">Cancel</Button>
-                  <Button size="sm" onClick={handleAddLot} className="h-7 text-xs bg-emerald-500 hover:bg-emerald-600 text-white">Add Lot</Button>
+                <div className="flex justify-end gap-3 pt-2">
+                  <Button size="sm" variant="ghost" onClick={() => setShowAddLot(false)} className="h-10 px-4 rounded-[16px] text-[13px] font-bold text-[var(--color-clay-muted)] active:scale-[0.92] transition-transform">Cancel</Button>
+                  <Button size="sm" onClick={handleAddLot} className="h-10 px-5 rounded-[16px] text-[13px] font-black font-display bg-emerald-100 text-emerald-700 shadow-clayOrb hover:shadow-clayCard hover:-translate-y-1 active:scale-[0.92] transition-all">Add Lot</Button>
                 </div>
               </div>
             ) : (
               <Button
                 onClick={() => setShowAddLot(true)}
                 variant="outline"
-                className="w-full bg-white/5 border-dashed border-white/20 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/30"
+                className="w-full h-14 bg-[var(--color-clay-input-bg)] shadow-clayInset border-none text-[var(--color-clay-muted)] font-bold rounded-[24px] hover:bg-white hover:shadow-clayOrb active:scale-[0.92] active:shadow-clayPressed transition-all duration-300"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-5 h-5 mr-2" strokeWidth={3} />
                 Add Another Lot
               </Button>
             )}
 
             {/* Summary */}
-            <div className="pt-4 border-t border-white/10 mt-4">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-white/50">Total Shares</span>
-                <span className="font-bold text-white">{projectTotalQty.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+            <div className="pt-4 mt-2">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display">Total Shares</span>
+                <span className="text-lg font-black text-[var(--color-clay-fg)] font-display tracking-tight">{projectTotalQty.toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-white/50">Avg Price</span>
-                <span className="font-bold text-white">${projectAvgPrice.toFixed(2)}</span>
+                <span className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display">Avg Price</span>
+                <span className="text-lg font-black text-[var(--color-clay-fg)] font-display tracking-tight">${projectAvgPrice.toFixed(2)}</span>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-2 mt-6">
+            <div className="flex justify-end gap-3 mt-8">
               <Button
                 type="button"
                 onClick={() => setEditOpen(false)}
-                className="bg-white/10 hover:bg-white/15 text-white"
+                className="rounded-[20px] bg-[var(--color-clay-input-bg)] shadow-clayInset text-[var(--color-clay-muted)] hover:text-[var(--color-clay-fg)] hover:bg-[#E5E0EF] font-bold h-12 px-8 active:scale-[0.92] transition-all duration-200 border-none"
               >
                 Cancel
               </Button>
@@ -458,7 +456,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                 type="button"
                 onClick={handleEditSubmit}
                 disabled={loading}
-                className="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50"
+                className="rounded-[20px] bg-gradient-to-br from-violet-400 to-violet-600 shadow-clayButton hover:shadow-clayButtonHover active:shadow-clayPressed active:scale-[0.92] text-white font-bold font-display tracking-wide h-12 px-8 transition-all duration-200 border-none disabled:opacity-50 disabled:active:scale-100"
               >
                 {loading ? 'Saving...' : 'Save Changes'}
               </Button>

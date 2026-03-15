@@ -13,14 +13,14 @@ export function SidebarContent() {
 
                 <div className="mb-10 text-center">
                     <a href="/" className="inline-flex flex-col items-center group">
-                        <div className="relative w-40 h-40 transition-transform duration-500 group-hover:scale-105">
+                        <div className="relative w-40 h-40 transition-transform duration-500 group-hover:scale-110 drop-shadow-xl">
                             <img
                                 src="/logo.png"
                                 alt="FinTechPro"
-                                className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                                className="w-full h-full object-contain"
                             />
                         </div>
-                        <p className="text-xs font-medium text-emerald-400/60 uppercase tracking-widest -mt-6">
+                        <p className="text-[12px] font-black font-display text-[var(--color-clay-success)] uppercase tracking-[0.2em] -mt-6">
                             Wealth Management
                         </p>
                     </a>
@@ -32,13 +32,13 @@ export function SidebarContent() {
                 {/* Live Market News from Socket.io */}
                 <LiveMarketNews />
             </div>
-            <div className="mt-auto px-6 py-4 border-t border-white/10 bg-[#0f0f12]/50 backdrop-blur-md shrink-0">
+            <div className="mt-auto px-6 py-6 border-t border-white/50 bg-white/40 backdrop-blur-md shrink-0">
                 <button
                     onClick={logout}
-                    className="flex items-center gap-3 w-full p-3 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+                    className="flex items-center justify-center gap-3 w-full p-4 rounded-[20px] bg-white shadow-clayOrb text-rose-500 font-bold hover:shadow-clayCard hover:-translate-y-1 active:scale-[0.92] active:shadow-clayPressed transition-all duration-300"
                 >
-                    <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Log Out</span>
+                    <LogOut className="w-5 h-5" strokeWidth={2.5} />
+                    <span className="font-display tracking-wide uppercase text-sm">Log Out</span>
                 </button>
             </div>
         </div>

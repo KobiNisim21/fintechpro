@@ -81,82 +81,82 @@ export function PortfolioHero() {
   }, [portfolioAnalytics?.benchmarkData]);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500/20 via-[#1a1a1f]/80 to-cyan-500/20 backdrop-blur-2xl border border-white/10 p-6 md:p-8">
-      {/* Glassmorphism overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-
+    <div className="relative overflow-hidden rounded-[32px] md:rounded-[48px] bg-[var(--color-clay-card-bg)] backdrop-blur-xl shadow-clayDeep p-6 md:p-10 transition-all duration-500">
       <div className="relative z-10">
         <div className="flex flex-wrap items-start justify-between gap-6 mb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider">Total Portfolio Value</h3>
+              <h3 className="text-sm font-bold text-[var(--color-clay-muted)] uppercase tracking-wider font-display">Total Portfolio Value</h3>
               <div className="flex items-center gap-2">
                 <PulseDot />
-                <span className="text-xs text-emerald-400 font-medium">LIVE</span>
+                <span className="text-[13px] text-[var(--color-clay-success)] font-black font-display tracking-widest uppercase">LIVE</span>
               </div>
             </div>
 
             {/* ILS Primary */}
             <div className="mb-3">
               <div className="flex items-baseline gap-3">
-                <span className="text-6xl font-bold text-white">
-                  ₪{totalValueILS.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                <span className="text-6xl md:text-7xl font-black text-[var(--color-clay-fg)] font-display tracking-tight">
+                  <span className="text-[var(--color-clay-muted)] mr-1">₪</span>{totalValueILS.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                 </span>
-                <span className="text-xl text-white/40">ILS</span>
+                <span className="text-xl font-bold text-[var(--color-clay-muted)] font-display">ILS</span>
               </div>
             </div>
 
             {/* USD Secondary */}
-            <div className="flex items-baseline gap-2 mb-4">
-              <span className="text-2xl font-semibold text-white/60">
-                ${totalValueUSD.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+            <div className="flex items-baseline gap-2 mb-6">
+              <span className="text-2xl font-bold text-[var(--color-clay-fg)] font-display">
+                <span className="text-[var(--color-clay-muted)] mr-1">$</span>{totalValueUSD.toLocaleString('en-US', { maximumFractionDigits: 2 })}
               </span>
-              <span className="text-sm text-white/30">USD</span>
+              <span className="text-sm font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display">USD</span>
             </div>
 
-            {/* Daily Change */}
-            <div className="flex items-center gap-4">
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${isDailyPositive
-                ? 'bg-emerald-500/20 border-emerald-400/30'
-                : 'bg-rose-500/20 border-rose-400/30'
-                }`}>
-                {isDailyPositive ? (
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
-                ) : (
-                  <TrendingDown className="w-4 h-4 text-rose-400" />
-                )}
-                <span className={`font-semibold ${isDailyPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {isDailyPositive ? '+' : ''}₪{dailyChangeILS.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)
+            {/* Daily Change & Total Gain/Loss Container */}
+            <div className="flex flex-col gap-4">
+              {/* Daily Change */}
+              <div className="flex items-center gap-4">
+                <div className={`flex items-center gap-2 px-5 py-2.5 rounded-[20px] shadow-clayOrb transition-transform duration-300 hover:scale-[1.02] ${isDailyPositive
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-rose-50 text-rose-700'
+                  }`}>
+                  {isDailyPositive ? (
+                    <TrendingUp className="w-5 h-5 text-emerald-600" strokeWidth={3} />
+                  ) : (
+                    <TrendingDown className="w-5 h-5 text-rose-600" strokeWidth={3} />
+                  )}
+                  <span className="font-black font-display tracking-tight text-[15px]">
+                    {isDailyPositive ? '+' : ''}₪{dailyChangeILS.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-[var(--color-clay-muted)] font-display uppercase tracking-widest">Today</span>
+              </div>
+
+              {/* Total Gain/Loss */}
+              <div className="flex items-center gap-2 pl-2">
+                <span className="text-xs font-bold text-[var(--color-clay-muted)] uppercase tracking-wider font-display">Total Gain/Loss:</span>
+                <span className={`text-sm font-black font-display tracking-tight ${isTotalPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {isTotalPositive ? '+' : ''}₪{(totalGainUSD * usdToIls).toLocaleString('en-US', { maximumFractionDigits: 2 })} / ${totalGainUSD.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({totalGainPercent.toFixed(2)}%)
                 </span>
               </div>
-              <span className="text-sm text-white/50">Today</span>
-            </div>
-
-            {/* Total Gain/Loss */}
-            <div className="flex items-center gap-2 mt-3">
-              <span className="text-xs text-white/40">Total Gain/Loss:</span>
-              <span className={`text-sm font-semibold ${isTotalPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {isTotalPositive ? '+' : ''}₪{(totalGainUSD * usdToIls).toLocaleString('en-US', { maximumFractionDigits: 2 })} / ${totalGainUSD.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({totalGainPercent.toFixed(2)}%)
-              </span>
             </div>
           </div>
 
           {/* ── Right Column: Returns + Activity/Exchange ── */}
-          <div className="flex flex-col items-end gap-4">
+          <div className="flex flex-col items-end gap-5">
             {/* Activity Indicator & Exchange Rate */}
-            <div className="flex items-center gap-3">
-              <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
-                <Activity className="w-8 h-8 text-cyan-400" />
+            <div className="flex items-center gap-4">
+              <div className="p-4 rounded-[20px] bg-sky-50 shadow-clayOrb hover:scale-110 transition-transform duration-300 ease-in-out">
+                <Activity className="w-8 h-8 text-[var(--color-clay-sky)]" strokeWidth={2.5} />
               </div>
-              <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 min-w-[80px]">
-                <div className="text-[10px] text-white/40 uppercase tracking-wider mb-0.5">USD/ILS</div>
-                <div className="text-base font-bold text-white/90">{usdToIls.toFixed(4)}</div>
+              <div className="flex flex-col items-center justify-center p-4 rounded-[20px] bg-white/80 shadow-clayCard min-w-[90px] hover:-translate-y-2 transition-transform duration-500">
+                <div className="text-[11px] text-[var(--color-clay-muted)] font-bold uppercase tracking-widest mb-1 font-display">USD/ILS</div>
+                <div className="text-lg font-black text-[var(--color-clay-fg)] font-display tracking-tight">{usdToIls.toFixed(4)}</div>
               </div>
             </div>
 
             {/* ── Period Returns (Weekly / Monthly / Yearly) ── */}
             {periodReturns && (
-              <div className="flex flex-row gap-3">
+              <div className="flex flex-row gap-4 mt-2">
                 {([
                   { label: '1W', value: periodReturns.weekly },
                   { label: '1M', value: periodReturns.monthly },
@@ -166,13 +166,13 @@ export function PortfolioHero() {
                   return (
                     <div
                       key={label}
-                      className={`flex flex-col items-center px-4 py-3 rounded-2xl border backdrop-blur-md min-w-[80px] ${isPositive
-                        ? 'bg-emerald-500/10 border-emerald-400/20'
-                        : 'bg-rose-500/10 border-rose-400/20'
+                      className={`flex flex-col items-center px-4 py-3.5 rounded-[24px] shadow-clayCard min-w-[85px] hover:-translate-y-2 transition-transform duration-500 ${isPositive
+                        ? 'bg-emerald-50/80'
+                        : 'bg-rose-50/80'
                         }`}
                     >
-                      <span className="text-[10px] text-white/40 uppercase tracking-wider mb-1">{label} Return</span>
-                      <span className={`text-lg font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <span className="text-[10px] text-[var(--color-clay-muted)] font-bold uppercase tracking-widest mb-1.5 font-display">{label} Return</span>
+                      <span className={`text-xl font-black font-display tracking-tight ${isPositive ? 'text-emerald-700' : 'text-rose-700'}`}>
                         {isPositive ? '+' : ''}{value.toFixed(1)}%
                       </span>
                     </div>
