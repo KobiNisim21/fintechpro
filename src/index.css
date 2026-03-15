@@ -1486,13 +1486,14 @@ body {
 
     /* Text */
     --color-clay-fg:          #332F3A;
-    --color-clay-muted:       #635F69;
+    --color-clay-muted:       #4A4651;
 
     /* Accents */
     --color-clay-accent:      #7C3AED;
     --color-clay-accent-alt:  #DB2777;
     --color-clay-sky:         #0EA5E9;
-    --color-clay-success:     #10B981;
+    --color-clay-success:     #059669;
+    --color-clay-danger:      #DC2626;
     --color-clay-warning:     #F59E0B;
   }
 }

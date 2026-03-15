@@ -50,7 +50,7 @@ function Dashboard() {
         <section>
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div className="flex items-center justify-between w-full md:w-auto">
-              <h2 className="text-xl md:text-2xl font-semibold text-white/90">
+              <h2 className="text-xl md:text-2xl font-black font-display text-[var(--color-clay-fg)]">
                 {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : viewMode === 'watchlist' ? 'Watchlist' : 'Market Calendar'}
               </h2>
               {/* Mobile Add Button - Visible only on mobile */}
@@ -61,12 +61,12 @@ function Dashboard() {
 
             <div className="flex items-center gap-3">
               {/* View Toggle */}
-              <div className="flex p-1 bg-white/5 backdrop-blur-md rounded-lg border border-white/10">
+              <div className="flex p-1 bg-[var(--color-clay-input-bg)] shadow-clayInset rounded-[16px]">
                 <button
                   onClick={() => startTransition(() => setViewMode('holdings'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'holdings'
-                    ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-sm transition-all ${viewMode === 'holdings'
+                    ? 'bg-violet-100 text-violet-700 font-black shadow-sm ring-1 ring-violet-200'
+                    : 'text-[var(--color-clay-muted)] font-bold hover:text-[var(--color-clay-fg)] hover:bg-white/50'
                     }`}
                 >
                   <LayoutGrid className="w-4 h-4" />
@@ -74,9 +74,9 @@ function Dashboard() {
                 </button>
                 <button
                   onClick={() => startTransition(() => setViewMode('insights'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'insights'
-                    ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-sm transition-all ${viewMode === 'insights'
+                    ? 'bg-violet-100 text-violet-700 font-black shadow-sm ring-1 ring-violet-200'
+                    : 'text-[var(--color-clay-muted)] font-bold hover:text-[var(--color-clay-fg)] hover:bg-white/50'
                     }`}
                 >
                   <PieChart className="w-4 h-4" />
@@ -84,9 +84,9 @@ function Dashboard() {
                 </button>
                 <button
                   onClick={() => startTransition(() => setViewMode('watchlist'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'watchlist'
-                    ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-sm transition-all ${viewMode === 'watchlist'
+                    ? 'bg-violet-100 text-violet-700 font-black shadow-sm ring-1 ring-violet-200'
+                    : 'text-[var(--color-clay-muted)] font-bold hover:text-[var(--color-clay-fg)] hover:bg-white/50'
                     }`}
                 >
                   <Eye className="w-4 h-4" />
@@ -94,9 +94,9 @@ function Dashboard() {
                 </button>
                 <button
                   onClick={() => startTransition(() => setViewMode('calendar'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'calendar'
-                    ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-sm transition-all ${viewMode === 'calendar'
+                    ? 'bg-violet-100 text-violet-700 font-black shadow-sm ring-1 ring-violet-200'
+                    : 'text-[var(--color-clay-muted)] font-bold hover:text-[var(--color-clay-fg)] hover:bg-white/50'
                     }`}
                 >
                   <CalendarDays className="w-4 h-4" />

@@ -50,18 +50,18 @@ export function LiveMarketNews() {
         <div className="mt-6">
             {/* Header */}
             <div className="flex items-center gap-2 mb-4">
-                <Newspaper className="w-5 h-5 text-cyan-400" />
-                <h2 className="text-sm font-semibold text-white/90 uppercase tracking-wider">Market News</h2>
+                <Newspaper className="w-5 h-5 text-[var(--color-clay-sky)]" />
+                <h2 className="text-sm font-black font-display text-[var(--color-clay-fg)] uppercase tracking-wider">Market News</h2>
                 {connected && (
                     <div className="flex items-center gap-1.5 ml-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-xs text-emerald-400">LIVE</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[11px] font-bold text-emerald-600">LIVE</span>
                     </div>
                 )}
                 {newItemsCount > 0 && (
                     <button
                         onClick={() => { setCurrentPage(0); clearNewCount(); }}
-                        className="ml-auto text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full hover:bg-cyan-500/30 transition-colors"
+                        className="ml-auto text-xs bg-[var(--color-clay-sky)]/20 text-[var(--color-clay-sky)] font-bold px-2 py-0.5 rounded-full hover:bg-[var(--color-clay-sky)]/30 transition-colors"
                     >
                         +{newItemsCount} new
                     </button>
@@ -74,19 +74,19 @@ export function LiveMarketNews() {
                     // Loading skeleton
                     <div className="space-y-3">
                         {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 animate-pulse">
-                                <div className="h-3 w-24 bg-white/10 rounded mb-2" />
-                                <div className="h-4 w-full bg-white/10 rounded mb-1" />
-                                <div className="h-4 w-3/4 bg-white/10 rounded" />
+                            <div key={i} className="p-4 rounded-[24px] bg-[var(--color-clay-card-bg)] border border-white/40 animate-pulse shadow-sm">
+                                <div className="h-3 w-24 bg-[var(--color-clay-muted)]/20 rounded mb-2" />
+                                <div className="h-4 w-full bg-[var(--color-clay-muted)]/20 rounded mb-1" />
+                                <div className="h-4 w-3/4 bg-[var(--color-clay-muted)]/20 rounded" />
                             </div>
                         ))}
                     </div>
                 ) : paginatedNews.length === 0 ? (
                     // Empty state
-                    <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 text-center">
-                        <Newspaper className="w-8 h-8 text-white/20 mx-auto mb-2" />
-                        <p className="text-sm text-white/40">No news matching your portfolio yet</p>
-                        <p className="text-xs text-white/30 mt-1">News will appear when sources mention $TICKER symbols in your holdings</p>
+                    <div className="p-6 rounded-[24px] bg-[var(--color-clay-card-bg)] border border-white/40 text-center shadow-sm">
+                        <Newspaper className="w-8 h-8 text-[var(--color-clay-muted)]/40 mx-auto mb-2" />
+                        <p className="text-sm font-bold text-[var(--color-clay-fg)]">No news matching your portfolio yet</p>
+                        <p className="text-xs font-medium text-[var(--color-clay-muted)] mt-1">News will appear when sources mention $TICKER symbols in your holdings</p>
                     </div>
                 ) : (
                     // News cards with smooth slide animation
@@ -105,22 +105,22 @@ export function LiveMarketNews() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.2, delay: index * 0.05 }}
-                                    className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
+                                    className="p-4 rounded-[24px] bg-[var(--color-clay-card-bg)] border border-white/40 hover:-translate-y-1 hover:shadow-clayCardHover shadow-sm transition-all cursor-pointer"
                                     onClick={() => item.link && window.open(item.link, '_blank')}
                                 >
                                     <div className="flex flex-col gap-2">
                                         {/* Header: Source & Time */}
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-semibold text-cyan-400">{item.source || 'Unknown'}</span>
-                                            <span className="text-xs text-white/40">{item.relativeTime || 'recently'}</span>
+                                            <span className="text-[12px] font-black font-display text-[var(--color-clay-sky)]">{item.source || 'Unknown'}</span>
+                                            <span className="text-[11px] font-bold text-[var(--color-clay-muted)]">{item.relativeTime || 'recently'}</span>
                                         </div>
 
                                         {/* Content - Headline first, then summary/content */}
-                                        <p className="text-sm font-medium text-white/90 leading-relaxed line-clamp-2">
+                                        <p className="text-[14px] font-bold text-[var(--color-clay-fg)] leading-relaxed line-clamp-2">
                                             {item.headline || item.content || '(No content)'}
                                         </p>
                                         {item.summary && item.summary !== item.headline && (
-                                            <p className="text-xs text-white/50 line-clamp-1 mt-1">
+                                            <p className="text-xs font-medium text-[var(--color-clay-muted)] line-clamp-1 mt-1">
                                                 {item.summary}
                                             </p>
                                         )}
@@ -132,7 +132,7 @@ export function LiveMarketNews() {
                                                     <button
                                                         key={ticker}
                                                         onClick={(e) => handleTickerClick(ticker, e)}
-                                                        className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-medium hover:bg-emerald-500/40 transition-colors"
+                                                        className="text-[10px] px-2 py-0.5 rounded-[8px] bg-emerald-100 text-emerald-700 font-bold hover:bg-emerald-200 transition-colors"
                                                     >
                                                         ${ticker}
                                                     </button>
@@ -149,7 +149,7 @@ export function LiveMarketNews() {
 
             {/* Pagination Dots with smooth transitions */}
             {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-3 mt-4 py-3 px-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="flex justify-center items-center gap-3 mt-4 py-3 px-4 bg-[var(--color-clay-card-bg)] rounded-[20px] shadow-sm border border-white/40">
                     {Array.from({ length: totalPages }).map((_, i) => (
                         <motion.div
                             key={i}
@@ -158,8 +158,8 @@ export function LiveMarketNews() {
                             tabIndex={0}
                             animate={{
                                 width: i === currentPage ? 28 : 10,
-                                backgroundColor: i === currentPage ? '#22d3ee' : 'rgba(255,255,255,0.3)',
-                                boxShadow: i === currentPage ? '0 0 12px rgba(34,211,238,0.5)' : 'none'
+                                backgroundColor: i === currentPage ? 'var(--color-clay-sky)' : 'rgba(74, 70, 81, 0.2)',
+                                boxShadow: i === currentPage ? '0 0 12px rgba(14, 165, 233, 0.3)' : 'none'
                             }}
                             transition={{ type: "spring", stiffness: 400, damping: 25 }}
                             style={{
@@ -170,7 +170,7 @@ export function LiveMarketNews() {
                             aria-label={`Go to page ${i + 1} of ${totalPages}`}
                         />
                     ))}
-                    <span className="text-xs text-white/50 ml-2 font-medium">
+                    <span className="text-[11px] text-[var(--color-clay-muted)] ml-2 font-bold">
                         {currentPage + 1}/{totalPages}
                     </span>
                 </div>
@@ -178,7 +178,7 @@ export function LiveMarketNews() {
 
             {/* Total items indicator */}
             {news.length > 0 && (
-                <p className="text-xs text-white/30 text-center mt-2">
+                <p className="text-[11px] font-bold text-[var(--color-clay-muted)] text-center mt-2">
                     Showing {paginatedNews.length} of {news.length} items
                 </p>
             )}

@@ -120,9 +120,9 @@ export function PortfolioHero() {
                   : 'bg-rose-50 text-rose-700'
                   }`}>
                   {isDailyPositive ? (
-                    <TrendingUp className="w-5 h-5 text-emerald-600" strokeWidth={3} />
+                    <TrendingUp className="w-5 h-5 text-emerald-700" strokeWidth={3} />
                   ) : (
-                    <TrendingDown className="w-5 h-5 text-rose-600" strokeWidth={3} />
+                    <TrendingDown className="w-5 h-5 text-rose-700" strokeWidth={3} />
                   )}
                   <span className="font-black font-display tracking-tight text-[15px]">
                     {isDailyPositive ? '+' : ''}₪{dailyChangeILS.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)
@@ -134,9 +134,12 @@ export function PortfolioHero() {
               {/* Total Gain/Loss */}
               <div className="flex items-center gap-2 pl-2">
                 <span className="text-xs font-bold text-[var(--color-clay-muted)] uppercase tracking-wider font-display">Total Gain/Loss:</span>
-                <span className={`text-sm font-black font-display tracking-tight ${isTotalPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                  {isTotalPositive ? '+' : ''}₪{(totalGainUSD * usdToIls).toLocaleString('en-US', { maximumFractionDigits: 2 })} / ${totalGainUSD.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({totalGainPercent.toFixed(2)}%)
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-black font-display tracking-tight ${isTotalPositive ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    {isTotalPositive ? '+' : ''}₪{Math.abs(totalGainILS).toLocaleString(undefined, { maximumFractionDigits: 2 })} /
+                    {isTotalPositive ? ' +$' : ' -$'}{Math.abs(totalGainUSD).toLocaleString(undefined, { maximumFractionDigits: 2 })} ({isTotalPositive ? '+' : ''}{totalGainPercent.toFixed(2)}%)
+                  </span>
+                </div>
               </div>
             </div>
           </div>
