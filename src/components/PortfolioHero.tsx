@@ -51,6 +51,7 @@ export function PortfolioHero() {
 
   // Derive all other values (cheap, no need for separate memo)
   const totalGainUSD = totalValueUSD - totalCostUSD;
+  const totalGainILS = totalGainUSD * usdToIls;
   const totalGainPercent = totalCostUSD > 0 ? (totalGainUSD / totalCostUSD) * 100 : 0;
   const dailyChangePercent = totalValueUSD > 0 ? (dailyChangeUSD / (totalValueUSD - dailyChangeUSD)) * 100 : 0;
   const totalValueILS = totalValueUSD * usdToIls;
