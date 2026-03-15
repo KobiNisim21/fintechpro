@@ -180,7 +180,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
     <>
       <div
         data-ticker={stock.symbol}
-        className={`group relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] border border-white/40 backdrop-blur-xl shadow-clayCard hover:shadow-clayCardHover p-5 pr-12 hover:-translate-y-2 transition-all duration-500 cursor-pointer ${className || ''} ${isNear52wLow ? 'ring-2 ring-inset ring-amber-400' : ''}`}
+        className={`group relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] border border-white/20 backdrop-blur-xl shadow-clayDeep hover:-translate-y-2 transition-all duration-500 cursor-pointer ${className || ''} ${isNear52wLow ? 'ring-2 ring-inset ring-amber-400' : ''}`}
       >
 
         <div className="relative z-10">
@@ -199,9 +199,9 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
             <div className="flex items-center gap-1 shrink-0 mr-1">
               {isPositive ? (
-                <TrendingUp className="w-5 h-5 text-emerald-700" />
+                <TrendingUp className="w-5 h-5 text-[var(--color-clay-success)]" />
               ) : (
-                <TrendingDown className="w-5 h-5 text-rose-700" />
+                <TrendingDown className="w-5 h-5 text-[var(--color-clay-danger)]" />
               )}
               {stock._id && (
                 <>
@@ -231,7 +231,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                 <span>${stock.price.toFixed(2)}</span>
                 {/* Extended hours price */}
                 {stock.marketStatus && stock.marketStatus !== 'regular' && stock.extendedPrice && (
-                  <span className="text-[15px] font-bold text-amber-600 font-display tracking-normal">
+                  <span className="text-[15px] font-bold text-[var(--color-clay-muted)] font-display tracking-normal">
                     {stock.marketStatus === 'pre-market' && 'PM'}
                     {stock.marketStatus === 'after-hours' && 'AH'}
                     {stock.marketStatus === 'closed' && 'AH'}
@@ -251,7 +251,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                 )}
               </div>
 
-              <div className={`flex items-center gap-2 text-[14px] font-black font-display tracking-wide ${isPositive ? 'text-emerald-700' : 'text-rose-700'}`}>
+              <div className={`flex items-center gap-2 text-[14px] font-black font-display tracking-wide ${isPositive ? 'text-[var(--color-clay-success)]' : 'text-[var(--color-clay-danger)]'}`}>
                 <span>{isPositive ? '+' : ''}${stock.change.toFixed(2)}</span>
                 <span>({isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%)</span>
                 {stock.marketStatus && stock.marketStatus !== 'regular' && !stock.extendedPrice && (
@@ -261,14 +261,15 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
               {/* Extended hours change */}
               {stock.marketStatus && stock.marketStatus !== 'regular' && stock.extendedPrice && stock.extendedChange !== undefined && (
-                <div className="flex items-center gap-1.5 mt-1" style={{ fontSize: '11px', color: 'rgba(251, 146, 60, 0.9)' }}>
-                  <span style={{ color: 'rgba(251, 146, 60, 0.6)' }}>
+                <div className="flex items-center gap-1.5 mt-1" style={{ fontSize: '11px', color: 'var(--color-clay-muted)' }}>
+                  <span className="font-bold opacity-80">
                     {stock.marketStatus === 'pre-market' && 'Pre-market:'}
                     {stock.marketStatus === 'after-hours' && 'After-hours:'}
                     {stock.marketStatus === 'closed' && 'After-hours:'}
                   </span>
-                  <span>{stock.extendedChange >= 0 ? '+' : ''}${stock.extendedChange.toFixed(2)}</span>
-                  <span>({stock.extendedChange >= 0 ? '+' : ''}{stock.extendedChangePercent?.toFixed(2)}%)</span>
+                  <span className={`font-black ${stock.extendedChange >= 0 ? 'text-[var(--color-clay-success)]' : 'text-[var(--color-clay-danger)]'}`}>
+                    {stock.extendedChange >= 0 ? '+' : ''}${stock.extendedChange.toFixed(2)} ({stock.extendedChange >= 0 ? '+' : ''}{stock.extendedChangePercent?.toFixed(2)}%)
+                  </span>
                 </div>
               )}
             </div>
@@ -285,7 +286,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
               <div className="text-right">
                 <p className="text-[11px] font-bold text-[var(--color-clay-muted)] mb-1 uppercase tracking-widest font-display">Total Value</p>
                 <p className="text-[15px] font-black text-[var(--color-clay-fg)] font-display tracking-tight">${totalValue.toFixed(2)}</p>
-                <p className={`text-[13px] font-bold tracking-tight ${istotalReturnPositive ? 'text-emerald-700' : 'text-rose-700'}`}>
+                <p className={`text-[13px] font-bold tracking-tight ${istotalReturnPositive ? 'text-[var(--color-clay-success)]' : 'text-[var(--color-clay-danger)]'}`}>
                   {istotalReturnPositive ? '+' : ''}{totalReturn.toFixed(2)} ({totalReturnPercent.toFixed(2)}%)
                 </p>
               </div>

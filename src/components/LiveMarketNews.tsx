@@ -74,17 +74,17 @@ export function LiveMarketNews() {
                     // Loading skeleton
                     <div className="space-y-3">
                         {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="p-4 rounded-[24px] bg-[var(--color-clay-card-bg)] border border-white/40 animate-pulse shadow-sm">
-                                <div className="h-3 w-24 bg-[var(--color-clay-muted)]/20 rounded mb-2" />
-                                <div className="h-4 w-full bg-[var(--color-clay-muted)]/20 rounded mb-1" />
-                                <div className="h-4 w-3/4 bg-[var(--color-clay-muted)]/20 rounded" />
+                            <div key={i} className="p-4 rounded-[24px] bg-[var(--color-clay-card-bg)] border border-white/20 animate-pulse shadow-clayCard">
+                                <div className="h-3 w-24 bg-[var(--color-clay-muted)]/40 rounded mb-2" />
+                                <div className="h-4 w-full bg-[var(--color-clay-fg)]/20 rounded mb-1" />
+                                <div className="h-4 w-3/4 bg-[var(--color-clay-fg)]/20 rounded" />
                             </div>
                         ))}
                     </div>
                 ) : paginatedNews.length === 0 ? (
                     // Empty state
-                    <div className="p-6 rounded-[24px] bg-[var(--color-clay-card-bg)] border border-white/40 text-center shadow-sm">
-                        <Newspaper className="w-8 h-8 text-[var(--color-clay-muted)]/40 mx-auto mb-2" />
+                    <div className="p-6 rounded-[24px] bg-[var(--color-clay-card-bg)] border border-white/20 text-center shadow-clayCard">
+                        <Newspaper className="w-8 h-8 text-[var(--color-clay-muted)] mx-auto mb-2 opacity-60" />
                         <p className="text-sm font-bold text-[var(--color-clay-fg)]">No news matching your portfolio yet</p>
                         <p className="text-xs font-medium text-[var(--color-clay-muted)] mt-1">News will appear when sources mention $TICKER symbols in your holdings</p>
                     </div>
@@ -105,7 +105,7 @@ export function LiveMarketNews() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.2, delay: index * 0.05 }}
-                                    className="p-4 rounded-[24px] bg-[var(--color-clay-card-bg)] border border-white/40 hover:-translate-y-1 hover:shadow-clayCardHover shadow-sm transition-all cursor-pointer"
+                                    className="p-4 rounded-[24px] bg-[var(--color-clay-card-bg)] border border-white/20 hover:-translate-y-1 hover:shadow-clayCardHover shadow-clayCard transition-all cursor-pointer"
                                     onClick={() => item.link && window.open(item.link, '_blank')}
                                 >
                                     <div className="flex flex-col gap-2">

@@ -82,7 +82,7 @@ export function PortfolioHero() {
   }, [portfolioAnalytics?.benchmarkData]);
 
   return (
-    <div className="relative overflow-hidden rounded-[32px] md:rounded-[48px] bg-[var(--color-clay-card-bg)] backdrop-blur-xl shadow-clayDeep p-6 md:p-10 transition-all duration-500">
+    <div className="relative overflow-hidden rounded-[32px] md:rounded-[48px] bg-(--color-clay-card-bg) border border-white/20 backdrop-blur-xl shadow-clayDeep p-6 md:p-10 transition-all duration-500">
       <div className="relative z-10">
         <div className="flex flex-wrap items-start justify-between gap-6 mb-6">
           <div>
@@ -117,13 +117,13 @@ export function PortfolioHero() {
               {/* Daily Change */}
               <div className="flex items-center gap-4">
                 <div className={`flex items-center gap-2 px-5 py-2.5 rounded-[20px] shadow-clayOrb transition-transform duration-300 hover:scale-[1.02] ${isDailyPositive
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'bg-rose-50 text-rose-700'
+                  ? 'bg-emerald-50 text-[var(--color-clay-success)]'
+                  : 'bg-rose-50 text-[var(--color-clay-danger)]'
                   }`}>
                   {isDailyPositive ? (
-                    <TrendingUp className="w-5 h-5 text-emerald-700" strokeWidth={3} />
+                    <TrendingUp className="w-5 h-5 text-[var(--color-clay-success)]" strokeWidth={3} />
                   ) : (
-                    <TrendingDown className="w-5 h-5 text-rose-700" strokeWidth={3} />
+                    <TrendingDown className="w-5 h-5 text-[var(--color-clay-danger)]" strokeWidth={3} />
                   )}
                   <span className="font-black font-display tracking-tight text-[15px]">
                     {isDailyPositive ? '+' : ''}₪{dailyChangeILS.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)
@@ -136,7 +136,7 @@ export function PortfolioHero() {
               <div className="flex items-center gap-2 pl-2">
                 <span className="text-xs font-bold text-[var(--color-clay-muted)] uppercase tracking-wider font-display">Total Gain/Loss:</span>
                 <div className="flex items-center gap-2">
-                  <span className={`text-sm font-black font-display tracking-tight ${isTotalPositive ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  <span className={`text-sm font-black font-display tracking-tight ${isTotalPositive ? 'text-[var(--color-clay-success)]' : 'text-[var(--color-clay-danger)]'}`}>
                     {isTotalPositive ? '+' : ''}₪{Math.abs(totalGainILS).toLocaleString(undefined, { maximumFractionDigits: 2 })} /
                     {isTotalPositive ? ' +$' : ' -$'}{Math.abs(totalGainUSD).toLocaleString(undefined, { maximumFractionDigits: 2 })} ({isTotalPositive ? '+' : ''}{totalGainPercent.toFixed(2)}%)
                   </span>
