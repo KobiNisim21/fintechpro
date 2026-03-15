@@ -1485,7 +1485,7 @@ body {
     --color-clay-input-bg:    #EFEBF5;
 
     /* Text */
-    --color-clay-fg:          #332F3A;
+    --color-clay-fg:          #1F1D23;
     --color-clay-muted:       #4A4651;
 
     /* Accents */
@@ -1504,7 +1504,7 @@ body {
   .font-body { font-family: "DM Sans", system-ui, sans-serif; }
 
   .shadow-clayDeep {
-    box-shadow: 30px 30px 60px #CDC6D9, -30px -30px 60px #FFFFFF, inset 10px 10px 20px rgba(139, 92, 246, 0.05), inset -10px -10px 20px rgba(255, 255, 255, 0.8);
+    box-shadow: 40px 40px 80px rgba(160, 150, 180, 0.45), -20px -20px 60px #FFFFFF, inset 10px 10px 20px rgba(139, 92, 246, 0.05), inset -10px -10px 20px rgba(255, 255, 255, 0.8);
   }
   .shadow-clayCard {
     box-shadow: 16px 16px 32px rgba(160, 150, 180, 0.20), -10px -10px 24px rgba(255, 255, 255, 0.90), inset 6px 6px 12px rgba(139, 92, 246, 0.03), inset -6px -6px 12px rgba(255, 255, 255, 1.00);

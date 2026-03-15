@@ -82,7 +82,7 @@ export function PortfolioHero() {
   }, [portfolioAnalytics?.benchmarkData]);
 
   return (
-    <div className="relative overflow-hidden rounded-[32px] md:rounded-[48px] bg-(--color-clay-card-bg) border border-white/20 backdrop-blur-xl shadow-clayDeep p-6 md:p-10 transition-all duration-500">
+    <div className="relative overflow-hidden rounded-[32px] md:rounded-[48px] bg-(--color-clay-card-bg) border border-white/60 backdrop-blur-xl shadow-clayDeep p-6 md:p-10 transition-all duration-500">
       <div className="relative z-10">
         <div className="flex flex-wrap items-start justify-between gap-6 mb-6">
           <div>

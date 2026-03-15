@@ -180,7 +180,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
     <>
       <div
         data-ticker={stock.symbol}
-        className={`group relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] border border-white/20 backdrop-blur-xl shadow-clayDeep hover:-translate-y-2 transition-all duration-500 cursor-pointer ${className || ''} ${isNear52wLow ? 'ring-2 ring-inset ring-amber-400' : ''}`}
+        className={`group relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] border border-white/60 backdrop-blur-xl shadow-clayDeep hover:-translate-y-2 transition-all duration-500 cursor-pointer ${className || ''} ${isNear52wLow ? 'ring-2 ring-inset ring-amber-400' : ''}`}
       >
 
         <div className="relative z-10">
