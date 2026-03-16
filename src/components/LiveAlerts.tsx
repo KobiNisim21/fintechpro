@@ -9,8 +9,8 @@ export function LiveAlerts() {
         <div className="mb-6">
             {/* Header */}
             <div className="flex items-center gap-2 mb-4">
-                <Bell className="w-5 h-5 text-emerald-400" />
-                <h2 className="text-sm font-semibold text-white/90 uppercase tracking-wider">Live Alerts</h2>
+                <Bell className="w-5 h-5 text-[var(--color-clay-success)]" />
+                <h2 className="text-sm font-black font-display text-[var(--color-clay-fg)] uppercase tracking-wider">Live Alerts</h2>
                 {connected && (
                     <div className="flex items-center gap-1.5 ml-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -23,22 +23,22 @@ export function LiveAlerts() {
                 {loading ? (
                     // Loading skeleton
                     Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 animate-pulse">
+                        <div key={i} className="p-4 rounded-xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-clayCard animate-pulse">
                             <div className="flex items-start gap-3">
-                                <div className="w-4 h-4 bg-white/10 rounded mt-1" />
+                                <div className="w-4 h-4 bg-[var(--color-clay-muted)]/20 rounded mt-1" />
                                 <div className="flex-1">
-                                    <div className="h-4 w-3/4 bg-white/10 rounded mb-2" />
-                                    <div className="h-3 w-16 bg-white/10 rounded" />
+                                    <div className="h-4 w-3/4 bg-[var(--color-clay-fg)]/20 rounded mb-2" />
+                                    <div className="h-3 w-16 bg-[var(--color-clay-muted)]/20 rounded" />
                                 </div>
                             </div>
                         </div>
                     ))
                 ) : alerts.length === 0 ? (
                     // Empty state
-                    <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 text-center">
-                        <Bell className="w-6 h-6 text-white/20 mx-auto mb-2" />
-                        <p className="text-sm text-white/40">No alerts yet</p>
-                        <p className="text-xs text-white/30 mt-1">Price moves, 52-week lows &amp; earnings</p>
+                    <div className="p-4 rounded-xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-clayCard text-center">
+                        <Bell className="w-6 h-6 text-[var(--color-clay-muted)]/60 mx-auto mb-2" />
+                        <p className="text-sm font-bold text-[var(--color-clay-fg)]">No alerts yet</p>
+                        <p className="text-xs font-medium text-[var(--color-clay-muted)] mt-1">Price moves, 52-week lows &amp; earnings</p>
                     </div>
                 ) : (
                     // Alert cards with animation
@@ -50,33 +50,33 @@ export function LiveAlerts() {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
                                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                                className="p-2 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
+                                className="p-3 rounded-xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-clayCard hover:-translate-y-1 hover:shadow-clayCardHover transition-all cursor-pointer"
                             >
                                 <div className="flex items-center gap-3">
                                     {/* Icon based on alert type */}
                                     {alert.type === 'gain' && (
-                                        <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
+                                        <TrendingUp className="w-4 h-4 text-[var(--color-clay-success)] shrink-0" />
                                     )}
                                     {alert.type === 'loss' && (
-                                        <TrendingDown className="w-4 h-4 text-rose-500 shrink-0" />
+                                        <TrendingDown className="w-4 h-4 text-[var(--color-clay-danger)] shrink-0" />
                                     )}
                                     {alert.type === 'news' && (
-                                        <Bell className="w-4 h-4 text-cyan-400 shrink-0" />
+                                        <Bell className="w-4 h-4 text-[var(--color-clay-sky)] shrink-0" />
                                     )}
                                     {alert.type === '52w-low' && (
-                                        <Target className="w-4 h-4 text-amber-400 shrink-0" />
+                                        <Target className="w-4 h-4 text-[var(--color-clay-warning)] shrink-0" />
                                     )}
                                     {alert.type === 'earnings' && (
-                                        <Calendar className="w-4 h-4 text-blue-400 shrink-0" />
+                                        <Calendar className="w-4 h-4 text-[var(--color-clay-accent-alt)] shrink-0" />
                                     )}
 
                                     <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                                        <p className="text-sm text-white/80 truncate">
+                                        <p className="text-sm font-bold text-[var(--color-clay-fg)] truncate">
                                             {alert.message}
                                         </p>
 
                                         {/* Ticker */}
-                                        <span className="text-xs px-1.5 py-0.5 rounded bg-white/10 text-white/60 font-medium shrink-0">
+                                        <span className="text-xs px-2 py-0.5 rounded-md bg-[var(--color-clay-input-bg)] text-[var(--color-clay-muted)] font-black tracking-wider uppercase shrink-0 font-display shadow-clayInset">
                                             ${alert.ticker}
                                         </span>
                                     </div>

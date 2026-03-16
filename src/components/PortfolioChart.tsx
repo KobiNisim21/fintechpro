@@ -52,7 +52,10 @@ export function PortfolioChart() {
         const results = await Promise.all(historyPromises);
 
         // 4. Aggregate data by date
-        const timestampMap = new Map<number, number>();
+        // Fix for 2x Spike Bug: If Yahoo returns multiple ticks for the same calendar day (e.g., due to timezone crossing),
+        // we overwrite the value per symbol instead of summing it twice.
+        const symbolValuesByDate = new Map<number, Map<string, number>>();
+        
         results.forEach(({ symbol, data }) => {
           const position = positions.find(p => p.symbol === symbol);
           if (!position || !data.c || !data.t) return;
@@ -65,9 +68,24 @@ export function PortfolioChart() {
 
             // Calculate value in USD
             const valueUsd = data.c[index] * position.quantity;
-            timestampMap.set(normalizedTs, (timestampMap.get(normalizedTs) || 0) + valueUsd);
+            
+            if (!symbolValuesByDate.has(normalizedTs)) {
+               symbolValuesByDate.set(normalizedTs, new Map());
+            }
+            // Overwrites if multiple ticks on the same day exist for the same symbol
+            symbolValuesByDate.get(normalizedTs)!.set(symbol, valueUsd);
           });
         });
+
+        // Sum up the deduplicated latest value of each symbol per calendar day
+        const timestampMap = new Map<number, number>();
+        for (const [ts, symbolMap] of symbolValuesByDate.entries()) {
+           let totalDayValue = 0;
+           for (const val of symbolMap.values()) {
+              totalDayValue += val;
+           }
+           timestampMap.set(ts, totalDayValue);
+        }
 
         // 5. Convert to Sorted Array and Apply Exchange Rate
         const sortedData = Array.from(timestampMap.entries())
