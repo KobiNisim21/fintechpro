@@ -309,9 +309,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
             {/* ══ Analytics Row: Health Score + Benchmark ══ */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* ── Health Score Gauge ── */}
-                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg lg:col-span-1">
+                <Card className="bg-[var(--color-clay-card-bg)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard lg:col-span-1">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                        <CardTitle className="text-lg font-black text-[var(--color-clay-fg)] font-display flex items-center gap-2 tracking-tight">
                             <ShieldCheck className="w-5 h-5 text-cyan-400" />
                             Portfolio Health
                         </CardTitle>
@@ -399,9 +399,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
             >
                 {/* ── Dividend Calendar ── */}
-                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg">
+                <Card className="bg-[var(--color-clay-card-bg)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                        <CardTitle className="text-lg font-black text-[var(--color-clay-fg)] font-display flex items-center gap-2 tracking-tight">
                             <CalendarDays className="w-5 h-5 text-emerald-400" />
                             Upcoming Dividends
                         </CardTitle>
@@ -487,9 +487,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
                 {/* ── Sector Distribution (Treemap) ── */}
                 {!insightsLoaded ? (
-                    <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg h-full flex flex-col">
+                    <Card className="bg-[var(--color-clay-card-bg)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard h-full flex flex-col">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                            <CardTitle className="text-lg font-black text-[var(--color-clay-fg)] font-display flex items-center gap-2 tracking-tight">
                                 <Activity className="w-5 h-5 text-violet-400" />
                                 Sector Distribution
                             </CardTitle>
@@ -499,9 +499,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                         </CardContent>
                     </Card>
                 ) : (
-                    <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg h-full flex flex-col">
+                    <Card className="bg-[var(--color-clay-card-bg)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard h-full flex flex-col">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                            <CardTitle className="text-lg font-black text-[var(--color-clay-fg)] font-display flex items-center gap-2 tracking-tight">
                                 <Activity className="w-5 h-5 text-violet-400" />
                                 Sector Distribution
                             </CardTitle>
@@ -532,9 +532,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
             {/* ══ Portfolio Allocation + Correlation Matrix Row ══ */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* ── Portfolio Allocation (Left - Small, col-span-1) ── */}
-                <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg lg:col-span-1">
+                <Card className="bg-[var(--color-clay-card-bg)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard lg:col-span-1">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                        <CardTitle className="text-lg font-black text-[var(--color-clay-fg)] font-display flex items-center gap-2 tracking-tight">
                             <PieChartIcon className="w-5 h-5 text-cyan-400" />
                             Portfolio Allocation
                         </CardTitle>
@@ -573,7 +573,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
             {/* ── Analyst Recommendations ── */}
             <div>
-                <h3 className="text-lg font-semibold text-white/90 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-black text-[var(--color-clay-fg)] font-display mb-4 flex items-center gap-2 tracking-tight">
                     <Target className="w-5 h-5 text-emerald-400" />
                     Analyst Recommendations & Price Targets
                 </h3>
@@ -588,13 +588,13 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         {analystCards.map((item) => (
                             <div key={item.symbol}
-                                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/8 transition-all duration-200"
+                                className="bg-[var(--color-clay-card-bg)] border border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard p-5 pb-6 hover:-translate-y-2 hover:shadow-clayCardHover transition-all duration-500 cursor-pointer"
                             >
                                 {/* Header */}
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <h4 className="font-bold text-lg text-white">{item.symbol}</h4>
+                                            <h4 className="font-black text-[var(--color-clay-fg)] text-lg font-display tracking-tight">{item.symbol}</h4>
                                             <Badge className={`${item.consensusColor} text-white text-[10px] font-semibold border-none px-2 py-0.5`}>
                                                 {item.consensus}
                                             </Badge>

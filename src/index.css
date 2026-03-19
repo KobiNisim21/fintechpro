@@ -103,6 +103,17 @@
 
 @layer base {
 
+  :root {
+    --color-clay-canvas: #F4F1FA;
+    --color-clay-card-bg: rgba(255, 255, 255, 0.65);
+    --color-clay-input-bg: #EFEBF5;
+    --color-clay-fg: #1F1D23;
+    --color-clay-muted: #4A4651;
+    --color-clay-success: #10B981;
+    --color-clay-danger: #EF4444;
+    --color-clay-sky: #38BDF8;
+  }
+
   *,
   :after,
   :before,

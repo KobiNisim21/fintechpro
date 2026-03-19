@@ -372,12 +372,12 @@ export function WatchlistView() {
                     : watchlist.map(stock => (
                         <div
                             key={stock._id}
-                            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-xl border border-white/10 p-5 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-cyan-500/5 group"
+                            className="relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] border border-white/60 backdrop-blur-xl shadow-clayCard p-5 pb-6 hover:-translate-y-2 hover:shadow-clayCardHover transition-all duration-500 group cursor-pointer"
                         >
                             {/* Remove Button */}
                             <button
                                 onClick={() => handleRemove(stock._id)}
-                                className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/30 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                                className="absolute top-3 right-3 p-2 rounded-[16px] bg-white/60 shadow-clayOrb hover:shadow-clayCard hover:-translate-y-1 active:scale-[0.92] text-rose-400 hover:text-rose-600 transition-all opacity-0 group-hover:opacity-100 z-20"
                                 title="Remove from watchlist"
                             >
                                 <Trash2 className="w-4 h-4" />
@@ -391,13 +391,13 @@ export function WatchlistView() {
                                             <span className="text-cyan-400 text-xs font-bold">{stock.symbol.slice(0, 2)}</span>
                                         </div>
                                         <div>
-                                            <h3 className="text-white font-semibold text-sm">{stock.symbol}</h3>
-                                            <p className="text-white/40 text-xs truncate max-w-[150px]">{stock.name}</p>
+                                            <h3 className="text-[var(--color-clay-fg)] font-black text-lg font-display tracking-tight leading-none">{stock.symbol}</h3>
+                                            <p className="text-[13px] font-bold text-[var(--color-clay-muted)] truncate max-w-[150px] font-display mt-0.5">{stock.name}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-white font-bold text-lg">
+                                <div className="text-right mt-1">
+                                    <p className="text-xl font-black text-[var(--color-clay-fg)] font-display tracking-tight">
                                         {stock.loaded ? `$${stock.price.toFixed(2)}` : '...'}
                                     </p>
                                 </div>
