@@ -22,20 +22,20 @@ interface WatchlistStock extends WatchlistItem {
 // ─── Skeleton ───────────────────────────────────────────────────
 function SkeletonCard() {
     return (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-xl border border-white/10 p-5 animate-pulse">
+        <div className="relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] backdrop-blur-xl border border-white/60 shadow-clayCard p-5 pb-6 animate-pulse">
             <div className="flex justify-between items-start mb-4">
                 <div>
-                    <div className="h-5 w-20 bg-white/10 rounded mb-2" />
-                    <div className="h-3 w-32 bg-white/10 rounded" />
+                    <div className="h-5 w-20 bg-[var(--color-clay-input-bg)] rounded mb-2" />
+                    <div className="h-3 w-32 bg-[var(--color-clay-input-bg)] rounded" />
                 </div>
-                <div className="h-8 w-24 bg-white/10 rounded" />
+                <div className="h-8 w-24 bg-[var(--color-clay-input-bg)] rounded" />
             </div>
             <div className="grid grid-cols-4 gap-2 mb-4">
                 {[0, 1, 2, 3].map(i => (
-                    <div key={i} className="h-12 bg-white/5 rounded-lg" />
+                    <div key={i} className="h-12 bg-[var(--color-clay-input-bg)] rounded-[16px]" />
                 ))}
             </div>
-            <div className="h-32 bg-white/5 rounded-lg" />
+            <div className="h-32 bg-[var(--color-clay-input-bg)] rounded-[16px]" />
         </div>
     );
 }
@@ -44,9 +44,9 @@ function SkeletonCard() {
 function ChartTooltipContent({ active, payload, label }: any) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-[#1a1a1f]/95 border border-white/20 rounded-xl px-3 py-2 backdrop-blur-xl shadow-2xl">
-            <p className="text-white/60 text-xs mb-0.5">{label}</p>
-            <p className="text-white font-bold text-sm">${payload[0].value.toFixed(2)}</p>
+        <div className="bg-[var(--color-clay-card-bg)] border border-white/60 rounded-[16px] px-3 py-2 backdrop-blur-xl shadow-clayCard">
+            <p className="text-[var(--color-clay-muted)] font-display text-xs mb-0.5">{label}</p>
+            <p className="text-[var(--color-clay-fg)] font-black font-display text-sm">${payload[0].value.toFixed(2)}</p>
         </div>
     );
 }
@@ -54,17 +54,17 @@ function ChartTooltipContent({ active, payload, label }: any) {
 // ─── Change Badge ───────────────────────────────────────────────
 function ChangeBadge({ label, value }: { label: string; value: number | null }) {
     if (value === null) return (
-        <div className="flex flex-col items-center p-2 rounded-lg bg-white/5">
-            <span className="text-[10px] text-white/40 uppercase tracking-wide">{label}</span>
-            <span className="text-xs text-white/30 mt-0.5">—</span>
+        <div className="flex flex-col items-center p-2 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed">
+            <span className="text-[10px] text-[var(--color-clay-muted)] uppercase tracking-wide font-bold">{label}</span>
+            <span className="text-xs text-[var(--color-clay-muted)] font-bold mt-0.5">—</span>
         </div>
     );
 
     const isPositive = value >= 0;
     return (
-        <div className="flex flex-col items-center p-2 rounded-lg bg-white/5 hover:bg-white/8 transition-colors">
-            <span className="text-[10px] text-white/40 uppercase tracking-wide">{label}</span>
-            <span className={`text-xs font-semibold mt-0.5 flex items-center gap-0.5 ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+        <div className="flex flex-col items-center p-2 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayOrb transition-colors">
+            <span className="text-[10px] text-[var(--color-clay-muted)] uppercase tracking-wide font-bold">{label}</span>
+            <span className={`text-xs font-black font-display mt-0.5 flex items-center gap-0.5 ${isPositive ? 'text-[var(--color-clay-success)]' : 'text-[var(--color-clay-danger)]'}`}>
                 {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 {isPositive ? '+' : ''}{value.toFixed(2)}%
             </span>
@@ -250,17 +250,17 @@ export function WatchlistView() {
     // ─── Empty State ──────────────────────────────────────────────
     if (!loading && watchlist.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 border border-white/10">
-                    <Eye className="w-10 h-10 text-cyan-400/60" />
+            <div className="flex flex-col items-center justify-center py-20 bg-[var(--color-clay-card-bg)] rounded-[32px] border border-white/60 shadow-clayCard">
+                <div className="w-20 h-20 rounded-[24px] bg-[var(--color-clay-input-bg)] flex items-center justify-center mb-6 shadow-clayPressed text-cyan-500">
+                    <Eye className="w-10 h-10" />
                 </div>
-                <h3 className="text-xl font-semibold text-white/80 mb-2">No Stocks in Watchlist</h3>
-                <p className="text-white/40 text-sm mb-6 text-center max-w-sm">
+                <h3 className="text-xl font-black font-display text-[var(--color-clay-fg)] mb-2">No Stocks in Watchlist</h3>
+                <p className="text-[var(--color-clay-muted)] font-bold text-sm mb-6 text-center max-w-sm">
                     Add stocks to track their daily, weekly, monthly, and yearly performance — without adding them to your portfolio.
                 </p>
                 <Button
                     onClick={() => setAddDialogOpen(true)}
-                    className="bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 border border-cyan-500/30"
+                    className="bg-[var(--color-clay-input-bg)] hover:bg-white text-[var(--color-clay-fg)] font-bold border-none shadow-clayOrb hover:shadow-clayCard active:scale-[0.92] transition-all"
                 >
                     <Plus className="w-4 h-4 mr-2" /> Add to Watchlist
                 </Button>
@@ -278,65 +278,57 @@ export function WatchlistView() {
                         onClick={() => { setAddDialogOpen(false); setSearchQuery(''); setSearchResults([]); }}
                         style={{
                             position: 'absolute', top: '-4px', right: '-4px',
-                            background: 'transparent', border: 'none',
-                            color: 'rgba(255, 255, 255, 0.7)', cursor: 'pointer',
-                            padding: '4px', borderRadius: '4px',
+                            background: 'var(--color-clay-input-bg)', border: 'none',
+                            color: 'var(--color-clay-muted)', cursor: 'pointer',
+                            padding: '8px', borderRadius: '16px',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.color = 'white';
-                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
-                            e.currentTarget.style.backgroundColor = 'transparent';
+                            transition: 'all 0.2s', boxShadow: 'inset -2px -2px 5px rgba(255, 255, 255, 0.7), inset 2px 2px 5px rgba(0, 0, 0, 0.05)'
                         }}
                     >
                         <X className="w-5 h-5" />
                     </button>
 
-                    <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
+                    <h2 className="text-2xl font-black font-display text-[var(--color-clay-fg)] mb-2">
                         Add to Watchlist
                     </h2>
-                    <p style={{ fontSize: '14px', color: '#a1a1aa', marginBottom: '16px' }}>
+                    <p className="text-sm font-bold text-[var(--color-clay-muted)] mb-4">
                         Search for a stock to track its performance.
                     </p>
 
                     {/* Search Input */}
                     <div className="relative mb-4">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-clay-muted)]" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search by symbol or name..."
-                            className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 transition-all"
+                            className="w-full pl-11 pr-4 py-3 bg-[var(--color-clay-input-bg)] shadow-clayPressed rounded-[16px] text-[var(--color-clay-fg)] font-bold text-sm placeholder:text-[var(--color-clay-muted)] focus:outline-none focus:ring-2 focus:ring-violet-400 transition-all font-display border-none"
                             autoFocus
                         />
                     </div>
 
                     {/* Results */}
-                    <div className="max-h-64 overflow-y-auto space-y-1">
+                    <div className="max-h-64 overflow-y-auto space-y-2 p-1">
                         {searching && (
-                            <div className="text-center py-6 text-white/40 text-sm">Searching...</div>
+                            <div className="text-center py-6 text-[var(--color-clay-muted)] font-bold text-sm">Searching...</div>
                         )}
                         {!searching && searchQuery.length > 1 && searchResults.length === 0 && (
-                            <div className="text-center py-6 text-white/40 text-sm">No stocks found.</div>
+                            <div className="text-center py-6 text-[var(--color-clay-muted)] font-bold text-sm">No stocks found.</div>
                         )}
                         {searchResults.map((stock) => (
                             <button
                                 key={stock.symbol}
                                 onClick={() => handleAdd(stock.symbol, stock.description)}
                                 disabled={addingSymbol === stock.symbol}
-                                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-white/10 transition-colors group text-left"
+                                className="w-full flex items-center justify-between p-3 rounded-[16px] hover:bg-white/80 bg-[var(--color-clay-card-bg)] shadow-clayOrb hover:shadow-clayCard active:scale-[0.98] transition-all group text-left border-white/60 border"
                             >
                                 <div>
-                                    <span className="text-white font-semibold text-sm">{stock.displaySymbol}</span>
-                                    <span className="text-white/40 text-xs ml-2">{stock.type}</span>
-                                    <p className="text-white/50 text-xs mt-0.5 truncate max-w-[220px]">{stock.description}</p>
+                                    <span className="text-[var(--color-clay-fg)] font-black font-display text-sm">{stock.displaySymbol}</span>
+                                    <span className="text-[var(--color-clay-muted)] font-bold text-xs ml-2">{stock.type}</span>
+                                    <p className="text-[var(--color-clay-muted)] font-bold text-xs mt-0.5 truncate max-w-[220px]">{stock.description}</p>
                                 </div>
-                                <span className="text-cyan-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="text-cyan-600 font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity">
                                     {addingSymbol === stock.symbol ? 'Adding...' : '+ Add'}
                                 </span>
                             </button>
@@ -351,15 +343,15 @@ export function WatchlistView() {
     return (
         <div>
             {/* Header with Add Button */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <Eye className="w-5 h-5 text-cyan-400" />
-                    <span className="text-white/60 text-sm">{watchlist.length} stock{watchlist.length !== 1 ? 's' : ''} tracked</span>
+            <div className="flex items-center justify-between mb-4 px-2">
+                <div className="flex items-center gap-2 text-[var(--color-clay-muted)] font-bold">
+                    <Eye className="w-5 h-5 text-cyan-600" />
+                    <span className="text-sm">{watchlist.length} stock{watchlist.length !== 1 ? 's' : ''} tracked</span>
                 </div>
                 <Button
                     onClick={() => setAddDialogOpen(true)}
                     size="sm"
-                    className="bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                    className="bg-[var(--color-clay-input-bg)] hover:bg-white text-[var(--color-clay-fg)] font-bold shadow-clayOrb hover:shadow-clayCard border-none active:scale-[0.92] transition-all rounded-[16px] px-4"
                 >
                     <Plus className="w-4 h-4 mr-1" /> Add Stock
                 </Button>
@@ -422,18 +414,18 @@ export function WatchlistView() {
                                                     <stop offset="95%" stopColor={stock.monthlyChange >= 0 ? '#10B981' : '#EF4444'} stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
                                             <XAxis
                                                 dataKey="date"
-                                                stroke="rgba(255,255,255,0.2)"
+                                                stroke="var(--color-clay-muted)"
                                                 style={{ fontSize: '10px' }}
                                                 tickLine={false}
                                                 axisLine={false}
                                                 minTickGap={40}
                                             />
                                             <YAxis
-                                                stroke="rgba(255,255,255,0.2)"
-                                                style={{ fontSize: '10px' }}
+                                                stroke="var(--color-clay-muted)"
+                                                style={{ fontSize: '10px', fontWeight: 'bold' }}
                                                 tickLine={false}
                                                 axisLine={false}
                                                 domain={['auto', 'auto']}

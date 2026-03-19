@@ -183,7 +183,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
         className={`group relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] border border-white/60 backdrop-blur-xl shadow-clayDeep hover:-translate-y-2 transition-all duration-500 cursor-pointer ${className || ''} ${isNear52wLow ? 'ring-2 ring-inset ring-amber-400' : ''}`}
       >
 
-        <div className="relative z-10 pb-2">
+        <div className="relative z-10 p-5 pb-8">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-4">
@@ -312,7 +312,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
           {/* Special Insights Footer */}
           {(formattedEarnings || isNear52wLow) && (
-            <div className="flex items-center gap-3 pt-4 border-t border-[var(--color-clay-input-bg)] text-[12px] font-bold font-display mt-2 mb-2 pb-1">
+            <div className="flex flex-col gap-2 pt-4 border-t border-[var(--color-clay-input-bg)] text-[12px] font-bold font-display mt-2">
               {isNear52wLow && (
                 <div className="flex items-center gap-1 text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full shadow-clayOrb">
                   <TrendingDown className="w-4 h-4" />

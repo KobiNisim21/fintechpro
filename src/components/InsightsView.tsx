@@ -20,11 +20,11 @@ const COLORS = [
 
 // ─── Skeleton Component ─────────────────────────────────────────
 const Skeleton = ({ className = '' }: { className?: string }) => (
-    <div className={`animate-pulse bg-white/10 rounded-xl ${className}`} />
+    <div className={`animate-pulse bg-[var(--color-clay-input-bg)] rounded-[16px] ${className}`} />
 );
 
 const SkeletonCard = () => (
-    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 space-y-4">
+    <div className="bg-[var(--color-clay-card-bg)] backdrop-blur-xl border border-white/60 shadow-clayCard rounded-[32px] p-5 space-y-4">
         <div className="flex justify-between items-start">
             <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -43,7 +43,7 @@ const SkeletonCard = () => (
             <Skeleton className="h-16" />
         </div>
         <div className="space-y-2">
-            <Skeleton className="h-1.5 w-full rounded-full" />
+            <Skeleton className="h-1.5 w-full rounded-[16px]" />
             <div className="flex justify-between">
                 <Skeleton className="h-3 w-10" />
                 <Skeleton className="h-3 w-10" />
@@ -54,12 +54,12 @@ const SkeletonCard = () => (
 );
 
 const SkeletonChart = () => (
-    <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg">
+    <Card className="bg-[var(--color-clay-card-bg)] backdrop-blur-xl border-white/60 rounded-[32px] shadow-clayCard">
         <CardHeader className="pb-2">
             <Skeleton className="h-6 w-44" />
         </CardHeader>
         <CardContent className="h-[340px] flex items-center justify-center">
-            <Skeleton className="h-[200px] w-[200px] rounded-full" />
+            <Skeleton className="h-[200px] w-[200px] rounded-[100px]" />
         </CardContent>
     </Card>
 );
@@ -85,12 +85,12 @@ const BentoTreemapContent = (props: any) => {
             {clampedW > 30 && clampedH > 30 && (
                 <foreignObject x={clampedX} y={clampedY} width={clampedW} height={clampedH}>
                     <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center overflow-hidden">
-                        <span className="text-white font-semibold leading-tight break-words w-full"
-                            style={{ fontSize: clampedW < 60 ? '9px' : '11px' }}>
+                        <span className="text-[var(--color-clay-fg)] font-black leading-tight break-words w-full font-display"
+                            style={{ fontSize: clampedW < 60 ? '9px' : '12px' }}>
                             {name}
                         </span>
                         {clampedH > 50 && root?.value > 0 && (
-                            <span className="text-white/75 font-medium mt-0.5"
+                            <span className="text-[var(--color-clay-fg)] font-extrabold mt-0.5 opacity-80"
                                 style={{ fontSize: clampedW < 60 ? '8px' : '10px' }}>
                                 {((value / root.value) * 100).toFixed(1)}%
                             </span>
@@ -107,13 +107,13 @@ const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
         const data = payload[0];
         return (
-            <div className="bg-[#111]/95 backdrop-blur-xl border border-white/10 rounded-xl px-4 py-3 shadow-2xl">
-                <p className="text-white/90 font-semibold text-sm mb-1">{data.name}</p>
-                <p className="text-white font-mono text-base">
+            <div className="bg-[var(--color-clay-card-bg)] backdrop-blur-xl border border-white/60 rounded-[16px] px-4 py-3 shadow-clayCard">
+                <p className="text-[var(--color-clay-muted)] font-bold text-sm mb-1">{data.name}</p>
+                <p className="text-[var(--color-clay-fg)] font-black font-display text-base">
                     ${Number(data.value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 {data.payload?.percent !== undefined && (
-                    <p className="text-cyan-400 text-xs mt-1">
+                    <p className="text-cyan-600 font-bold text-xs mt-1">
                         {(data.payload.percent * 100).toFixed(1)}% of portfolio
                     </p>
                 )}
@@ -138,10 +138,10 @@ const renderCustomLabel = ({ cx, cy, midAngle, outerRadius, name, percent }: any
     const textAnchor = cos >= 0 ? 'start' : 'end';
     return (
         <g>
-            <line x1={sx} y1={sy} x2={ex} y2={ey} stroke="rgba(255,255,255,0.25)" strokeWidth={1} />
+            <line x1={sx} y1={sy} x2={ex} y2={ey} stroke="rgba(0,0,0,0.15)" strokeWidth={1} />
             <text x={tx} y={ty} textAnchor={textAnchor} dominantBaseline="central"
-                fill="rgba(255,255,255,0.8)" fontSize={11} fontWeight="500"
-                fontFamily="Inter, system-ui, -apple-system, sans-serif"
+                fill="var(--color-clay-muted)" fontSize={12} fontWeight="700"
+                fontFamily="Nunito, system-ui, -apple-system, sans-serif"
             >{name} {(percent * 100).toFixed(1)}%</text>
         </g>
     );
@@ -318,7 +318,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     </CardHeader>
                     <CardContent className="flex flex-col items-center justify-center py-4">
                         {analyticsLoading || !analytics ? (
-                            <div className="w-48 h-48 rounded-full bg-white/5 animate-pulse" />
+                            <div className="w-48 h-48 rounded-[100px] bg-[var(--color-clay-input-bg)] animate-pulse" />
                         ) : (() => {
                             const score = analytics.healthScore;
                             const radius = 80;
@@ -326,7 +326,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             const circumference = Math.PI * radius; // half circle
                             const progress = (score / 100) * circumference;
                             const riskLabel = score > 80 ? 'Low Risk' : score > 50 ? 'Moderate' : 'High Risk';
-                            const riskColor = score > 80 ? 'text-emerald-400' : score > 50 ? 'text-amber-400' : 'text-rose-400';
+                            const riskColor = score > 80 ? 'text-[var(--color-clay-success)]' : score > 50 ? 'text-amber-500' : 'text-[var(--color-clay-danger)]';
                             return (
                                 <div className="relative">
                                     <svg width={2 * (radius + stroke)} height={radius + stroke + 24} className="overflow-visible">
@@ -339,7 +339,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                         {/* Track */}
                                         <path
                                             d={`M ${stroke / 2}, ${radius + stroke / 2} A ${radius},${radius} 0 0,1 ${2 * radius + stroke * 1.5},${radius + stroke / 2}`}
-                                            fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={stroke} strokeLinecap="round"
+                                            fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth={stroke} strokeLinecap="round"
                                         />
                                         {/* Progress */}
                                         <path
@@ -349,34 +349,34 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                             className="transition-all duration-1000"
                                         />
                                         {/* Score number */}
-                                        <text x={radius + stroke} y={radius - 4} textAnchor="middle" fill="white" fontSize="36" fontWeight="700" fontFamily="Inter, system-ui, sans-serif">
+                                        <text x={radius + stroke} y={radius - 4} textAnchor="middle" fill="var(--color-clay-fg)" fontSize="36" fontWeight="900" fontFamily="Nunito, system-ui, sans-serif">
                                             {score}
                                         </text>
-                                        <text x={radius + stroke} y={radius + 18} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="12" fontFamily="Inter, system-ui, sans-serif">
+                                        <text x={radius + stroke} y={radius + 18} textAnchor="middle" fill="var(--color-clay-muted)" fontSize="14" fontWeight="bold" fontFamily="Nunito, system-ui, sans-serif">
                                             / 100
                                         </text>
                                     </svg>
                                     {/* Risk label */}
                                     <div className="text-center mt-1">
-                                        <span className={`text-sm font-semibold ${riskColor}`}>{riskLabel}</span>
+                                        <span className={`text-sm font-black font-display ${riskColor}`}>{riskLabel}</span>
                                     </div>
                                     {/* Component breakdown */}
                                     <div className="grid grid-cols-3 gap-2 mt-4 text-center">
                                         <div>
-                                            <div className="text-xs text-white/40 mb-0.5">Diversity</div>
-                                            <div className="text-sm font-bold text-white/80">{analytics.components.diversification}</div>
+                                            <div className="text-xs text-[var(--color-clay-muted)] font-bold mb-0.5">Diversity</div>
+                                            <div className="text-sm font-black font-display text-[var(--color-clay-fg)]">{analytics.components.diversification}</div>
                                         </div>
                                         <div>
-                                            <div className="text-xs text-white/40 mb-0.5">Volatility</div>
-                                            <div className="text-sm font-bold text-white/80">{analytics.components.volatility}</div>
+                                            <div className="text-xs text-[var(--color-clay-muted)] font-bold mb-0.5">Volatility</div>
+                                            <div className="text-sm font-black font-display text-[var(--color-clay-fg)]">{analytics.components.volatility}</div>
                                         </div>
                                         <div>
-                                            <div className="text-xs text-white/40 mb-0.5">Sentiment</div>
-                                            <div className="text-sm font-bold text-white/80">{analytics.components.sentiment}</div>
+                                            <div className="text-xs text-[var(--color-clay-muted)] font-bold mb-0.5">Sentiment</div>
+                                            <div className="text-sm font-black font-display text-[var(--color-clay-fg)]">{analytics.components.sentiment}</div>
                                         </div>
                                     </div>
                                     <div className="text-center mt-3">
-                                        <span className="text-xs text-white/30">β = {analytics.portfolioBeta}</span>
+                                        <span className="text-xs font-bold text-[var(--color-clay-muted)]">β = {analytics.portfolioBeta}</span>
                                     </div>
                                 </div>
                             );
@@ -410,13 +410,13 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                         {analyticsLoading || !analytics ? (
                             <div className="space-y-3">
                                 {[1, 2, 3].map(i => (
-                                    <div key={i} className="h-10 bg-white/5 rounded-lg animate-pulse" />
+                                    <div key={i} className="h-10 bg-[var(--color-clay-input-bg)] rounded-[16px] animate-pulse" />
                                 ))}
                             </div>
                         ) : analytics.dividends?.length > 0 ? (
                             <div className="overflow-hidden">
                                 {/* Header Row */}
-                                <div className="grid grid-cols-4 gap-2 text-[10px] text-white/40 uppercase tracking-wider pb-2 border-b border-white/5">
+                                <div className="grid grid-cols-4 gap-2 text-[10px] text-[var(--color-clay-muted)] font-black uppercase tracking-wider pb-2 border-b border-[var(--color-clay-input-bg)]">
                                     <span>Symbol</span>
                                     <span>Ex-Date</span>
                                     <span className="text-right">Amount</span>
@@ -424,19 +424,19 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                 </div>
                                 {/* Data rows */}
                                 {analytics.dividends.map((div, i) => (
-                                    <div key={i} className="grid grid-cols-4 gap-2 items-center py-2.5 border-b border-white/5 last:border-0">
-                                        <span className="text-sm font-semibold text-white">{div.symbol}</span>
-                                        <span className="text-xs text-white/60">
+                                    <div key={i} className="grid grid-cols-4 gap-2 items-center py-2.5 border-b border-[var(--color-clay-input-bg)] last:border-0">
+                                        <span className="text-sm font-black text-[var(--color-clay-fg)] font-display">{div.symbol}</span>
+                                        <span className="text-xs text-[var(--color-clay-muted)] font-bold">
                                             {new Date(div.exDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                         </span>
-                                        <span className="text-sm text-white/70 text-right font-mono">${div.amount.toFixed(2)}</span>
-                                        <span className="text-sm text-cyan-400 text-right font-bold font-mono">${div.estimatedPayout.toFixed(2)}</span>
+                                        <span className="text-sm text-[var(--color-clay-muted)] text-right font-bold font-mono">${div.amount.toFixed(2)}</span>
+                                        <span className="text-sm text-cyan-600 text-right font-black font-mono">${div.estimatedPayout.toFixed(2)}</span>
                                     </div>
                                 ))}
                                 {/* Total row */}
-                                <div className="grid grid-cols-4 gap-2 items-center pt-3 mt-1 border-t border-white/10">
-                                    <span className="text-xs text-white/50 col-span-3">Total Estimated Payout</span>
-                                    <span className="text-sm text-cyan-400 text-right font-bold font-mono">
+                                <div className="grid grid-cols-4 gap-2 items-center pt-3 mt-1 border-t border-[var(--color-clay-input-bg)]">
+                                    <span className="text-xs text-[var(--color-clay-muted)] font-bold col-span-3">Total Estimated Payout</span>
+                                    <span className="text-sm text-cyan-600 text-right font-black font-mono">
                                         ${analytics.dividends.reduce((s, d) => s + d.estimatedPayout, 0).toFixed(2)}
                                     </span>
                                 </div>
@@ -448,27 +448,27 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             </div>
                         )}
                         {analytics?.pendingPayouts && analytics.pendingPayouts.length > 0 && (
-                            <div className="mt-6 border-t border-white/5 pt-4">
-                                <h4 className="text-xs text-white/50 uppercase tracking-wider mb-3">Pending Payouts (Passed Ex-Date)</h4>
-                                <div className="grid grid-cols-4 gap-2 text-[10px] text-white/40 uppercase tracking-wider pb-2 border-b border-white/5">
+                            <div className="mt-6 border-t border-[var(--color-clay-input-bg)] pt-4">
+                                <h4 className="text-xs text-[var(--color-clay-muted)] font-black uppercase tracking-wider mb-3">Pending Payouts (Passed Ex-Date)</h4>
+                                <div className="grid grid-cols-4 gap-2 text-[10px] text-[var(--color-clay-muted)] font-black uppercase tracking-wider pb-2 border-b border-[var(--color-clay-input-bg)]">
                                     <span>Symbol</span>
                                     <span>Ex-Date</span>
                                     <span className="text-right">Pay Date</span>
                                     <span className="text-right">Payout</span>
                                 </div>
-                                <div className="overflow-hidden opacity-80">
+                                <div className="overflow-hidden opacity-90">
                                     {analytics.pendingPayouts.map((div, i) => (
-                                        <div key={`pending-${i}`} className="grid grid-cols-4 gap-2 items-center py-2 border-b border-white/5 last:border-0 relative">
+                                        <div key={`pending-${i}`} className="grid grid-cols-4 gap-2 items-center py-2 border-b border-[var(--color-clay-input-bg)] last:border-0 relative">
                                             {/* Subtle processing indicator */}
-                                            <div className="absolute left-[-10px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-emerald-500/50 animate-pulse" />
-                                            <span className="text-sm font-semibold text-white pl-2">{div.symbol}</span>
-                                            <span className="text-xs text-white/60">
+                                            <div className="absolute left-[-10px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--color-clay-success)] animate-pulse" />
+                                            <span className="text-sm font-black text-[var(--color-clay-fg)] pl-2 font-display">{div.symbol}</span>
+                                            <span className="text-xs text-[var(--color-clay-muted)] font-bold">
                                                 {new Date(div.exDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                             </span>
-                                            <span className="text-[10px] text-white/40 text-right leading-tight flex flex-col items-end">
+                                            <span className="text-[10px] text-[var(--color-clay-muted)] font-bold text-right leading-tight flex flex-col items-end">
                                                 {div.paymentDate ? new Date(div.paymentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD'}
                                             </span>
-                                            <span className="text-sm text-emerald-400 text-right font-bold font-mono">
+                                            <span className="text-sm text-[var(--color-clay-success)] text-right font-black font-mono">
                                                 ${div.estimatedPayout.toFixed(2)}
                                             </span>
                                         </div>
@@ -477,7 +477,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             </div>
                         )}
                         {analytics?.lastUpdated && (
-                            <div className="mt-3 text-[10px] text-white/20 text-right flex items-center justify-end gap-1">
+                            <div className="mt-3 text-[10px] text-[var(--color-clay-muted)] font-bold text-right flex items-center justify-end gap-1">
                                 <Activity className="w-3 h-3" />
                                 Updated: {new Date(analytics.lastUpdated).toLocaleTimeString()}
                             </div>
@@ -495,7 +495,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1 min-h-[340px]">
-                            <div className="w-full h-full bg-white/5 rounded-xl animate-pulse" />
+                            <div className="w-full h-full bg-[var(--color-clay-input-bg)] rounded-[16px] animate-pulse" />
                         </CardContent>
                     </Card>
                 ) : (
@@ -541,7 +541,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     </CardHeader>
                     <CardContent className="h-[280px] flex justify-center items-center">
                         {loading ? (
-                            <div className="w-full h-full bg-white/5 animate-pulse rounded-xl" />
+                            <div className="w-full h-full bg-[var(--color-clay-input-bg)] animate-pulse rounded-[16px]" />
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -599,27 +599,27 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                                 {item.consensus}
                                             </Badge>
                                         </div>
-                                        <p className="text-sm text-zinc-500 truncate max-w-[180px]">{item.name}</p>
+                                        <p className="text-sm text-[var(--color-clay-muted)] font-bold truncate max-w-[180px]">{item.name}</p>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Current</div>
-                                        <div className="font-mono text-white font-semibold">${item.price.toFixed(2)}</div>
+                                        <div className="text-[10px] text-[var(--color-clay-muted)] font-bold uppercase tracking-wider">Current</div>
+                                        <div className="font-mono text-[var(--color-clay-fg)] font-black">${item.price.toFixed(2)}</div>
                                     </div>
                                 </div>
 
                                 {/* Target + Potential */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <div className="bg-white/5 rounded-xl p-3">
-                                        <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Avg Target</div>
-                                        <div className="font-bold text-white text-sm">
+                                    <div className="bg-[var(--color-clay-input-bg)] shadow-clayPressed rounded-[16px] p-3">
+                                        <div className="text-[10px] text-[var(--color-clay-muted)] font-bold uppercase tracking-wider mb-1">Avg Target</div>
+                                        <div className="font-black text-[var(--color-clay-fg)] font-display text-sm">
                                             {item.target ? `$${item.target.toFixed(2)}` : 'No Data'}
                                         </div>
                                     </div>
-                                    <div className="bg-white/5 rounded-xl p-3">
-                                        <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Potential</div>
-                                        <div className={`font-bold text-sm flex items-center gap-1 ${item.target
-                                            ? item.upside >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                                            : 'text-zinc-500'
+                                    <div className="bg-[var(--color-clay-input-bg)] shadow-clayPressed rounded-[16px] p-3">
+                                        <div className="text-[10px] text-[var(--color-clay-muted)] font-bold uppercase tracking-wider mb-1">Potential</div>
+                                        <div className={`font-black font-display text-sm flex items-center gap-1 ${item.target
+                                            ? item.upside >= 0 ? 'text-[var(--color-clay-success)]' : 'text-[var(--color-clay-danger)]'
+                                            : 'text-[var(--color-clay-muted)]'
                                             }`}>
                                             {item.target ? (
                                                 <>
@@ -636,10 +636,10 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
                                 {/* Rating Bar */}
                                 <div className="space-y-1.5">
-                                    <div className="flex justify-between text-[10px] text-zinc-500 uppercase tracking-wider">
+                                    <div className="flex justify-between text-[10px] text-[var(--color-clay-muted)] font-bold uppercase tracking-wider">
                                         <span>Ratings ({item.totalVotes})</span>
                                     </div>
-                                    <div className="h-1.5 w-full flex rounded-full overflow-hidden bg-white/5">
+                                    <div className="h-1.5 w-full flex rounded-full overflow-hidden bg-[var(--color-clay-input-bg)] shadow-clayPressed">
                                         {item.buyVotes > 0 && (
                                             <div style={{ width: `${(item.buyVotes / item.totalVotes) * 100}%` }}
                                                 className="bg-emerald-500 h-full transition-all duration-500" />
@@ -653,7 +653,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                                 className="bg-rose-500 h-full transition-all duration-500" />
                                         )}
                                     </div>
-                                    <div className="flex justify-between text-[10px] text-zinc-500">
+                                    <div className="flex justify-between text-[10px] text-[var(--color-clay-muted)] font-bold">
                                         <span>Buy {item.buyVotes}</span>
                                         <span>Hold {item.holdVotes}</span>
                                         <span>Sell {item.sellVotes}</span>
