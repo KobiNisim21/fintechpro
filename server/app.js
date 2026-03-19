@@ -39,11 +39,18 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Connect to MongoDB
-// Note: In Vercel serverless, connection might need to be managed differently (cached), 
-// but mongoose usually handles connection pooling well enough for this scale.
-// We export the promise so Vercel can await it.
-const dbConnection = connectDB().catch(err => console.error('Initial MongoDB connection error:', err));
+// Database Connection Middleware
+// Ensures the DB is connected before any route logic executes, 
+// crucial since we disabled bufferCommands in database.js
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        console.error('MongoDB Connection Error in middleware:', err);
+        res.status(500).json({ message: 'Database connection failed' });
+    }
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -65,4 +72,4 @@ app.get('/api', (req, res) => {
 app.use(errorHandler);
 
 export default app;
-export { corsOptions, dbConnection };
+export { corsOptions };
