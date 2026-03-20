@@ -68,8 +68,11 @@ app.get('/api', (req, res) => {
     res.json({ message: 'TraderAI API Root' });
 });
 
+// Export connection promise for Vercel Serverless/Cron functions
+const dbConnection = connectDB().catch(err => console.error('Initial MongoDB connection error:', err));
+
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
 export default app;
-export { corsOptions };
+export { corsOptions, dbConnection };

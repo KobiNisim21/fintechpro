@@ -1,19 +1,10 @@
-import app, { dbConnection } from '../server/app.js';
+// Initialize the Vercel serverless handler
+import app from '../server/app.js';
 
 export default async function handler(req, res) {
     try {
-        console.log('API Handler triggered');
-
-        // Dynamically import app to catch initialization errors
-        const { default: app, dbConnection } = await import('../server/app.js');
-        console.log('App loaded');
-
-        // Ensure DB is connected before handling the request
-        if (dbConnection) {
-            await dbConnection;
-            console.log('DB Connection waiting complete');
-        }
-
+        // Return the Express app wrapped as the serverless handler
+        // The DB connection is securely handled by the app.js level middleware
         return app(req, res);
     } catch (error) {
         console.error('Vercel Handler Error:', error);
