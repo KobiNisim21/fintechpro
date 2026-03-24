@@ -18,27 +18,28 @@ const COLORS = [
     '#a78bfa', '#fb923c', '#38bdf8', '#4ade80', '#e879f9',
 ];
 
-// ─── Sector Tile Gradients (dark glass style) ────────────────────
-const SECTOR_GRADIENTS = [
-    ['#0d9488', '#003B26'],   // teal
-    ['#334155', '#1e293b'],   // slate-dark
-    ['#9f1239', '#4c0519'],   // rose-dark
-    ['#d97706', '#78350f'],   // amber-dark
-    ['#2563eb', '#1e3a5f'],   // blue-dark
-    ['#7c3aed', '#3b0764'],   // violet-dark
-    ['#059669', '#022c22'],   // emerald-dark
-    ['#ea580c', '#431407'],   // orange-dark
-    ['#0891b2', '#083344'],   // cyan-dark
-    ['#4f46e5', '#1e1b4b'],   // indigo-dark
+// ─── Sector Tile Gradients (soft pastel, iOS-integrated) ─────────
+const SECTOR_GRADIENTS: [string, string, string][] = [
+    // [gradient-from, gradient-to, text-color]
+    ['#0d9488', '#0f766e', '#ffffff'],   // teal
+    ['#6366f1', '#4338ca', '#ffffff'],   // indigo
+    ['#f59e0b', '#d97706', '#1e293b'],   // amber
+    ['#ec4899', '#be185d', '#ffffff'],   // pink
+    ['#3b82f6', '#2563eb', '#ffffff'],   // blue
+    ['#8b5cf6', '#6d28d9', '#ffffff'],   // violet
+    ['#10b981', '#059669', '#ffffff'],   // emerald
+    ['#f97316', '#ea580c', '#ffffff'],   // orange
+    ['#06b6d4', '#0891b2', '#ffffff'],   // cyan
+    ['#a855f7', '#7c3aed', '#ffffff'],   // purple
 ];
 
 // ─── Skeleton Component ─────────────────────────────────────────
 const Skeleton = ({ className = '' }: { className?: string }) => (
-    <div className={`animate-pulse bg-[var(--color-ios-input)] rounded-[16px] ${className}`} />
+    <div className={`animate-pulse bg-slate-100 rounded-[16px] ${className}`} />
 );
 
 const SkeletonCard = () => (
-    <div className="bg-[var(--color-ios-card)] backdrop-blur-xl border border-white/60 shadow-[var(--shadow-ios-card)] rounded-[32px] p-5 space-y-4">
+    <div className="glass-card rounded-[32px] p-5 space-y-4">
         <div className="flex justify-between items-start">
             <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -68,7 +69,7 @@ const SkeletonCard = () => (
 );
 
 const SkeletonChart = () => (
-    <Card className="bg-[var(--color-ios-card)] backdrop-blur-xl border-white/60 rounded-[32px] shadow-[var(--shadow-ios-card)]">
+    <Card className="glass-card rounded-[32px]">
         <CardHeader className="pb-2">
             <Skeleton className="h-6 w-44" />
         </CardHeader>
@@ -83,7 +84,6 @@ const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
     const totalValue = data.reduce((sum, d) => sum + d.value, 0);
     if (totalValue === 0 || data.length === 0) return <div className="text-slate-400 text-center py-8">No sector data</div>;
 
-    // Calculate percentages and assign grid areas
     const items = data.map((d, i) => ({
         ...d,
         percent: (d.value / totalValue) * 100,
@@ -91,39 +91,29 @@ const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
     }));
 
     return (
-        <div
-            className="rounded-2xl p-3 w-full h-full min-h-[340px]"
-            style={{
-                background: 'rgba(30, 30, 35, 0.8)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-            }}
-        >
-            <div className="grid grid-cols-3 auto-rows-fr gap-3 h-full" style={{ minHeight: '310px' }}>
-                {items.map((item, i) => {
-                    // First 2 sectors get larger tiles (span 1 col, taller)
-                    const isLarge = i < 2;
-                    return (
-                        <div
-                            key={item.name}
-                            className={`flex flex-col justify-end p-4 overflow-hidden transition-transform duration-200 hover:scale-[1.02] cursor-pointer ${
-                                isLarge ? 'row-span-2' : ''
-                            }`}
-                            style={{
-                                borderRadius: '16px',
-                                background: `linear-gradient(180deg, ${item.gradient[0]} 0%, ${item.gradient[1]} 100%)`,
-                            }}
-                        >
-                            <span className="text-white/80 text-sm font-medium leading-tight truncate" style={{ fontWeight: 500 }}>
-                                {item.name}
-                            </span>
-                            <span className="text-white text-xl font-semibold mt-0.5" style={{ fontWeight: 600 }}>
-                                {item.percent.toFixed(1)}%
-                            </span>
-                        </div>
-                    );
-                })}
-            </div>
+        <div className="grid grid-cols-3 auto-rows-fr gap-3 w-full h-full min-h-[340px]">
+            {items.map((item, i) => {
+                const isLarge = i < 2;
+                const textColor = item.gradient[2];
+                return (
+                    <div
+                        key={item.name}
+                        className={`flex flex-col justify-end p-4 overflow-hidden rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer ${
+                            isLarge ? 'row-span-2' : ''
+                        }`}
+                        style={{
+                            background: `linear-gradient(135deg, ${item.gradient[0]} 0%, ${item.gradient[1]} 100%)`,
+                        }}
+                    >
+                        <span className="text-sm font-medium leading-tight truncate" style={{ color: textColor, opacity: 0.85 }}>
+                            {item.name}
+                        </span>
+                        <span className="text-xl font-bold mt-0.5" style={{ color: textColor }}>
+                            {item.percent.toFixed(1)}%
+                        </span>
+                    </div>
+                );
+            })}
         </div>
     );
 };
