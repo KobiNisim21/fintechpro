@@ -2,7 +2,7 @@ import { usePortfolio } from '@/context/PortfolioContext';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
-    PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Treemap,
+    PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip,
 } from 'recharts';
 import { stocksAPI } from '@/api/stocks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,20 @@ import PortfolioBenchmarkChart from './Analytics/PortfolioBenchmarkChart';
 const COLORS = [
     '#22d3ee', '#34d399', '#818cf8', '#f472b6', '#fbbf24',
     '#a78bfa', '#fb923c', '#38bdf8', '#4ade80', '#e879f9',
+];
+
+// ─── Sector Tile Gradients (dark glass style) ────────────────────
+const SECTOR_GRADIENTS = [
+    ['#0d9488', '#003B26'],   // teal
+    ['#334155', '#1e293b'],   // slate-dark
+    ['#9f1239', '#4c0519'],   // rose-dark
+    ['#d97706', '#78350f'],   // amber-dark
+    ['#2563eb', '#1e3a5f'],   // blue-dark
+    ['#7c3aed', '#3b0764'],   // violet-dark
+    ['#059669', '#022c22'],   // emerald-dark
+    ['#ea580c', '#431407'],   // orange-dark
+    ['#0891b2', '#083344'],   // cyan-dark
+    ['#4f46e5', '#1e1b4b'],   // indigo-dark
 ];
 
 // ─── Skeleton Component ─────────────────────────────────────────
@@ -64,41 +78,53 @@ const SkeletonChart = () => (
     </Card>
 );
 
-// ─── Custom Treemap Cell (Bento-box iOS style) ──────────────────
-const BentoTreemapContent = (props: any) => {
-    const { root, x, y, width, height, index, name, value, colors } = props;
-    const GAP = 3;
-    const RADIUS = 10;
-    const clampedX = x + GAP / 2;
-    const clampedY = y + GAP / 2;
-    const clampedW = Math.max(width - GAP, 0);
-    const clampedH = Math.max(height - GAP, 0);
-    const fillColor = colors[index % colors.length];
+// ─── Sector Distribution Grid Component ─────────────────────────
+const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
+    const totalValue = data.reduce((sum, d) => sum + d.value, 0);
+    if (totalValue === 0 || data.length === 0) return <div className="text-slate-400 text-center py-8">No sector data</div>;
 
+    // Calculate percentages and assign grid areas
+    const items = data.map((d, i) => ({
+        ...d,
+        percent: (d.value / totalValue) * 100,
+        gradient: SECTOR_GRADIENTS[i % SECTOR_GRADIENTS.length],
+    }));
 
     return (
-        <g>
-            <rect x={clampedX} y={clampedY} width={clampedW} height={clampedH}
-                rx={RADIUS} ry={RADIUS}
-                style={{ fill: fillColor, fillOpacity: 0.82, stroke: 'none' }}
-            />
-            {clampedW > 30 && clampedH > 30 && (
-                <foreignObject x={clampedX} y={clampedY} width={clampedW} height={clampedH}>
-                    <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center overflow-hidden">
-                        <span className="text-[var(--color-ios-fg)] font-bold leading-tight break-words w-full "
-                            style={{ fontSize: clampedW < 60 ? '9px' : '12px' }}>
-                            {name}
-                        </span>
-                        {clampedH > 50 && root?.value > 0 && (
-                            <span className="text-[var(--color-ios-fg)] font-extrabold mt-0.5 opacity-80"
-                                style={{ fontSize: clampedW < 60 ? '8px' : '10px' }}>
-                                {((value / root.value) * 100).toFixed(1)}%
+        <div
+            className="rounded-2xl p-3 w-full h-full min-h-[340px]"
+            style={{
+                background: 'rgba(30, 30, 35, 0.8)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+            }}
+        >
+            <div className="grid grid-cols-3 auto-rows-fr gap-3 h-full" style={{ minHeight: '310px' }}>
+                {items.map((item, i) => {
+                    // First 2 sectors get larger tiles (span 1 col, taller)
+                    const isLarge = i < 2;
+                    return (
+                        <div
+                            key={item.name}
+                            className={`flex flex-col justify-end p-4 overflow-hidden transition-transform duration-200 hover:scale-[1.02] cursor-pointer ${
+                                isLarge ? 'row-span-2' : ''
+                            }`}
+                            style={{
+                                borderRadius: '16px',
+                                background: `linear-gradient(180deg, ${item.gradient[0]} 0%, ${item.gradient[1]} 100%)`,
+                            }}
+                        >
+                            <span className="text-white/80 text-sm font-medium leading-tight truncate" style={{ fontWeight: 500 }}>
+                                {item.name}
                             </span>
-                        )}
-                    </div>
-                </foreignObject>
-            )}
-        </g>
+                            <span className="text-white text-xl font-semibold mt-0.5" style={{ fontWeight: 600 }}>
+                                {item.percent.toFixed(1)}%
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
     );
 };
 
@@ -485,45 +511,29 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     </CardContent>
                 </Card>
 
-                {/* ── Sector Distribution (Treemap) ── */}
+                {/* ── Sector Distribution (Grid) ── */}
                 {!insightsLoaded ? (
-                    <Card className="bg-[var(--color-ios-card)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)] h-full flex flex-col">
+                    <Card className="glass-card rounded-[32px] h-full flex flex-col">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
+                            <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2 tracking-tight">
                                 <Activity className="w-5 h-5 text-violet-400" />
                                 Sector Distribution
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1 min-h-[340px]">
-                            <div className="w-full h-full bg-[var(--color-ios-input)] rounded-[16px] animate-pulse" />
+                            <div className="w-full h-full bg-slate-100 rounded-2xl animate-pulse" />
                         </CardContent>
                     </Card>
                 ) : (
-                    <Card className="bg-[var(--color-ios-card)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)] h-full flex flex-col">
+                    <Card className="glass-card rounded-[32px] h-full flex flex-col">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
+                            <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2 tracking-tight">
                                 <Activity className="w-5 h-5 text-violet-400" />
                                 Sector Distribution
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="flex-1 min-h-[340px]">
-                            {sectorData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <Treemap
-                                        data={sectorData}
-                                        dataKey="value"
-                                        aspectRatio={isMobile ? 1 / 2 : 4 / 3}
-                                        stroke="none"
-                                        content={<BentoTreemapContent colors={COLORS} />}
-                                    >
-                                        <RechartsTooltip content={<CustomTooltip />} />
-                                    </Treemap>
-                                </ResponsiveContainer>
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-zinc-500">
-                                    No sector data available
-                                </div>
-                            )}
+                        <CardContent className="flex-1">
+                            <SectorGrid data={sectorData} />
                         </CardContent>
                     </Card>
                 )}

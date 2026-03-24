@@ -12,11 +12,11 @@ const COUNTRY_FLAGS: Record<string, string> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-    fed: 'text-amber-400',
-    inflation: 'text-rose-400',
-    employment: 'text-cyan-400',
-    gdp: 'text-emerald-400',
-    central_bank: 'text-violet-400',
+    fed: 'text-amber-600',
+    inflation: 'text-rose-500',
+    employment: 'text-cyan-600',
+    gdp: 'text-emerald-600',
+    central_bank: 'text-violet-500',
 };
 
 function formatDate(dateStr: string) {
@@ -35,7 +35,7 @@ function ImportanceStars({ level }: { level: number }) {
             {[1, 2, 3].map(i => (
                 <Star
                     key={i}
-                    className={`w-3 h-3 ${i <= level ? 'text-amber-400 fill-amber-400' : 'text-white/10'}`}
+                    className={`w-3 h-3 ${i <= level ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}`}
                 />
             ))}
         </span>
@@ -84,22 +84,22 @@ export function MarketCalendar() {
     ];
 
     return (
-        <Card className="bg-white/5 border-white/10 backdrop-blur-md">
+        <Card className="glass-card rounded-[32px]">
             <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-white/90">
-                    <Calendar className="w-5 h-5 text-cyan-400" />
+                <CardTitle className="flex items-center gap-2 text-slate-800 font-bold">
+                    <Calendar className="w-5 h-5 text-cyan-500" />
                     Market Calendar
                 </CardTitle>
 
                 {/* Tab Bar */}
-                <div className="flex gap-1 mt-3 p-1 bg-white/5 rounded-lg">
+                <div className="flex gap-1 mt-3 p-1 bg-slate-100 rounded-lg">
                     {tabs.map(tab => (
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
                             className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === tab.key
-                                ? 'bg-cyan-500/20 text-cyan-400'
-                                : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
                                 }`}
                         >
                             {tab.label}
@@ -115,7 +115,7 @@ export function MarketCalendar() {
                 {loading ? (
                     <div className="space-y-3">
                         {[1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className="h-10 bg-white/5 rounded-lg animate-pulse" />
+                            <div key={i} className="h-10 bg-slate-100 rounded-lg animate-pulse" />
                         ))}
                     </div>
                 ) : (
@@ -124,17 +124,17 @@ export function MarketCalendar() {
                         {activeTab === 'events' && (
                             <div className="space-y-1 max-h-[400px] overflow-y-auto pr-1">
                                 {(data?.economicEvents || []).length === 0 ? (
-                                    <p className="text-center text-white/30 text-sm py-8">No upcoming events</p>
+                                    <p className="text-center text-slate-400 text-sm py-8">No upcoming events</p>
                                 ) : (
                                     (data?.economicEvents || []).map((event, i) => (
                                         <div
                                             key={i}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors group"
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors group"
                                         >
                                             {/* Date */}
                                             <div className="flex flex-col items-center min-w-[52px]">
-                                                <span className="text-[10px] text-white/30 uppercase">{formatWeekday(event.date)}</span>
-                                                <span className="text-sm font-semibold text-white/70">{formatDate(event.date)}</span>
+                                                <span className="text-[10px] text-slate-400 uppercase">{formatWeekday(event.date)}</span>
+                                                <span className="text-sm font-semibold text-slate-600">{formatDate(event.date)}</span>
                                             </div>
 
                                             {/* Flag */}
@@ -144,12 +144,12 @@ export function MarketCalendar() {
                                             <ImportanceStars level={event.importance} />
 
                                             {/* Event Name */}
-                                            <span className={`text-sm font-medium flex-1 ${CATEGORY_COLORS[event.category] || 'text-white/80'}`}>
+                                            <span className={`text-sm font-medium flex-1 ${CATEGORY_COLORS[event.category] || 'text-slate-700'}`}>
                                                 {event.event}
                                             </span>
 
                                             {/* Time */}
-                                            <span className="text-[10px] text-white/25 hidden sm:block">{event.time} ET</span>
+                                            <span className="text-[10px] text-slate-400 hidden sm:block">{event.time} ET</span>
                                         </div>
                                     ))
                                 )}
@@ -160,28 +160,28 @@ export function MarketCalendar() {
                         {activeTab === 'holidays' && (
                             <div className="space-y-1 max-h-[400px] overflow-y-auto pr-1">
                                 {futureHolidays.length === 0 ? (
-                                    <p className="text-center text-white/30 text-sm py-8">No upcoming market holidays</p>
+                                    <p className="text-center text-slate-400 text-sm py-8">No upcoming market holidays</p>
                                 ) : (
                                     futureHolidays.map((holiday, i) => (
                                         <div
                                             key={i}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors"
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors"
                                         >
                                             <div className="flex flex-col items-center min-w-[52px]">
-                                                <span className="text-[10px] text-white/30 uppercase">{formatWeekday(holiday.date)}</span>
-                                                <span className="text-sm font-semibold text-white/70">{formatDate(holiday.date)}</span>
+                                                <span className="text-[10px] text-slate-400 uppercase">{formatWeekday(holiday.date)}</span>
+                                                <span className="text-sm font-semibold text-slate-600">{formatDate(holiday.date)}</span>
                                             </div>
 
-                                            <AlertTriangle className="w-4 h-4 text-rose-400" />
+                                            <AlertTriangle className="w-4 h-4 text-rose-500" />
 
                                             <div className="flex-1">
-                                                <span className="text-sm font-medium text-rose-300">{holiday.name}</span>
-                                                <span className="text-[10px] text-white/25 ml-2">
+                                                <span className="text-sm font-medium text-rose-600">{holiday.name}</span>
+                                                <span className="text-[10px] text-slate-400 ml-2">
                                                     {holiday.tradingHour === 'closed' ? 'Exchange Closed' : holiday.tradingHour}
                                                 </span>
                                             </div>
 
-                                            <span className="text-[10px] text-white/20 uppercase">{holiday.exchange}</span>
+                                            <span className="text-[10px] text-slate-400 uppercase">{holiday.exchange}</span>
                                         </div>
                                     ))
                                 )}
@@ -193,25 +193,25 @@ export function MarketCalendar() {
                             <div className="space-y-1 max-h-[400px] overflow-y-auto pr-1">
                                 {(data?.stockSplits || []).length === 0 ? (
                                     <div className="text-center py-8">
-                                        <Scissors className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                                        <p className="text-white/30 text-sm">No upcoming splits for your holdings</p>
+                                        <Scissors className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+                                        <p className="text-slate-400 text-sm">No upcoming splits for your holdings</p>
                                     </div>
                                 ) : (
                                     (data?.stockSplits || []).map((split, i) => (
                                         <div
                                             key={i}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors"
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors"
                                         >
                                             <div className="flex flex-col items-center min-w-[52px]">
-                                                <span className="text-[10px] text-white/30 uppercase">{formatWeekday(split.date)}</span>
-                                                <span className="text-sm font-semibold text-white/70">{formatDate(split.date)}</span>
+                                                <span className="text-[10px] text-slate-400 uppercase">{formatWeekday(split.date)}</span>
+                                                <span className="text-sm font-semibold text-slate-600">{formatDate(split.date)}</span>
                                             </div>
 
-                                            <Scissors className="w-4 h-4 text-violet-400" />
+                                            <Scissors className="w-4 h-4 text-violet-500" />
 
                                             <div className="flex-1">
-                                                <span className="text-sm font-bold text-violet-300">{split.symbol}</span>
-                                                <span className="text-xs text-white/40 ml-2">{split.description}</span>
+                                                <span className="text-sm font-bold text-violet-600">{split.symbol}</span>
+                                                <span className="text-xs text-slate-400 ml-2">{split.description}</span>
                                             </div>
                                         </div>
                                     ))

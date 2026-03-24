@@ -21,7 +21,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
         const labelSize = corrSymbols.length <= 5 ? 36 : corrSymbols.length <= 8 ? 28 : 22;
 
         const getColor = (val: number | null) => {
-            if (val === null) return 'rgba(255,255,255,0.05)';
+            if (val === null) return 'rgba(0,0,0,0.03)';
             if (val >= 0) {
                 const g = Math.round(120 + val * 135);
                 return `rgba(${Math.round(34 + (1 - val) * 100)}, ${g}, ${Math.round(100 - val * 40)}, ${0.15 + val * 0.5})`;
@@ -35,17 +35,17 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
     }, [data, isLoading]);
 
     return (
-        <Card className="bg-white/5 backdrop-blur-md border-white/10 rounded-2xl shadow-lg lg:col-span-2 relative overflow-hidden">
+        <Card className="glass-card rounded-[32px] lg:col-span-2 relative overflow-hidden">
             <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-violet-400" />
                     Correlation Matrix
-                    <span className="text-[10px] text-white/30 ml-auto">30-day Pearson</span>
+                    <span className="text-[10px] text-slate-400 ml-auto">30-day Pearson</span>
                 </CardTitle>
             </CardHeader>
             <CardContent>
                 {!content ? (
-                    <div className="w-full h-[280px] bg-white/5 rounded-xl animate-pulse" />
+                    <div className="w-full h-[280px] bg-slate-100 rounded-xl animate-pulse" />
                 ) : (
                     <div className="overflow-x-auto overflow-y-hidden w-full py-2 pb-4 max-h-[420px]">
                         <div style={{ display: 'block', width: 'fit-content', margin: '0 auto' }}>
@@ -53,7 +53,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                             <div className="flex" style={{ paddingLeft: content.labelSize }}>
                                 {content.corrSymbols.map(sym => (
                                     <div key={sym} style={{ width: content.cellSize, minWidth: content.cellSize }}
-                                        className="text-[9px] text-white/40 text-center font-mono truncate">
+                                        className="text-[9px] text-slate-500 text-center font-mono truncate">
                                         {sym}
                                     </div>
                                 ))}
@@ -62,7 +62,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                             {content.matrix.map((row, i) => (
                                 <div key={i} className="flex items-center">
                                     <div style={{ width: content.labelSize, minWidth: content.labelSize }}
-                                        className="text-[9px] text-white/40 font-mono truncate pr-1 text-right">
+                                        className="text-[9px] text-slate-500 font-mono truncate pr-1 text-right">
                                         {content.corrSymbols[i]}
                                     </div>
                                     {row.map((val, j) => (
@@ -75,11 +75,11 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                                             }}
                                         >
                                             {content.cellSize >= 36 && val !== null && (
-                                                <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono text-white/60">
+                                                <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono text-slate-700">
                                                     {val.toFixed(2)}
                                                 </span>
                                             )}
-                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 text-white text-xs font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
                                                 {content.corrSymbols[i]} vs {content.corrSymbols[j]}: {val !== null ? val.toFixed(2) : 'N/A'}
                                             </div>
                                         </div>
