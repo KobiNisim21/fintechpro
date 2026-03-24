@@ -22,20 +22,20 @@ interface WatchlistStock extends WatchlistItem {
 // ─── Skeleton ───────────────────────────────────────────────────
 function SkeletonCard() {
     return (
-        <div className="relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] backdrop-blur-xl border border-white/60 shadow-clayCard p-5 pb-6 animate-pulse">
+        <div className="relative overflow-hidden rounded-[32px] bg-[var(--color-ios-card)] backdrop-blur-xl border border-white/60 shadow-[var(--shadow-ios-card)] p-5 pb-6 animate-pulse">
             <div className="flex justify-between items-start mb-4">
                 <div>
-                    <div className="h-5 w-20 bg-[var(--color-clay-input-bg)] rounded mb-2" />
-                    <div className="h-3 w-32 bg-[var(--color-clay-input-bg)] rounded" />
+                    <div className="h-5 w-20 bg-[var(--color-ios-input)] rounded mb-2" />
+                    <div className="h-3 w-32 bg-[var(--color-ios-input)] rounded" />
                 </div>
-                <div className="h-8 w-24 bg-[var(--color-clay-input-bg)] rounded" />
+                <div className="h-8 w-24 bg-[var(--color-ios-input)] rounded" />
             </div>
             <div className="grid grid-cols-4 gap-2 mb-4">
                 {[0, 1, 2, 3].map(i => (
-                    <div key={i} className="h-12 bg-[var(--color-clay-input-bg)] rounded-[16px]" />
+                    <div key={i} className="h-12 bg-[var(--color-ios-input)] rounded-[16px]" />
                 ))}
             </div>
-            <div className="h-32 bg-[var(--color-clay-input-bg)] rounded-[16px]" />
+            <div className="h-32 bg-[var(--color-ios-input)] rounded-[16px]" />
         </div>
     );
 }
@@ -44,9 +44,9 @@ function SkeletonCard() {
 function ChartTooltipContent({ active, payload, label }: any) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-[var(--color-clay-card-bg)] border border-white/60 rounded-[16px] px-3 py-2 backdrop-blur-xl shadow-clayCard">
-            <p className="text-[var(--color-clay-muted)] font-display text-xs mb-0.5">{label}</p>
-            <p className="text-[var(--color-clay-fg)] font-black font-display text-sm">${payload[0].value.toFixed(2)}</p>
+        <div className="bg-[var(--color-ios-card)] border border-white/60 rounded-[16px] px-3 py-2 backdrop-blur-xl shadow-[var(--shadow-ios-card)]">
+            <p className="text-[var(--color-ios-secondary)]  text-xs mb-0.5">{label}</p>
+            <p className="text-[var(--color-ios-fg)] font-bold  text-sm">${payload[0].value.toFixed(2)}</p>
         </div>
     );
 }
@@ -54,17 +54,17 @@ function ChartTooltipContent({ active, payload, label }: any) {
 // ─── Change Badge ───────────────────────────────────────────────
 function ChangeBadge({ label, value }: { label: string; value: number | null }) {
     if (value === null) return (
-        <div className="flex flex-col items-center p-2 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed">
-            <span className="text-[10px] text-[var(--color-clay-muted)] uppercase tracking-wide font-bold">{label}</span>
-            <span className="text-xs text-[var(--color-clay-muted)] font-bold mt-0.5">—</span>
+        <div className="flex flex-col items-center p-2 rounded-[16px] bg-[var(--color-ios-input)] shadow-none">
+            <span className="text-[10px] text-[var(--color-ios-secondary)] uppercase tracking-wide font-bold">{label}</span>
+            <span className="text-xs text-[var(--color-ios-secondary)] font-bold mt-0.5">—</span>
         </div>
     );
 
     const isPositive = value >= 0;
     return (
-        <div className="flex flex-col items-center p-2 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayOrb transition-colors">
-            <span className="text-[10px] text-[var(--color-clay-muted)] uppercase tracking-wide font-bold">{label}</span>
-            <span className={`text-xs font-black font-display mt-0.5 flex items-center gap-0.5 ${isPositive ? 'text-[var(--color-clay-success)]' : 'text-[var(--color-clay-danger)]'}`}>
+        <div className="flex flex-col items-center p-2 rounded-[16px] bg-[var(--color-ios-input)] shadow-[var(--shadow-ios-card)] transition-colors">
+            <span className="text-[10px] text-[var(--color-ios-secondary)] uppercase tracking-wide font-bold">{label}</span>
+            <span className={`text-xs font-bold  mt-0.5 flex items-center gap-0.5 ${isPositive ? 'text-[var(--color-ios-success)]' : 'text-[var(--color-ios-danger)]'}`}>
                 {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 {isPositive ? '+' : ''}{value.toFixed(2)}%
             </span>
@@ -250,17 +250,17 @@ export function WatchlistView() {
     // ─── Empty State ──────────────────────────────────────────────
     if (!loading && watchlist.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 bg-[var(--color-clay-card-bg)] rounded-[32px] border border-white/60 shadow-clayCard">
-                <div className="w-20 h-20 rounded-[24px] bg-[var(--color-clay-input-bg)] flex items-center justify-center mb-6 shadow-clayPressed text-cyan-500">
+            <div className="flex flex-col items-center justify-center py-20 bg-[var(--color-ios-card)] rounded-[32px] border border-white/60 shadow-[var(--shadow-ios-card)]">
+                <div className="w-20 h-20 rounded-[24px] bg-[var(--color-ios-input)] flex items-center justify-center mb-6 shadow-none text-cyan-500">
                     <Eye className="w-10 h-10" />
                 </div>
-                <h3 className="text-xl font-black font-display text-[var(--color-clay-fg)] mb-2">No Stocks in Watchlist</h3>
-                <p className="text-[var(--color-clay-muted)] font-bold text-sm mb-6 text-center max-w-sm">
+                <h3 className="text-xl font-bold  text-[var(--color-ios-fg)] mb-2">No Stocks in Watchlist</h3>
+                <p className="text-[var(--color-ios-secondary)] font-bold text-sm mb-6 text-center max-w-sm">
                     Add stocks to track their daily, weekly, monthly, and yearly performance — without adding them to your portfolio.
                 </p>
                 <Button
                     onClick={() => setAddDialogOpen(true)}
-                    className="bg-[var(--color-clay-input-bg)] hover:bg-white text-[var(--color-clay-fg)] font-bold border-none shadow-clayOrb hover:shadow-clayCard active:scale-[0.92] transition-all"
+                    className="bg-[var(--color-ios-input)] hover:bg-white text-[var(--color-ios-fg)] font-bold border-none shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] active:scale-[0.92] transition-all"
                 >
                     <Plus className="w-4 h-4 mr-2" /> Add to Watchlist
                 </Button>
@@ -278,8 +278,8 @@ export function WatchlistView() {
                         onClick={() => { setAddDialogOpen(false); setSearchQuery(''); setSearchResults([]); }}
                         style={{
                             position: 'absolute', top: '-4px', right: '-4px',
-                            background: 'var(--color-clay-input-bg)', border: 'none',
-                            color: 'var(--color-clay-muted)', cursor: 'pointer',
+                            background: 'var(--color-ios-input)', border: 'none',
+                            color: 'var(--color-ios-secondary)', cursor: 'pointer',
                             padding: '8px', borderRadius: '16px',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             transition: 'all 0.2s', boxShadow: 'inset -2px -2px 5px rgba(255, 255, 255, 0.7), inset 2px 2px 5px rgba(0, 0, 0, 0.05)'
@@ -288,22 +288,22 @@ export function WatchlistView() {
                         <X className="w-5 h-5" />
                     </button>
 
-                    <h2 className="text-2xl font-black font-display text-[var(--color-clay-fg)] mb-2">
+                    <h2 className="text-2xl font-bold  text-[var(--color-ios-fg)] mb-2">
                         Add to Watchlist
                     </h2>
-                    <p className="text-sm font-bold text-[var(--color-clay-muted)] mb-4">
+                    <p className="text-sm font-bold text-[var(--color-ios-secondary)] mb-4">
                         Search for a stock to track its performance.
                     </p>
 
                     {/* Search Input */}
                     <div className="relative mb-4">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-clay-muted)]" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-ios-secondary)]" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search by symbol or name..."
-                            className="w-full pl-11 pr-4 py-3 bg-[var(--color-clay-input-bg)] shadow-clayPressed rounded-[16px] text-[var(--color-clay-fg)] font-bold text-sm placeholder:text-[var(--color-clay-muted)] focus:outline-none focus:ring-2 focus:ring-violet-400 transition-all font-display border-none"
+                            className="w-full pl-11 pr-4 py-3 bg-[var(--color-ios-input)] shadow-none rounded-[16px] text-[var(--color-ios-fg)] font-bold text-sm placeholder:text-[var(--color-ios-secondary)] focus:outline-none focus:ring-2 focus:ring-violet-400 transition-all  border-none"
                             autoFocus
                         />
                     </div>
@@ -311,22 +311,22 @@ export function WatchlistView() {
                     {/* Results */}
                     <div className="max-h-64 overflow-y-auto space-y-2 p-1">
                         {searching && (
-                            <div className="text-center py-6 text-[var(--color-clay-muted)] font-bold text-sm">Searching...</div>
+                            <div className="text-center py-6 text-[var(--color-ios-secondary)] font-bold text-sm">Searching...</div>
                         )}
                         {!searching && searchQuery.length > 1 && searchResults.length === 0 && (
-                            <div className="text-center py-6 text-[var(--color-clay-muted)] font-bold text-sm">No stocks found.</div>
+                            <div className="text-center py-6 text-[var(--color-ios-secondary)] font-bold text-sm">No stocks found.</div>
                         )}
                         {searchResults.map((stock) => (
                             <button
                                 key={stock.symbol}
                                 onClick={() => handleAdd(stock.symbol, stock.description)}
                                 disabled={addingSymbol === stock.symbol}
-                                className="w-full flex items-center justify-between p-3 rounded-[16px] hover:bg-white/80 bg-[var(--color-clay-card-bg)] shadow-clayOrb hover:shadow-clayCard active:scale-[0.98] transition-all group text-left border-white/60 border"
+                                className="w-full flex items-center justify-between p-3 rounded-[16px] hover:bg-white/80 bg-[var(--color-ios-card)] shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] active:scale-[0.98] transition-all group text-left border-white/60 border"
                             >
                                 <div>
-                                    <span className="text-[var(--color-clay-fg)] font-black font-display text-sm">{stock.displaySymbol}</span>
-                                    <span className="text-[var(--color-clay-muted)] font-bold text-xs ml-2">{stock.type}</span>
-                                    <p className="text-[var(--color-clay-muted)] font-bold text-xs mt-0.5 truncate max-w-[220px]">{stock.description}</p>
+                                    <span className="text-[var(--color-ios-fg)] font-bold  text-sm">{stock.displaySymbol}</span>
+                                    <span className="text-[var(--color-ios-secondary)] font-bold text-xs ml-2">{stock.type}</span>
+                                    <p className="text-[var(--color-ios-secondary)] font-bold text-xs mt-0.5 truncate max-w-[220px]">{stock.description}</p>
                                 </div>
                                 <span className="text-cyan-600 font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity">
                                     {addingSymbol === stock.symbol ? 'Adding...' : '+ Add'}
@@ -344,14 +344,14 @@ export function WatchlistView() {
         <div>
             {/* Header with Add Button */}
             <div className="flex items-center justify-between mb-4 px-2">
-                <div className="flex items-center gap-2 text-[var(--color-clay-muted)] font-bold">
+                <div className="flex items-center gap-2 text-[var(--color-ios-secondary)] font-bold">
                     <Eye className="w-5 h-5 text-cyan-600" />
                     <span className="text-sm">{watchlist.length} stock{watchlist.length !== 1 ? 's' : ''} tracked</span>
                 </div>
                 <Button
                     onClick={() => setAddDialogOpen(true)}
                     size="sm"
-                    className="bg-[var(--color-clay-input-bg)] hover:bg-white text-[var(--color-clay-fg)] font-bold shadow-clayOrb hover:shadow-clayCard border-none active:scale-[0.92] transition-all rounded-[16px] px-4"
+                    className="bg-[var(--color-ios-input)] hover:bg-white text-[var(--color-ios-fg)] font-bold shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] border-none active:scale-[0.92] transition-all rounded-[16px] px-4"
                 >
                     <Plus className="w-4 h-4 mr-1" /> Add Stock
                 </Button>
@@ -364,12 +364,12 @@ export function WatchlistView() {
                     : watchlist.map(stock => (
                         <div
                             key={stock._id}
-                            className="relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] border border-white/60 backdrop-blur-xl shadow-clayCard p-5 pb-6 hover:-translate-y-2 hover:shadow-clayCardHover transition-all duration-500 group cursor-pointer"
+                            className="relative overflow-hidden rounded-[32px] bg-[var(--color-ios-card)] border border-white/60 backdrop-blur-xl shadow-[var(--shadow-ios-card)] p-5 pb-6 hover:-translate-y-2 hover:shadow-[var(--shadow-ios-card)]Hover transition-all duration-500 group cursor-pointer"
                         >
                             {/* Remove Button */}
                             <button
                                 onClick={() => handleRemove(stock._id)}
-                                className="absolute top-3 right-3 p-2 rounded-[16px] bg-white/60 shadow-clayOrb hover:shadow-clayCard hover:-translate-y-1 active:scale-[0.92] text-rose-400 hover:text-rose-600 transition-all opacity-0 group-hover:opacity-100 z-20"
+                                className="absolute top-3 right-3 p-2 rounded-[16px] bg-white/60 shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] text-rose-400 hover:text-rose-600 transition-all opacity-0 group-hover:opacity-100 z-20"
                                 title="Remove from watchlist"
                             >
                                 <Trash2 className="w-4 h-4" />
@@ -383,13 +383,13 @@ export function WatchlistView() {
                                             <span className="text-cyan-400 text-xs font-bold">{stock.symbol.slice(0, 2)}</span>
                                         </div>
                                         <div>
-                                            <h3 className="text-[var(--color-clay-fg)] font-black text-lg font-display tracking-tight leading-none">{stock.symbol}</h3>
-                                            <p className="text-[13px] font-bold text-[var(--color-clay-muted)] truncate max-w-[150px] font-display mt-0.5">{stock.name}</p>
+                                            <h3 className="text-[var(--color-ios-fg)] font-bold text-lg  tracking-tight leading-none">{stock.symbol}</h3>
+                                            <p className="text-[13px] font-bold text-[var(--color-ios-secondary)] truncate max-w-[150px]  mt-0.5">{stock.name}</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="text-right mt-1">
-                                    <p className="text-xl font-black text-[var(--color-clay-fg)] font-display tracking-tight">
+                                    <p className="text-xl font-bold text-[var(--color-ios-fg)]  tracking-tight">
                                         {stock.loaded ? `$${stock.price.toFixed(2)}` : '...'}
                                     </p>
                                 </div>
@@ -417,14 +417,14 @@ export function WatchlistView() {
                                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
                                             <XAxis
                                                 dataKey="date"
-                                                stroke="var(--color-clay-muted)"
+                                                stroke="var(--color-ios-secondary)"
                                                 style={{ fontSize: '10px' }}
                                                 tickLine={false}
                                                 axisLine={false}
                                                 minTickGap={40}
                                             />
                                             <YAxis
-                                                stroke="var(--color-clay-muted)"
+                                                stroke="var(--color-ios-secondary)"
                                                 style={{ fontSize: '10px', fontWeight: 'bold' }}
                                                 tickLine={false}
                                                 axisLine={false}

@@ -20,7 +20,7 @@ export function SidebarContent() {
                                 className="w-full h-full object-contain"
                             />
                         </div>
-                        <p className="text-[12px] font-black font-display text-[var(--color-clay-success)] uppercase tracking-[0.2em] -mt-6">
+                        <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-[0.2em] -mt-6">
                             Wealth Management
                         </p>
                     </a>
@@ -32,13 +32,13 @@ export function SidebarContent() {
                 {/* Live Market News from Socket.io */}
                 <LiveMarketNews />
             </div>
-            <div className="mt-auto px-6 py-6 border-t border-white/50 bg-white/40 backdrop-blur-md shrink-0">
+            <div className="mt-auto px-6 py-6 border-t border-slate-200/50 bg-white/40 backdrop-blur-md shrink-0">
                 <button
                     onClick={logout}
-                    className="flex items-center justify-center gap-3 w-full p-4 rounded-[20px] bg-white shadow-clayOrb text-rose-500 font-bold hover:shadow-clayCard hover:-translate-y-1 active:scale-[0.92] active:shadow-clayPressed transition-all duration-300"
+                    className="flex items-center justify-center gap-3 w-full p-4 rounded-2xl glass-card-solid text-slate-800 font-bold hover-lift transition-all duration-300"
                 >
-                    <LogOut className="w-5 h-5" strokeWidth={2.5} />
-                    <span className="font-display tracking-wide uppercase text-sm">Log Out</span>
+                    <LogOut className="w-5 h-5 text-slate-700" strokeWidth={2.5} />
+                    <span className="tracking-wide uppercase text-sm">Log Out</span>
                 </button>
             </div>
         </div>

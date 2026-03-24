@@ -138,25 +138,25 @@ export function AddPositionDialog() {
         <>
             <Button
                 onClick={() => setOpen(true)}
-                className="rounded-[20px] bg-white shadow-clayOrb hover:shadow-clayCard hover:-translate-y-1 active:scale-[0.92] active:shadow-clayPressed text-[var(--color-clay-fg)] font-bold px-6 h-12 transition-all duration-300"
+                className="rounded-[20px] bg-white shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] active:shadow-none text-[var(--color-ios-fg)] font-bold px-6 h-12 transition-all duration-300"
             >
                 <Plus className="w-5 h-5 mr-2" strokeWidth={2.5} />
-                <span className="font-display tracking-wide">Add Position</span>
+                <span className=" tracking-wide">Add Position</span>
             </Button>
 
             <SimpleDialog open={open} onClose={() => setOpen(false)}>
                 <div className="relative px-2">
                     <button
                         onClick={() => setOpen(false)}
-                        className="absolute -top-2 -right-2 w-10 h-10 flex items-center justify-center rounded-[16px] text-[var(--color-clay-muted)] hover:text-rose-500 hover:bg-rose-50 active:scale-[0.92] transition-all"
+                        className="absolute -top-2 -right-2 w-10 h-10 flex items-center justify-center rounded-[16px] text-[var(--color-ios-secondary)] hover:text-rose-500 hover:bg-rose-50 active:scale-[0.92] transition-all"
                     >
                         <X className="w-5 h-5" strokeWidth={2.5} />
                     </button>
 
-                    <h2 className="text-2xl font-black font-display text-[var(--color-clay-fg)] mb-2">
+                    <h2 className="text-2xl font-bold  text-[var(--color-ios-fg)] mb-2">
                         Add New Position
                     </h2>
-                    <p className="text-[14px] font-bold text-[var(--color-clay-muted)] mb-8">
+                    <p className="text-[14px] font-bold text-[var(--color-ios-secondary)] mb-8">
                         Enter the details of the stock you want to add to your portfolio.
                     </p>
 
@@ -168,14 +168,14 @@ export function AddPositionDialog() {
                         )}
 
                         <div className="grid grid-cols-[100px_1fr] items-center gap-4">
-                            <Label htmlFor="symbol" className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display text-right block">Symbol</Label>
+                            <Label htmlFor="symbol" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Symbol</Label>
                             <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
                                         role="combobox"
                                         aria-expanded={openCombobox}
-                                        className="w-full justify-between h-12 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed border-none text-[var(--color-clay-fg)] font-bold px-4 hover:bg-[var(--color-clay-input-bg)] hover:text-[var(--color-clay-fg)] active:scale-[0.98]"
+                                        className="w-full justify-between h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 hover:bg-[var(--color-ios-input)] hover:text-[var(--color-ios-fg)] active:scale-[0.98]"
                                     >
                                         {formData.symbol
                                             ? formData.symbol
@@ -183,16 +183,16 @@ export function AddPositionDialog() {
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[300px] p-2 bg-[var(--color-clay-canvas)] border-none rounded-[24px] shadow-clayDeep text-[var(--color-clay-fg)] z-[10010]">
+                                <PopoverContent className="w-[300px] p-2 bg-[var(--color-ios-bg)] border-none rounded-[24px] shadow-[var(--shadow-ios-card)] text-[var(--color-ios-fg)] z-[10010]">
                                     <Command className="bg-transparent" shouldFilter={false}>
                                         <CommandInput
                                             placeholder="Search symbol..."
                                             value={searchValue}
                                             onValueChange={setSearchValue}
-                                            className="text-[var(--color-clay-fg)] font-bold placeholder-[var(--color-clay-muted)]"
+                                            className="text-[var(--color-ios-fg)] font-bold placeholder-[var(--color-ios-secondary)]"
                                         />
                                         <CommandList className="max-h-[300px] overflow-y-auto w-full custom-scrollbar">
-                                            <CommandEmpty className="py-6 text-center text-[13px] font-bold text-[var(--color-clay-muted)]">
+                                            <CommandEmpty className="py-6 text-center text-[13px] font-bold text-[var(--color-ios-secondary)]">
                                                 {searching ? 'Searching...' : 'No stock found.'}
                                             </CommandEmpty>
                                             <CommandGroup>
@@ -208,7 +208,7 @@ export function AddPositionDialog() {
                                                             });
                                                             setOpenCombobox(false);
                                                         }}
-                                                        className="text-[var(--color-clay-fg)] aria-selected:bg-[var(--color-clay-fg)]/5 cursor-pointer rounded-[12px] my-1 data-[selected=true]:bg-[var(--color-clay-fg)]/10"
+                                                        className="text-[var(--color-ios-fg)] aria-selected:bg-[var(--color-ios-fg)]/5 cursor-pointer rounded-[12px] my-1 data-[selected=true]:bg-[var(--color-ios-fg)]/10"
                                                     >
                                                         <Check
                                                             className={cn(
@@ -218,14 +218,14 @@ export function AddPositionDialog() {
                                                         />
                                                         <div className="flex flex-col">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="font-black font-display">{stock.displaySymbol}</span>
+                                                                <span className="font-bold ">{stock.displaySymbol}</span>
                                                                 {stock.israeliData && (
                                                                     <span className="text-[10px] px-2 py-0.5 rounded-[8px] bg-blue-100 text-blue-600 font-bold whitespace-nowrap">
                                                                         {stock.israeliData.type === 'fund' ? 'קרן כספית 🇮🇱' : 'TASE 🇮🇱'}
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <span className="text-[12px] text-[var(--color-clay-muted)] font-bold">{stock.description}</span>
+                                                            <span className="text-[12px] text-[var(--color-ios-secondary)] font-bold">{stock.description}</span>
                                                         </div>
                                                     </CommandItem>
                                                 ))}
@@ -237,11 +237,11 @@ export function AddPositionDialog() {
                         </div>
 
                         <div className="grid grid-cols-[100px_1fr] items-center gap-4">
-                            <Label htmlFor="date" className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display text-right block">Date</Label>
+                            <Label htmlFor="date" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Date</Label>
                             <Input
                                 id="date"
                                 type="date"
-                                className="h-12 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed border-none text-[var(--color-clay-fg)] font-bold px-4 scheme-light focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 scheme-light focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 value={formData.date}
                                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                 required
@@ -249,10 +249,10 @@ export function AddPositionDialog() {
                         </div>
 
                         <div className="grid grid-cols-[100px_1fr] items-center gap-4">
-                            <Label htmlFor="name" className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display text-right block">Name</Label>
+                            <Label htmlFor="name" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Name</Label>
                             <Input
                                 id="name"
-                                className="h-12 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed border-none text-[var(--color-clay-fg)] font-bold px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 placeholder="Apple Inc. (optional)"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -260,12 +260,12 @@ export function AddPositionDialog() {
                         </div>
 
                         <div className="grid grid-cols-[100px_1fr] items-center gap-4">
-                            <Label htmlFor="quantity" className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display text-right block">Quantity</Label>
+                            <Label htmlFor="quantity" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Quantity</Label>
                             <Input
                                 id="quantity"
                                 type="number"
                                 step="any"
-                                className="h-12 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed border-none text-[var(--color-clay-fg)] font-black font-display px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold  px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 placeholder="10"
                                 value={formData.quantity}
                                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
@@ -274,12 +274,12 @@ export function AddPositionDialog() {
                         </div>
 
                         <div className="grid grid-cols-[100px_1fr] items-center gap-4">
-                            <Label htmlFor="avgPrice" className="text-[12px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display text-right block">Avg Price</Label>
+                            <Label htmlFor="avgPrice" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Avg Price</Label>
                             <Input
                                 id="avgPrice"
                                 type="number"
                                 step="any"
-                                className="h-12 rounded-[16px] bg-[var(--color-clay-input-bg)] shadow-clayPressed border-none text-[var(--color-clay-fg)] font-black font-display px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold  px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 placeholder="150.00"
                                 value={formData.averagePrice}
                                 onChange={(e) => setFormData({ ...formData, averagePrice: e.target.value })}
@@ -288,7 +288,7 @@ export function AddPositionDialog() {
                         </div>
 
                         <div className="flex justify-end mt-4">
-                            <Button type="submit" disabled={loading} className="rounded-[20px] bg-gradient-to-br from-violet-400 to-violet-600 shadow-clayButton hover:shadow-clayButtonHover active:shadow-clayPressed active:scale-[0.92] text-white font-bold font-display tracking-wide h-12 px-8 transition-all duration-200 border-none disabled:opacity-50 disabled:active:scale-100">
+                            <Button type="submit" disabled={loading} className="rounded-[20px] bg-gradient-to-br from-violet-400 to-violet-600 shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)]Hover active:shadow-none active:scale-[0.92] text-white font-bold  tracking-wide h-12 px-8 transition-all duration-200 border-none disabled:opacity-50 disabled:active:scale-100">
                                 {loading ? 'Adding...' : 'Add Stock'}
                             </Button>
                         </div>

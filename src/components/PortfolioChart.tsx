@@ -154,18 +154,18 @@ export function PortfolioChart() {
 
   if (loading || positionsLoading) {
     return (
-      <div className="relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] shadow-clayCard p-8 h-[450px] flex items-center justify-center">
+      <div className="relative overflow-hidden rounded-[32px] bg-[var(--color-ios-card)] shadow-[var(--shadow-ios-card)] p-8 h-[450px] flex items-center justify-center">
         <div className="animate-clay-float rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="relative overflow-hidden rounded-[32px] bg-[var(--color-clay-card-bg)] shadow-clayCard p-8 transition-transform hover:-translate-y-1 hover:shadow-clayCardHover duration-300">
+    <div className="relative overflow-hidden rounded-[32px] bg-[var(--color-ios-card)] shadow-[var(--shadow-ios-card)] p-8 transition-transform hover:-translate-y-1 hover:shadow-[var(--shadow-ios-card)]Hover duration-300">
       <div className="relative z-10">
         <div className="mb-8">
-          <h3 className="text-2xl font-black font-display text-[var(--color-clay-fg)] mb-1">Portfolio Growth</h3>
-          <p className="text-[13px] font-bold text-[var(--color-clay-muted)] uppercase tracking-widest font-display">Last 30 Days Performance</p>
+          <h3 className="text-2xl font-bold  text-[var(--color-ios-fg)] mb-1">Portfolio Growth</h3>
+          <p className="text-[13px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest ">Last 30 Days Performance</p>
         </div>
 
         <div className="h-80">
@@ -180,25 +180,25 @@ export function PortfolioChart() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
               <XAxis
                 dataKey="date"
-                stroke="var(--color-clay-muted)"
-                style={{ fontSize: '11px', fontWeight: 'bold', fontFamily: 'var(--font-display)' }}
+                stroke="var(--color-ios-secondary)"
+                style={{ fontSize: '11px', fontWeight: 'bold', fontFamily: 'var(--)' }}
                 minTickGap={30}
               />
               <YAxis
-                stroke="var(--color-clay-muted)"
-                style={{ fontSize: '12px', fontWeight: 'bold', fontFamily: 'var(--font-display)' }}
+                stroke="var(--color-ios-secondary)"
+                style={{ fontSize: '12px', fontWeight: 'bold', fontFamily: 'var(--)' }}
                 tickFormatter={(value) => `₪${(value / 1000).toFixed(0)}K`}
                 domain={['auto', 'auto']}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'var(--color-clay-card-bg)',
+                  backgroundColor: 'var(--color-ios-card)',
                   border: 'none',
                   borderRadius: '20px',
-                  boxShadow: 'var(--shadow-clayDeep)',
+                  boxShadow: 'var(--shadow-[var(--shadow-ios-card)])',
                   padding: '16px',
                 }}
-                labelStyle={{ color: 'var(--color-clay-fg)', fontWeight: '900', fontFamily: 'var(--font-display)' }}
+                labelStyle={{ color: 'var(--color-ios-fg)', fontWeight: '900', fontFamily: 'var(--)' }}
                 itemStyle={{ color: '#10B981' }}
                 formatter={(value: number) => `₪${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
               />
@@ -216,22 +216,22 @@ export function PortfolioChart() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-6 mt-8 pt-6 border-t border-[var(--color-clay-muted)]/20">
+        <div className="grid grid-cols-3 gap-6 mt-8 pt-6 border-t border-[var(--color-ios-secondary)]/20">
           <div>
-            <p className="text-[11px] font-bold text-[var(--color-clay-muted)] mb-1 uppercase tracking-widest font-display">Monthly Return</p>
-            <p className={`text-2xl font-black font-display tracking-tight ${stats.monthlyReturn >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <p className="text-[11px] font-bold text-[var(--color-ios-secondary)] mb-1 uppercase tracking-widest ">Monthly Return</p>
+            <p className={`text-2xl font-bold  tracking-tight ${stats.monthlyReturn >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
               {stats.monthlyReturn >= 0 ? '+' : ''}{stats.monthlyReturn.toFixed(2)}%
             </p>
           </div>
           <div>
-            <p className="text-[11px] font-bold text-[var(--color-clay-muted)] mb-1 uppercase tracking-widest font-display">Total Gain</p>
-            <p className={`text-2xl font-black font-display tracking-tight ${stats.totalGain >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <p className="text-[11px] font-bold text-[var(--color-ios-secondary)] mb-1 uppercase tracking-widest ">Total Gain</p>
+            <p className={`text-2xl font-bold  tracking-tight ${stats.totalGain >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
               {stats.totalGain >= 0 ? '+' : ''}₪{Math.abs(stats.totalGain).toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
           </div>
           <div>
-            <p className="text-[11px] font-bold text-[var(--color-clay-muted)] mb-1 uppercase tracking-widest font-display">Best Day</p>
-            <p className="text-2xl font-black font-display tracking-tight text-emerald-500">
+            <p className="text-[11px] font-bold text-[var(--color-ios-secondary)] mb-1 uppercase tracking-widest ">Best Day</p>
+            <p className="text-2xl font-bold  tracking-tight text-emerald-500">
               +₪{stats.bestDay.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
           </div>

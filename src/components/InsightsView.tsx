@@ -20,11 +20,11 @@ const COLORS = [
 
 // ─── Skeleton Component ─────────────────────────────────────────
 const Skeleton = ({ className = '' }: { className?: string }) => (
-    <div className={`animate-pulse bg-[var(--color-clay-input-bg)] rounded-[16px] ${className}`} />
+    <div className={`animate-pulse bg-[var(--color-ios-input)] rounded-[16px] ${className}`} />
 );
 
 const SkeletonCard = () => (
-    <div className="bg-[var(--color-clay-card-bg)] backdrop-blur-xl border border-white/60 shadow-clayCard rounded-[32px] p-5 space-y-4">
+    <div className="bg-[var(--color-ios-card)] backdrop-blur-xl border border-white/60 shadow-[var(--shadow-ios-card)] rounded-[32px] p-5 space-y-4">
         <div className="flex justify-between items-start">
             <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -54,7 +54,7 @@ const SkeletonCard = () => (
 );
 
 const SkeletonChart = () => (
-    <Card className="bg-[var(--color-clay-card-bg)] backdrop-blur-xl border-white/60 rounded-[32px] shadow-clayCard">
+    <Card className="bg-[var(--color-ios-card)] backdrop-blur-xl border-white/60 rounded-[32px] shadow-[var(--shadow-ios-card)]">
         <CardHeader className="pb-2">
             <Skeleton className="h-6 w-44" />
         </CardHeader>
@@ -85,12 +85,12 @@ const BentoTreemapContent = (props: any) => {
             {clampedW > 30 && clampedH > 30 && (
                 <foreignObject x={clampedX} y={clampedY} width={clampedW} height={clampedH}>
                     <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center overflow-hidden">
-                        <span className="text-[var(--color-clay-fg)] font-black leading-tight break-words w-full font-display"
+                        <span className="text-[var(--color-ios-fg)] font-bold leading-tight break-words w-full "
                             style={{ fontSize: clampedW < 60 ? '9px' : '12px' }}>
                             {name}
                         </span>
                         {clampedH > 50 && root?.value > 0 && (
-                            <span className="text-[var(--color-clay-fg)] font-extrabold mt-0.5 opacity-80"
+                            <span className="text-[var(--color-ios-fg)] font-extrabold mt-0.5 opacity-80"
                                 style={{ fontSize: clampedW < 60 ? '8px' : '10px' }}>
                                 {((value / root.value) * 100).toFixed(1)}%
                             </span>
@@ -107,9 +107,9 @@ const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
         const data = payload[0];
         return (
-            <div className="bg-[var(--color-clay-card-bg)] backdrop-blur-xl border border-white/60 rounded-[16px] px-4 py-3 shadow-clayCard">
-                <p className="text-[var(--color-clay-muted)] font-bold text-sm mb-1">{data.name}</p>
-                <p className="text-[var(--color-clay-fg)] font-black font-display text-base">
+            <div className="bg-[var(--color-ios-card)] backdrop-blur-xl border border-white/60 rounded-[16px] px-4 py-3 shadow-[var(--shadow-ios-card)]">
+                <p className="text-[var(--color-ios-secondary)] font-bold text-sm mb-1">{data.name}</p>
+                <p className="text-[var(--color-ios-fg)] font-bold  text-base">
                     ${Number(data.value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 {data.payload?.percent !== undefined && (
@@ -140,7 +140,7 @@ const renderCustomLabel = ({ cx, cy, midAngle, outerRadius, name, percent }: any
         <g>
             <line x1={sx} y1={sy} x2={ex} y2={ey} stroke="rgba(0,0,0,0.15)" strokeWidth={1} />
             <text x={tx} y={ty} textAnchor={textAnchor} dominantBaseline="central"
-                fill="var(--color-clay-muted)" fontSize={12} fontWeight="700"
+                fill="var(--color-ios-secondary)" fontSize={12} fontWeight="700"
                 fontFamily="Nunito, system-ui, -apple-system, sans-serif"
             >{name} {(percent * 100).toFixed(1)}%</text>
         </g>
@@ -309,16 +309,16 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
             {/* ══ Analytics Row: Health Score + Benchmark ══ */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* ── Health Score Gauge ── */}
-                <Card className="bg-[var(--color-clay-card-bg)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard lg:col-span-1">
+                <Card className="bg-[var(--color-ios-card)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)] lg:col-span-1">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-black text-[var(--color-clay-fg)] font-display flex items-center gap-2 tracking-tight">
+                        <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
                             <ShieldCheck className="w-5 h-5 text-cyan-400" />
                             Portfolio Health
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-col items-center justify-center py-4">
                         {analyticsLoading || !analytics ? (
-                            <div className="w-48 h-48 rounded-[100px] bg-[var(--color-clay-input-bg)] animate-pulse" />
+                            <div className="w-48 h-48 rounded-[100px] bg-[var(--color-ios-input)] animate-pulse" />
                         ) : (() => {
                             const score = analytics.healthScore;
                             const radius = 80;
@@ -326,7 +326,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             const circumference = Math.PI * radius; // half circle
                             const progress = (score / 100) * circumference;
                             const riskLabel = score > 80 ? 'Low Risk' : score > 50 ? 'Moderate' : 'High Risk';
-                            const riskColor = score > 80 ? 'text-[var(--color-clay-success)]' : score > 50 ? 'text-amber-500' : 'text-[var(--color-clay-danger)]';
+                            const riskColor = score > 80 ? 'text-[var(--color-ios-success)]' : score > 50 ? 'text-amber-500' : 'text-[var(--color-ios-danger)]';
                             return (
                                 <div className="relative">
                                     <svg width={2 * (radius + stroke)} height={radius + stroke + 24} className="overflow-visible">
@@ -349,34 +349,34 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                             className="transition-all duration-1000"
                                         />
                                         {/* Score number */}
-                                        <text x={radius + stroke} y={radius - 4} textAnchor="middle" fill="var(--color-clay-fg)" fontSize="36" fontWeight="900" fontFamily="Nunito, system-ui, sans-serif">
+                                        <text x={radius + stroke} y={radius - 4} textAnchor="middle" fill="var(--color-ios-fg)" fontSize="36" fontWeight="900" fontFamily="Nunito, system-ui, sans-serif">
                                             {score}
                                         </text>
-                                        <text x={radius + stroke} y={radius + 18} textAnchor="middle" fill="var(--color-clay-muted)" fontSize="14" fontWeight="bold" fontFamily="Nunito, system-ui, sans-serif">
+                                        <text x={radius + stroke} y={radius + 18} textAnchor="middle" fill="var(--color-ios-secondary)" fontSize="14" fontWeight="bold" fontFamily="Nunito, system-ui, sans-serif">
                                             / 100
                                         </text>
                                     </svg>
                                     {/* Risk label */}
                                     <div className="text-center mt-1">
-                                        <span className={`text-sm font-black font-display ${riskColor}`}>{riskLabel}</span>
+                                        <span className={`text-sm font-bold  ${riskColor}`}>{riskLabel}</span>
                                     </div>
                                     {/* Component breakdown */}
                                     <div className="grid grid-cols-3 gap-2 mt-4 text-center">
                                         <div>
-                                            <div className="text-xs text-[var(--color-clay-muted)] font-bold mb-0.5">Diversity</div>
-                                            <div className="text-sm font-black font-display text-[var(--color-clay-fg)]">{analytics.components.diversification}</div>
+                                            <div className="text-xs text-[var(--color-ios-secondary)] font-bold mb-0.5">Diversity</div>
+                                            <div className="text-sm font-bold  text-[var(--color-ios-fg)]">{analytics.components.diversification}</div>
                                         </div>
                                         <div>
-                                            <div className="text-xs text-[var(--color-clay-muted)] font-bold mb-0.5">Volatility</div>
-                                            <div className="text-sm font-black font-display text-[var(--color-clay-fg)]">{analytics.components.volatility}</div>
+                                            <div className="text-xs text-[var(--color-ios-secondary)] font-bold mb-0.5">Volatility</div>
+                                            <div className="text-sm font-bold  text-[var(--color-ios-fg)]">{analytics.components.volatility}</div>
                                         </div>
                                         <div>
-                                            <div className="text-xs text-[var(--color-clay-muted)] font-bold mb-0.5">Sentiment</div>
-                                            <div className="text-sm font-black font-display text-[var(--color-clay-fg)]">{analytics.components.sentiment}</div>
+                                            <div className="text-xs text-[var(--color-ios-secondary)] font-bold mb-0.5">Sentiment</div>
+                                            <div className="text-sm font-bold  text-[var(--color-ios-fg)]">{analytics.components.sentiment}</div>
                                         </div>
                                     </div>
                                     <div className="text-center mt-3">
-                                        <span className="text-xs font-bold text-[var(--color-clay-muted)]">β = {analytics.portfolioBeta}</span>
+                                        <span className="text-xs font-bold text-[var(--color-ios-secondary)]">β = {analytics.portfolioBeta}</span>
                                     </div>
                                 </div>
                             );
@@ -399,9 +399,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
             >
                 {/* ── Dividend Calendar ── */}
-                <Card className="bg-[var(--color-clay-card-bg)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard">
+                <Card className="bg-[var(--color-ios-card)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)]">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-black text-[var(--color-clay-fg)] font-display flex items-center gap-2 tracking-tight">
+                        <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
                             <CalendarDays className="w-5 h-5 text-emerald-400" />
                             Upcoming Dividends
                         </CardTitle>
@@ -410,13 +410,13 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                         {analyticsLoading || !analytics ? (
                             <div className="space-y-3">
                                 {[1, 2, 3].map(i => (
-                                    <div key={i} className="h-10 bg-[var(--color-clay-input-bg)] rounded-[16px] animate-pulse" />
+                                    <div key={i} className="h-10 bg-[var(--color-ios-input)] rounded-[16px] animate-pulse" />
                                 ))}
                             </div>
                         ) : analytics.dividends?.length > 0 ? (
                             <div className="overflow-hidden">
                                 {/* Header Row */}
-                                <div className="grid grid-cols-4 gap-2 text-[10px] text-[var(--color-clay-muted)] font-black uppercase tracking-wider pb-2 border-b border-[var(--color-clay-input-bg)]">
+                                <div className="grid grid-cols-4 gap-2 text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider pb-2 border-b border-[var(--color-ios-input)]">
                                     <span>Symbol</span>
                                     <span>Ex-Date</span>
                                     <span className="text-right">Amount</span>
@@ -424,19 +424,19 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                 </div>
                                 {/* Data rows */}
                                 {analytics.dividends.map((div, i) => (
-                                    <div key={i} className="grid grid-cols-4 gap-2 items-center py-2.5 border-b border-[var(--color-clay-input-bg)] last:border-0">
-                                        <span className="text-sm font-black text-[var(--color-clay-fg)] font-display">{div.symbol}</span>
-                                        <span className="text-xs text-[var(--color-clay-muted)] font-bold">
+                                    <div key={i} className="grid grid-cols-4 gap-2 items-center py-2.5 border-b border-[var(--color-ios-input)] last:border-0">
+                                        <span className="text-sm font-bold text-[var(--color-ios-fg)] ">{div.symbol}</span>
+                                        <span className="text-xs text-[var(--color-ios-secondary)] font-bold">
                                             {new Date(div.exDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                         </span>
-                                        <span className="text-sm text-[var(--color-clay-muted)] text-right font-bold font-mono">${div.amount.toFixed(2)}</span>
-                                        <span className="text-sm text-cyan-600 text-right font-black font-mono">${div.estimatedPayout.toFixed(2)}</span>
+                                        <span className="text-sm text-[var(--color-ios-secondary)] text-right font-bold font-mono">${div.amount.toFixed(2)}</span>
+                                        <span className="text-sm text-cyan-600 text-right font-bold font-mono">${div.estimatedPayout.toFixed(2)}</span>
                                     </div>
                                 ))}
                                 {/* Total row */}
-                                <div className="grid grid-cols-4 gap-2 items-center pt-3 mt-1 border-t border-[var(--color-clay-input-bg)]">
-                                    <span className="text-xs text-[var(--color-clay-muted)] font-bold col-span-3">Total Estimated Payout</span>
-                                    <span className="text-sm text-cyan-600 text-right font-black font-mono">
+                                <div className="grid grid-cols-4 gap-2 items-center pt-3 mt-1 border-t border-[var(--color-ios-input)]">
+                                    <span className="text-xs text-[var(--color-ios-secondary)] font-bold col-span-3">Total Estimated Payout</span>
+                                    <span className="text-sm text-cyan-600 text-right font-bold font-mono">
                                         ${analytics.dividends.reduce((s, d) => s + d.estimatedPayout, 0).toFixed(2)}
                                     </span>
                                 </div>
@@ -448,9 +448,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             </div>
                         )}
                         {analytics?.pendingPayouts && analytics.pendingPayouts.length > 0 && (
-                            <div className="mt-6 border-t border-[var(--color-clay-input-bg)] pt-4">
-                                <h4 className="text-xs text-[var(--color-clay-muted)] font-black uppercase tracking-wider mb-3">Pending Payouts (Passed Ex-Date)</h4>
-                                <div className="grid grid-cols-4 gap-2 text-[10px] text-[var(--color-clay-muted)] font-black uppercase tracking-wider pb-2 border-b border-[var(--color-clay-input-bg)]">
+                            <div className="mt-6 border-t border-[var(--color-ios-input)] pt-4">
+                                <h4 className="text-xs text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider mb-3">Pending Payouts (Passed Ex-Date)</h4>
+                                <div className="grid grid-cols-4 gap-2 text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider pb-2 border-b border-[var(--color-ios-input)]">
                                     <span>Symbol</span>
                                     <span>Ex-Date</span>
                                     <span className="text-right">Pay Date</span>
@@ -458,17 +458,17 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                 </div>
                                 <div className="overflow-hidden opacity-90">
                                     {analytics.pendingPayouts.map((div, i) => (
-                                        <div key={`pending-${i}`} className="grid grid-cols-4 gap-2 items-center py-2 border-b border-[var(--color-clay-input-bg)] last:border-0 relative">
+                                        <div key={`pending-${i}`} className="grid grid-cols-4 gap-2 items-center py-2 border-b border-[var(--color-ios-input)] last:border-0 relative">
                                             {/* Subtle processing indicator */}
-                                            <div className="absolute left-[-10px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--color-clay-success)] animate-pulse" />
-                                            <span className="text-sm font-black text-[var(--color-clay-fg)] pl-2 font-display">{div.symbol}</span>
-                                            <span className="text-xs text-[var(--color-clay-muted)] font-bold">
+                                            <div className="absolute left-[-10px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--color-ios-success)] animate-pulse" />
+                                            <span className="text-sm font-bold text-[var(--color-ios-fg)] pl-2 ">{div.symbol}</span>
+                                            <span className="text-xs text-[var(--color-ios-secondary)] font-bold">
                                                 {new Date(div.exDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                             </span>
-                                            <span className="text-[10px] text-[var(--color-clay-muted)] font-bold text-right leading-tight flex flex-col items-end">
+                                            <span className="text-[10px] text-[var(--color-ios-secondary)] font-bold text-right leading-tight flex flex-col items-end">
                                                 {div.paymentDate ? new Date(div.paymentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD'}
                                             </span>
-                                            <span className="text-sm text-[var(--color-clay-success)] text-right font-black font-mono">
+                                            <span className="text-sm text-[var(--color-ios-success)] text-right font-bold font-mono">
                                                 ${div.estimatedPayout.toFixed(2)}
                                             </span>
                                         </div>
@@ -477,7 +477,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             </div>
                         )}
                         {analytics?.lastUpdated && (
-                            <div className="mt-3 text-[10px] text-[var(--color-clay-muted)] font-bold text-right flex items-center justify-end gap-1">
+                            <div className="mt-3 text-[10px] text-[var(--color-ios-secondary)] font-bold text-right flex items-center justify-end gap-1">
                                 <Activity className="w-3 h-3" />
                                 Updated: {new Date(analytics.lastUpdated).toLocaleTimeString()}
                             </div>
@@ -487,21 +487,21 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
                 {/* ── Sector Distribution (Treemap) ── */}
                 {!insightsLoaded ? (
-                    <Card className="bg-[var(--color-clay-card-bg)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard h-full flex flex-col">
+                    <Card className="bg-[var(--color-ios-card)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)] h-full flex flex-col">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-black text-[var(--color-clay-fg)] font-display flex items-center gap-2 tracking-tight">
+                            <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
                                 <Activity className="w-5 h-5 text-violet-400" />
                                 Sector Distribution
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1 min-h-[340px]">
-                            <div className="w-full h-full bg-[var(--color-clay-input-bg)] rounded-[16px] animate-pulse" />
+                            <div className="w-full h-full bg-[var(--color-ios-input)] rounded-[16px] animate-pulse" />
                         </CardContent>
                     </Card>
                 ) : (
-                    <Card className="bg-[var(--color-clay-card-bg)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard h-full flex flex-col">
+                    <Card className="bg-[var(--color-ios-card)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)] h-full flex flex-col">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-black text-[var(--color-clay-fg)] font-display flex items-center gap-2 tracking-tight">
+                            <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
                                 <Activity className="w-5 h-5 text-violet-400" />
                                 Sector Distribution
                             </CardTitle>
@@ -532,16 +532,16 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
             {/* ══ Portfolio Allocation + Correlation Matrix Row ══ */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* ── Portfolio Allocation (Left - Small, col-span-1) ── */}
-                <Card className="bg-[var(--color-clay-card-bg)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard lg:col-span-1">
+                <Card className="bg-[var(--color-ios-card)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)] lg:col-span-1">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-black text-[var(--color-clay-fg)] font-display flex items-center gap-2 tracking-tight">
+                        <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
                             <PieChartIcon className="w-5 h-5 text-cyan-400" />
                             Portfolio Allocation
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="h-[280px] flex justify-center items-center">
                         {loading ? (
-                            <div className="w-full h-full bg-[var(--color-clay-input-bg)] animate-pulse rounded-[16px]" />
+                            <div className="w-full h-full bg-[var(--color-ios-input)] animate-pulse rounded-[16px]" />
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -573,7 +573,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
             {/* ── Analyst Recommendations ── */}
             <div>
-                <h3 className="text-lg font-black text-[var(--color-clay-fg)] font-display mb-4 flex items-center gap-2 tracking-tight">
+                <h3 className="text-lg font-bold text-[var(--color-ios-fg)]  mb-4 flex items-center gap-2 tracking-tight">
                     <Target className="w-5 h-5 text-emerald-400" />
                     Analyst Recommendations & Price Targets
                 </h3>
@@ -588,38 +588,38 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         {analystCards.map((item) => (
                             <div key={item.symbol}
-                                className="bg-[var(--color-clay-card-bg)] border border-white/60 backdrop-blur-xl rounded-[32px] shadow-clayCard p-5 pb-6 hover:-translate-y-2 hover:shadow-clayCardHover transition-all duration-500 cursor-pointer"
+                                className="bg-[var(--color-ios-card)] border border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)] p-5 pb-6 hover:-translate-y-2 hover:shadow-[var(--shadow-ios-card)]Hover transition-all duration-500 cursor-pointer"
                             >
                                 {/* Header */}
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <h4 className="font-black text-[var(--color-clay-fg)] text-lg font-display tracking-tight">{item.symbol}</h4>
+                                            <h4 className="font-bold text-[var(--color-ios-fg)] text-lg  tracking-tight">{item.symbol}</h4>
                                             <Badge className={`${item.consensusColor} text-white text-[10px] font-semibold border-none px-2 py-0.5`}>
                                                 {item.consensus}
                                             </Badge>
                                         </div>
-                                        <p className="text-sm text-[var(--color-clay-muted)] font-bold truncate max-w-[180px]">{item.name}</p>
+                                        <p className="text-sm text-[var(--color-ios-secondary)] font-bold truncate max-w-[180px]">{item.name}</p>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-[10px] text-[var(--color-clay-muted)] font-bold uppercase tracking-wider">Current</div>
-                                        <div className="font-mono text-[var(--color-clay-fg)] font-black">${item.price.toFixed(2)}</div>
+                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider">Current</div>
+                                        <div className="font-mono text-[var(--color-ios-fg)] font-bold">${item.price.toFixed(2)}</div>
                                     </div>
                                 </div>
 
                                 {/* Target + Potential */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <div className="bg-[var(--color-clay-input-bg)] shadow-clayPressed rounded-[16px] p-3">
-                                        <div className="text-[10px] text-[var(--color-clay-muted)] font-bold uppercase tracking-wider mb-1">Avg Target</div>
-                                        <div className="font-black text-[var(--color-clay-fg)] font-display text-sm">
+                                    <div className="bg-[var(--color-ios-input)] shadow-none rounded-[16px] p-3">
+                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider mb-1">Avg Target</div>
+                                        <div className="font-bold text-[var(--color-ios-fg)]  text-sm">
                                             {item.target ? `$${item.target.toFixed(2)}` : 'No Data'}
                                         </div>
                                     </div>
-                                    <div className="bg-[var(--color-clay-input-bg)] shadow-clayPressed rounded-[16px] p-3">
-                                        <div className="text-[10px] text-[var(--color-clay-muted)] font-bold uppercase tracking-wider mb-1">Potential</div>
-                                        <div className={`font-black font-display text-sm flex items-center gap-1 ${item.target
-                                            ? item.upside >= 0 ? 'text-[var(--color-clay-success)]' : 'text-[var(--color-clay-danger)]'
-                                            : 'text-[var(--color-clay-muted)]'
+                                    <div className="bg-[var(--color-ios-input)] shadow-none rounded-[16px] p-3">
+                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider mb-1">Potential</div>
+                                        <div className={`font-bold  text-sm flex items-center gap-1 ${item.target
+                                            ? item.upside >= 0 ? 'text-[var(--color-ios-success)]' : 'text-[var(--color-ios-danger)]'
+                                            : 'text-[var(--color-ios-secondary)]'
                                             }`}>
                                             {item.target ? (
                                                 <>
@@ -636,10 +636,10 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
                                 {/* Rating Bar */}
                                 <div className="space-y-1.5">
-                                    <div className="flex justify-between text-[10px] text-[var(--color-clay-muted)] font-bold uppercase tracking-wider">
+                                    <div className="flex justify-between text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider">
                                         <span>Ratings ({item.totalVotes})</span>
                                     </div>
-                                    <div className="h-1.5 w-full flex rounded-full overflow-hidden bg-[var(--color-clay-input-bg)] shadow-clayPressed">
+                                    <div className="h-1.5 w-full flex rounded-full overflow-hidden bg-[var(--color-ios-input)] shadow-none">
                                         {item.buyVotes > 0 && (
                                             <div style={{ width: `${(item.buyVotes / item.totalVotes) * 100}%` }}
                                                 className="bg-emerald-500 h-full transition-all duration-500" />
@@ -653,7 +653,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                                 className="bg-rose-500 h-full transition-all duration-500" />
                                         )}
                                     </div>
-                                    <div className="flex justify-between text-[10px] text-[var(--color-clay-muted)] font-bold">
+                                    <div className="flex justify-between text-[10px] text-[var(--color-ios-secondary)] font-bold">
                                         <span>Buy {item.buyVotes}</span>
                                         <span>Hold {item.holdVotes}</span>
                                         <span>Sell {item.sellVotes}</span>

@@ -21,14 +21,7 @@ function Dashboard() {
   const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist' | 'calendar'>('holdings');
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[var(--color-clay-canvas)] text-[var(--color-clay-fg)] relative z-0">
-      {/* Background Blobs Layer */}
-      <div className="clay-blob-bg">
-        <div className="absolute h-[60vh] w-[60vh] rounded-full blur-3xl bg-violet-400/10 -top-[10%] -left-[10%] animate-clay-float" />
-        <div className="absolute h-[60vh] w-[60vh] rounded-full blur-3xl bg-pink-400/10 -top-[10%] -right-[10%] animate-clay-float-delayed animation-delay-2000" />
-        <div className="absolute h-[50vh] w-[50vh] rounded-full blur-3xl bg-sky-400/10 top-[30%] -left-[5%] animate-clay-float-slow animation-delay-4000" />
-      </div>
-
+    <div className="flex h-screen w-full overflow-hidden text-slate-800 relative z-0" style={{ background: 'var(--color-ios-bg-gradient)' }}>
       {/* Main UI Container */}
       <div className="flex h-full w-full relative z-10">
         {/* Mobile Navigation - Fixed at top for mobile only */}
@@ -50,7 +43,7 @@ function Dashboard() {
         <section>
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div className="flex items-center justify-between w-full md:w-auto">
-              <h2 className="text-xl md:text-2xl font-black font-display text-[var(--color-clay-fg)]">
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800">
                 {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : viewMode === 'watchlist' ? 'Watchlist' : 'Market Calendar'}
               </h2>
               {/* Mobile Add Button - Visible only on mobile */}
@@ -61,12 +54,12 @@ function Dashboard() {
 
             <div className="flex items-center gap-3">
               {/* View Toggle */}
-              <div className="flex p-1 bg-[var(--color-clay-input-bg)] shadow-clayInset rounded-[16px]">
+              <div className="flex p-1 bg-slate-200/50 rounded-xl">
                 <button
                   onClick={() => startTransition(() => setViewMode('holdings'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-sm transition-all ${viewMode === 'holdings'
-                    ? 'bg-violet-100 text-violet-700 font-black shadow-sm ring-1 ring-violet-200'
-                    : 'text-[var(--color-clay-muted)] font-bold hover:text-[var(--color-clay-fg)] hover:bg-white/50'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'holdings'
+                    ? 'bg-white text-slate-800 font-semibold shadow-sm'
+                    : 'text-slate-500 font-medium hover:text-slate-700 hover:bg-white/50'
                     }`}
                 >
                   <LayoutGrid className="w-4 h-4" />
@@ -74,9 +67,9 @@ function Dashboard() {
                 </button>
                 <button
                   onClick={() => startTransition(() => setViewMode('insights'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-sm transition-all ${viewMode === 'insights'
-                    ? 'bg-violet-100 text-violet-700 font-black shadow-sm ring-1 ring-violet-200'
-                    : 'text-[var(--color-clay-muted)] font-bold hover:text-[var(--color-clay-fg)] hover:bg-white/50'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'insights'
+                    ? 'bg-white text-slate-800 font-semibold shadow-sm'
+                    : 'text-slate-500 font-medium hover:text-slate-700 hover:bg-white/50'
                     }`}
                 >
                   <PieChart className="w-4 h-4" />
@@ -84,9 +77,9 @@ function Dashboard() {
                 </button>
                 <button
                   onClick={() => startTransition(() => setViewMode('watchlist'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-sm transition-all ${viewMode === 'watchlist'
-                    ? 'bg-violet-100 text-violet-700 font-black shadow-sm ring-1 ring-violet-200'
-                    : 'text-[var(--color-clay-muted)] font-bold hover:text-[var(--color-clay-fg)] hover:bg-white/50'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'watchlist'
+                    ? 'bg-white text-slate-800 font-semibold shadow-sm'
+                    : 'text-slate-500 font-medium hover:text-slate-700 hover:bg-white/50'
                     }`}
                 >
                   <Eye className="w-4 h-4" />
@@ -94,9 +87,9 @@ function Dashboard() {
                 </button>
                 <button
                   onClick={() => startTransition(() => setViewMode('calendar'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-sm transition-all ${viewMode === 'calendar'
-                    ? 'bg-violet-100 text-violet-700 font-black shadow-sm ring-1 ring-violet-200'
-                    : 'text-[var(--color-clay-muted)] font-bold hover:text-[var(--color-clay-fg)] hover:bg-white/50'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'calendar'
+                    ? 'bg-white text-slate-800 font-semibold shadow-sm'
+                    : 'text-slate-500 font-medium hover:text-slate-700 hover:bg-white/50'
                     }`}
                 >
                   <CalendarDays className="w-4 h-4" />
@@ -122,10 +115,9 @@ function Dashboard() {
           )}
         </section>
 
-        {/* Statistics & Analytics (Always visible or maybe hide in insights mode?) */}
-        {/* Keeping it visible as it provides total value history which is distinct from allocation */}
+        {/* Statistics & Analytics */}
         <section>
-            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-[var(--color-clay-fg)] font-display">Performance History</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-slate-800">Performance History</h2>
             <PortfolioChart />
           </section>
         </main>
@@ -140,8 +132,8 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--color-clay-canvas)] flex items-center justify-center">
-        <div className="text-[var(--color-clay-fg)] text-xl font-display font-medium">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-ios-bg-gradient)' }}>
+        <div className="text-slate-800 text-xl font-medium">Loading...</div>
       </div>
     );
   }
@@ -168,7 +160,7 @@ export default function App() {
       <PortfolioProvider>
         <MarketNewsProvider>
           <LiveAlertsProvider>
-            <div className="min-h-screen bg-[var(--color-clay-canvas)] text-[var(--color-clay-fg)] font-body">
+            <div className="min-h-screen text-slate-800" style={{ background: 'var(--color-ios-bg-gradient)' }}>
               <AppContent />
             </div>
           </LiveAlertsProvider>
