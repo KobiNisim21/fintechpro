@@ -123,7 +123,7 @@ export function PortfolioHero() {
             {/* Total Gain/Loss */}
             <div className="mt-6 space-y-1">
               <p className={`text-sm font-medium ${isDailyPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {isDailyPositive ? '+' : ''}₪{dailyChangeILS.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)
+                {isDailyPositive ? '+' : ''}${dailyChangeUSD.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)
                 <span className="text-slate-400 font-normal ml-1">TODAY</span>
               </p>
               <p className={`text-sm font-medium ${isTotalPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
