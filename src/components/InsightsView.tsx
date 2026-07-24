@@ -1,6 +1,6 @@
 import { usePortfolio } from '@/context/PortfolioContext';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/components/ui/use-mobile';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip,
 } from 'recharts';

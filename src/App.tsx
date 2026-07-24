@@ -2,7 +2,6 @@ import { Sidebar } from './components/Sidebar';
 import { MobileNav } from './components/MobileNav';
 import { PortfolioHero } from './components/PortfolioHero';
 import { StockGrid } from './components/StockGrid';
-import { PortfolioChart } from './components/PortfolioChart';
 import { PortfolioProvider } from './context/PortfolioContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { MarketNewsProvider } from './context/MarketNewsContext';
@@ -10,18 +9,40 @@ import { LiveAlertsProvider } from './context/LiveAlertsContext';
 import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
 
-import { useState, startTransition } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { ConnectionStatus } from './components/ConnectionStatus';
+import { lazy, Suspense, useState, startTransition } from 'react';
 import { LayoutGrid, PieChart, Eye, CalendarDays } from 'lucide-react';
 import { AddPositionDialog } from './components/AddPositionDialog';
-import { InsightsView } from './components/InsightsView';
-import { WatchlistView } from './components/WatchlistView';
-import { MarketCalendar } from './components/Analytics/MarketCalendar';
+
+// Lazy load heavy views
+const InsightsView = lazy(() => import('./components/InsightsView').then(m => ({ default: m.InsightsView })));
+const WatchlistView = lazy(() => import('./components/WatchlistView').then(m => ({ default: m.WatchlistView })));
+const MarketCalendar = lazy(() => import('./components/Analytics/MarketCalendar').then(m => ({ default: m.MarketCalendar })));
+const PortfolioChart = lazy(() => import('./components/PortfolioChart').then(m => ({ default: m.PortfolioChart })));
+
+function ViewSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200/50 rounded-xl w-1/3" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[1,2,3,4].map(i => (
+          <div key={i} className="h-40 bg-slate-200/30 rounded-2xl" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 function Dashboard() {
   const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist' | 'calendar'>('holdings');
 
   return (
-    <div className="flex h-screen w-full overflow-hidden text-slate-800 relative z-0" style={{ background: 'var(--color-ios-bg-gradient)' }}>
+    <ErrorBoundary>
+      <ConnectionStatus />
+      <div className="flex h-screen w-full overflow-hidden text-slate-800 relative z-0" style={{ background: 'var(--color-ios-bg-gradient)' }}>
       {/* Main UI Container */}
       <div className="flex h-full w-full relative z-10">
         {/* Mobile Navigation - Fixed at top for mobile only */}
@@ -107,28 +128,37 @@ function Dashboard() {
           {viewMode === 'holdings' ? (
             <StockGrid />
           ) : viewMode === 'insights' ? (
-            <InsightsView />
+            <Suspense fallback={<ViewSkeleton />}>
+              <InsightsView />
+            </Suspense>
           ) : viewMode === 'watchlist' ? (
-            <WatchlistView />
+            <Suspense fallback={<ViewSkeleton />}>
+              <WatchlistView />
+            </Suspense>
           ) : (
-            <MarketCalendar />
+            <Suspense fallback={<ViewSkeleton />}>
+              <MarketCalendar />
+            </Suspense>
           )}
         </section>
 
         {/* Statistics & Analytics */}
         <section>
             <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-slate-800">Performance History</h2>
-            <PortfolioChart />
+            <Suspense fallback={<ViewSkeleton />}>
+              <PortfolioChart />
+            </Suspense>
           </section>
         </main>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
-  const currentPath = window.location.pathname;
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -138,34 +168,39 @@ function AppContent() {
     );
   }
 
-  // Route handling
-  if (!isAuthenticated) {
-    if (currentPath === '/register') {
-      return <RegisterForm />;
-    }
-    return <LoginForm />;
-  }
-
-  // Redirect to dashboard if on login/register page but authenticated
-  if (currentPath === '/login' || currentPath === '/register') {
-    window.history.replaceState(null, '', '/');
-  }
-
-  return <Dashboard />;
+  return (
+    <Routes>
+      <Route 
+        path="/login" 
+        element={isAuthenticated ? <Navigate to="/" replace /> : <LoginForm />} 
+      />
+      <Route 
+        path="/register" 
+        element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterForm />} 
+      />
+      <Route 
+        path="/" 
+        element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} 
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <PortfolioProvider>
-        <MarketNewsProvider>
-          <LiveAlertsProvider>
-            <div className="min-h-screen text-slate-800" style={{ background: 'var(--color-ios-bg-gradient)' }}>
-              <AppContent />
-            </div>
-          </LiveAlertsProvider>
-        </MarketNewsProvider>
-      </PortfolioProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <PortfolioProvider>
+          <MarketNewsProvider>
+            <LiveAlertsProvider>
+              <div className="min-h-screen text-slate-800" style={{ background: 'var(--color-ios-bg-gradient)' }}>
+                <AppContent />
+              </div>
+            </LiveAlertsProvider>
+          </MarketNewsProvider>
+        </PortfolioProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

@@ -59,8 +59,17 @@ app.use('/api/stocks', stocksRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', message: 'TraderAI Backend is running' });
+app.get('/api/health', async (req, res) => {
+    const mongoose = (await import('mongoose')).default;
+    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    res.json({
+        status: 'ok',
+        message: 'TraderAI Backend is running',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        db: dbStatus,
+        memory: process.memoryUsage().rss
+    });
 });
 
 // Root API route for testing

@@ -28,6 +28,18 @@ export const stocksAPI = {
         return response.data;
     },
 
+    getBatchHistory: async (symbols: string[], from: number, to: number): Promise<Record<string, CandleData>> => {
+        const response = await apiClient.get('/stocks/batch-history', {
+            params: { symbols: symbols.join(','), from, to }
+        });
+        return response.data;
+    },
+
+    getPortfolioSnapshot: async (): Promise<any> => {
+        const response = await apiClient.get('/stocks/portfolio-snapshot');
+        return response.data;
+    },
+
     getExtendedQuote: async (symbol: string): Promise<ExtendedQuote> => {
         const response = await apiClient.get(`/stocks/${symbol}/extended-quote`);
         return response.data;

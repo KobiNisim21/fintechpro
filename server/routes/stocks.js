@@ -1,5 +1,5 @@
 import express from 'express';
-import { getQuote, getNews, getMarketNews, getForexRate, getStockCandles, getExtendedQuote, getBatchExtendedQuote, searchStocks, listAllIsraeli, testTaseRaw, setIsraeliPrice, getIsraeliPrices, refreshIsraeliPrices, adminFixPosition, getAnalystRecommendations, getPriceTarget, getCompanyProfile, getBatchInsights, getPortfolioAnalytics, getMarketCalendar } from '../controllers/stocksController.js';
+import { getQuote, getNews, getMarketNews, getForexRate, getStockCandles, getExtendedQuote, getBatchExtendedQuote, searchStocks, listAllIsraeli, testTaseRaw, setIsraeliPrice, getIsraeliPrices, refreshIsraeliPrices, adminFixPosition, getAnalystRecommendations, getPriceTarget, getCompanyProfile, getBatchInsights, getPortfolioAnalytics, getMarketCalendar, getBatchHistory, getPortfolioSnapshot } from '../controllers/stocksController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -16,6 +16,8 @@ router.post('/admin-fix-position', adminFixPosition);
 router.use(protect);
 
 // Batch endpoints MUST come before :symbol routes
+router.get('/batch-history', getBatchHistory);
+router.get('/portfolio-snapshot', getPortfolioSnapshot);
 router.get('/batch-extended-quote', getBatchExtendedQuote);
 router.get('/batch-insights', getBatchInsights);
 router.get('/portfolio-analytics', getPortfolioAnalytics);

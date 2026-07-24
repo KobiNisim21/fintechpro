@@ -481,14 +481,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isAuthenticated || positions.length === 0) return;
 
-    const apiKey = import.meta.env.VITE_FINNHUB_API_KEY;
-    if (!apiKey) {
-      console.error('❌ VITE_FINNHUB_API_KEY not found in environment variables');
-      return;
-    }
-
     console.log('🚀 Initializing WebSocket for real-time updates...');
-    const ws = getFinnhubWebSocket(apiKey);
+    const ws = getFinnhubWebSocket();
 
     // Connect to WebSocket
     ws.connect();

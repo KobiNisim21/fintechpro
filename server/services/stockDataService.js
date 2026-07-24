@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Centralized Stock Data Service
  * Single source of truth for all stock data with:
  * - Shared cache across controller, alerts, and news services
@@ -13,7 +13,15 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { fetchFundNAV } from './israeliSecuritiesService.js';
+import { createCircuitBreaker } from './circuitBreaker.js';
+import { createRateLimiter } from './rateLimiter.js';
+
 const yahooFinance = new YahooFinance();
+
+const yahooCircuitBreaker = createCircuitBreaker('YahooFinance', { maxFailures: 3, openStateDuration: 60000 });
+const finnhubCircuitBreaker = createCircuitBreaker('Finnhub', { maxFailures: 3, openStateDuration: 60000 });
+const taseCircuitBreaker = createCircuitBreaker('TASE', { maxFailures: 3, openStateDuration: 60000 });
+const finnhubRateLimiter = createRateLimiter('FinnhubLimiter', { callsPerMinute: 60, minSpacing: 200 });
 
 const __filename_service = fileURLToPath(import.meta.url);
 const __dirname_service = dirname(__filename_service);
@@ -56,6 +64,23 @@ function getCached(key, duration) {
 
 function setCache(key, data) {
     cache.set(key, { data, timestamp: Date.now() });
+}
+
+export function getLastKnownPrice(symbol) {
+    const cached = cache.get(`quote_${symbol}`);
+    if (cached && cached.data && cached.data.c !== undefined && cached.data.c !== 0) {
+        return cached.data;
+    }
+    const extCached = cache.get(`extended_quote_${symbol}`);
+    if (extCached && extCached.data && extCached.data.regularMarketPrice) {
+        return {
+            c: extCached.data.regularMarketPrice,
+            d: extCached.data.regularMarketChange || 0,
+            dp: extCached.data.regularMarketChangePercent || 0,
+            t: Math.floor(Date.now() / 1000)
+        };
+    }
+    return null;
 }
 
 // ============================================
@@ -142,9 +167,9 @@ export async function getQuote(symbol) {
         return dedupedFetch(cacheKey, async () => {
             console.log(`נ‡®נ‡± Fetching TASE quote for ${symbol} from Yahoo Finance...`);
             try {
-                // Fetch quote and forex rate in parallel
+                // Fetch quote and forex rate in parallel using circuit breakers
                 const [quote, forexData] = await Promise.all([
-                    yahooFinance.quote(symbol),
+                    yahooCircuitBreaker(() => yahooFinance.quote(symbol)),
                     getForexRate()
                 ]);
 
@@ -202,9 +227,9 @@ export async function getQuote(symbol) {
         return dedupedFetch(cacheKey, async () => {
             console.log(`🇮🇱 Fetching TASE NAV for Mutual Fund ${fundId} in getQuote...`);
             try {
-                // Fetch NAV and forex rate in parallel
+                // Fetch NAV and forex rate in parallel using circuit breakers
                 const [navData, forexData] = await Promise.all([
-                    fetchFundNAV(fundId),
+                    taseCircuitBreaker(() => fetchFundNAV(fundId)),
                     getForexRate()
                 ]);
 
@@ -239,13 +264,12 @@ export async function getQuote(symbol) {
                 return result;
             } catch (error) {
                 console.error(`❌ TASE Fund error for ${symbol}:`, error.message);
-                console.log(`[TASE API Fallback] Using fallback 0 price for ${symbol} instead of failing validation.`);
-                const fallbackResult = {
-                    c: 0, d: 0, dp: 0, h: 0, l: 0, o: 0, pc: 0,
-                    t: Math.floor(Date.now() / 1000)
-                };
-                setCache(cacheKey, fallbackResult);
-                return fallbackResult;
+                const lastKnown = getLastKnownPrice(symbol);
+                if (lastKnown) {
+                    console.log(`[TASE API Fallback] Using last known price for ${symbol}.`);
+                    return lastKnown;
+                }
+                throw error;
             }
         });
     }
@@ -257,23 +281,29 @@ export async function getQuote(symbol) {
         if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
 
         const url = `${FINNHUB_BASE_URL}/quote?symbol=${symbol}&token=${apiKey}`;
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`Finnhub quote failed: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await finnhubCircuitBreaker(() =>
+            finnhubRateLimiter.execute(async () => {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Finnhub quote failed: ${response.status}`);
+                }
+                return response.json();
+            })
+        );
 
         if (!data || data.c === undefined) {
-            // Finnhub returns {c: 0} for invalid symbols sometimes, or empty result
             if (data && data.c === 0 && data.pc === 0) {
                 throw new Error(`Invalid symbol or no data: ${symbol}`);
             }
         }
+        
         // Sanity check for 0 price
-        if (data.c === 0 && symbol !== 'ETH-USD' && symbol !== 'BTC-USD') { // Crypto might be handled differently but assuming regular stocks
-            // Proceed but warn? Or assume it's pre-market 0? Finnhub usually returns previous close.
+        if (data.c === 0 && symbol !== 'ETH-USD' && symbol !== 'BTC-USD') {
+            console.warn(`[Finnhub] Received $0 price for ${symbol}. Using last known price if available.`);
+            const lastKnown = getLastKnownPrice(symbol);
+            if (lastKnown) {
+                return lastKnown;
+            }
         }
 
         setCache(cacheKey, data);

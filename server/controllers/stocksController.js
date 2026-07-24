@@ -422,6 +422,77 @@ export const getStockCandles = async (req, res) => {
     }
 };
 
+// @desc    Get historical data for multiple symbols in one request
+// @route   GET /api/stocks/batch-history?symbols=NVDA,AAPL&from=123&to=456
+// @access  Private
+export const getBatchHistory = async (req, res) => {
+    try {
+        const { symbols, from, to } = req.query;
+
+        if (!symbols || !from || !to) {
+            return res.status(400).json({ message: 'Missing parameters' });
+        }
+
+        const symbolList = symbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+
+        const results = {};
+        const fetchPromises = symbolList.map(async (symbol) => {
+            if (symbol.startsWith('FUND:')) {
+                results[symbol] = { c: [], t: [], s: 'no_data' };
+                return;
+            }
+
+            const cacheKey = `candles_yahoo_${symbol}_${from}_${to}`;
+            const cached = candleCache.get(cacheKey);
+            if (cached && Date.now() - cached.timestamp < 60 * 60 * 1000) {
+                results[symbol] = cached.data;
+                return;
+            }
+
+            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${from}&period2=${to}&interval=1d&includePrePost=false`;
+            
+            const response = await fetch(yahooUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                }
+            });
+
+            if (!response.ok) {
+                results[symbol] = { c: [], t: [], s: 'no_data', error: `HTTP ${response.status}` };
+                return;
+            }
+
+            const data = await response.json();
+            const chart = data?.chart?.result?.[0];
+            if (!chart || !chart.timestamp || !chart.indicators?.quote?.[0]?.close) {
+                results[symbol] = { c: [], t: [], s: 'no_data' };
+                return;
+            }
+
+            const timestamps = chart.timestamp;
+            const closes = chart.indicators.quote[0].close;
+
+            const validData = timestamps.reduce((acc, ts, i) => {
+                if (closes[i] !== null) {
+                    acc.t.push(ts);
+                    acc.c.push(closes[i]);
+                }
+                return acc;
+            }, { t: [], c: [] });
+
+            const result = { ...validData, s: 'ok' };
+            candleCache.set(cacheKey, { data: result, timestamp: Date.now() });
+            results[symbol] = result;
+        });
+
+        await Promise.allSettled(fetchPromises);
+        res.json(results);
+    } catch (error) {
+        console.error(`❌ Error in getBatchHistory:`, error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Get extended hours quote from Yahoo Finance
 // @route   GET /api/stocks/:symbol/extended-quote
 // @access  Private
@@ -545,6 +616,106 @@ export const getMarketCalendar = async (req, res) => {
         });
     } catch (error) {
         console.error('❌ Error in getMarketCalendar:', error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get complete portfolio snapshot (positions + prices + sparklines) in one call
+// @route   GET /api/stocks/portfolio-snapshot
+// @access  Private  
+export const getPortfolioSnapshot = async (req, res) => {
+    try {
+        // 1. Fetch user positions from DB
+        const positions = await Position.find({ user: req.user._id }).lean();
+        
+        if (!positions || positions.length === 0) {
+            return res.json({ positions: [] });
+        }
+
+        const symbols = [...new Set(positions.map(p => p.symbol))];
+
+        // 2. Get batch extended quotes for all symbols
+        const quotesPromise = stockData.getBatchExtendedQuotes(symbols);
+
+        // 3. Get batch history (30-day) for sparklines
+        const to = Math.floor(Date.now() / 1000);
+        const from = to - (30 * 24 * 60 * 60); // 30 days ago
+        
+        // Use local batch history logic directly or create a helper.
+        // We'll just construct the internal fetch logic to avoid making an HTTP call to our own API
+        const historyResults = {};
+        const historyPromises = symbols.map(async (symbol) => {
+            if (symbol.startsWith('FUND:')) {
+                historyResults[symbol] = { c: [], t: [], s: 'no_data' };
+                return;
+            }
+
+            const cacheKey = `candles_yahoo_${symbol}_${from}_${to}`;
+            const cached = candleCache.get(cacheKey);
+            if (cached && Date.now() - cached.timestamp < 60 * 60 * 1000) {
+                historyResults[symbol] = cached.data;
+                return;
+            }
+
+            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${from}&period2=${to}&interval=1d&includePrePost=false`;
+            
+            try {
+                const response = await fetch(yahooUrl, {
+                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+                });
+
+                if (!response.ok) {
+                    historyResults[symbol] = { c: [], t: [], s: 'no_data', error: `HTTP ${response.status}` };
+                    return;
+                }
+
+                const data = await response.json();
+                const chart = data?.chart?.result?.[0];
+                if (!chart || !chart.timestamp || !chart.indicators?.quote?.[0]?.close) {
+                    historyResults[symbol] = { c: [], t: [], s: 'no_data' };
+                    return;
+                }
+
+                const timestamps = chart.timestamp;
+                const closes = chart.indicators.quote[0].close;
+
+                const validData = timestamps.reduce((acc, ts, i) => {
+                    if (closes[i] !== null) {
+                        acc.t.push(ts);
+                        acc.c.push(closes[i]);
+                    }
+                    return acc;
+                }, { t: [], c: [] });
+
+                const result = { ...validData, s: 'ok' };
+                candleCache.set(cacheKey, { data: result, timestamp: Date.now() });
+                historyResults[symbol] = result;
+            } catch (err) {
+                historyResults[symbol] = { c: [], t: [], s: 'error', error: err.message };
+            }
+        });
+
+        // Wait for quotes and history
+        const [quotes] = await Promise.all([
+            quotesPromise,
+            Promise.allSettled(historyPromises)
+        ]);
+
+        // 4. Combine data
+        const enrichedPositions = positions.map(pos => {
+            const quote = quotes[pos.symbol] || {};
+            const history = historyResults[pos.symbol] || { c: [], t: [], s: 'no_data' };
+            
+            return {
+                ...pos,
+                quote,
+                sparkline: history
+            };
+        });
+
+        res.json({ positions: enrichedPositions });
+    } catch (error) {
+        console.error('❌ Error in getPortfolioSnapshot:', error.message);
         res.status(500).json({ message: error.message });
     }
 };
