@@ -17,7 +17,7 @@ export function SidebarContent() {
                             <img
                                 src="/logo.png"
                                 alt="FinTechPro"
-                                className="w-full h-full object-contain"
+                                className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
                             />
                         </div>
                         <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-[0.2em] -mt-6">
