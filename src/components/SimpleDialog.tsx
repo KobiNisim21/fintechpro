@@ -1,4 +1,5 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface SimpleDialogProps {
     open: boolean;
@@ -7,6 +8,11 @@ interface SimpleDialogProps {
 }
 
 export function SimpleDialog({ open, onClose, children }: SimpleDialogProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
     // Lock body scroll when dialog is open
     useEffect(() => {
         if (open) {
@@ -28,9 +34,9 @@ export function SimpleDialog({ open, onClose, children }: SimpleDialogProps) {
         return () => window.removeEventListener('keydown', handleEscape);
     }, [open, onClose]);
 
-    if (!open) return null;
+    if (!open || !mounted) return null;
 
-    return (
+    return createPortal(
         <>
             {/* Overlay & Scroll Container */}
             <div
@@ -71,7 +77,8 @@ export function SimpleDialog({ open, onClose, children }: SimpleDialogProps) {
                     }
                 }
             `}</style>
-        </>
+        </>,
+        document.body
     );
 }
 
