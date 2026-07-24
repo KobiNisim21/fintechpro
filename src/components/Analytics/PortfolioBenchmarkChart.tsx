@@ -115,9 +115,9 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
                 )}
             </CardContent>
             {/* Watermark & Version */}
-            <div className="absolute bottom-3 right-3 flex flex-col items-end opacity-20 pointer-events-none">
-                <img src="/logo.png" alt="" className="w-8 h-8 mb-1" />
-                <span className="text-[10px] text-slate-400 font-mono">v9.0</span>
+            <div className="absolute bottom-3 right-3 flex flex-col items-end opacity-40 pointer-events-none">
+                <img src="/logo.png" alt="" className="w-8 h-8 mb-1 drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]" />
+                <span className="text-[10px] text-slate-500 font-mono font-bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>v9.0</span>
             </div>
         </Card>
     );
