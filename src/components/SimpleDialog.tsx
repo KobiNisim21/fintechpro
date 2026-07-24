@@ -34,21 +34,23 @@ export function SimpleDialog({ open, onClose, children }: SimpleDialogProps) {
         <>
             {/* Overlay & Scroll Container */}
             <div
-                className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-[var(--color-ios-fg)]/20 backdrop-blur-sm transition-opacity"
+                className="fixed inset-0 z-[10000] overflow-y-auto custom-scrollbar bg-[var(--color-ios-fg)]/20 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
                 style={{
                     animation: 'fadeIn 0.2s ease-out',
                 }}
             >
-                {/* Content */}
-                <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="relative w-full max-w-[500px] max-h-[85vh] overflow-y-auto custom-scrollbar bg-[var(--color-ios-bg)] rounded-[32px] p-6 md:p-8 shadow-[var(--shadow-ios-card)] text-[var(--color-ios-fg)]"
-                    style={{
-                        animation: 'scaleIn 0.2s ease-out',
-                    }}
-                >
-                    {children}
+                <div className="flex min-h-full items-end justify-center sm:items-center p-4 pt-20">
+                    {/* Content */}
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="relative w-full max-w-[500px] bg-[var(--color-ios-bg)] rounded-[32px] p-6 md:p-8 shadow-[var(--shadow-ios-card)] text-[var(--color-ios-fg)] mb-safe"
+                        style={{
+                            animation: 'scaleIn 0.2s ease-out',
+                        }}
+                    >
+                        {children}
+                    </div>
                 </div>
             </div>
 
