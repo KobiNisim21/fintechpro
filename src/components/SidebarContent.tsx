@@ -15,7 +15,7 @@ export function SidebarContent() {
                     <a href="/" className="inline-flex flex-col items-center group">
                         <div className="relative w-40 h-40 transition-transform duration-500 group-hover:scale-110">
                             {/* Soft dark blur localized only behind the text area (bottom 30%) */}
-                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-28 h-8 bg-slate-500/30 blur-[10px] rounded-[100%]" />
+                            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] h-10 bg-slate-400/40 blur-[12px] rounded-full" />
                             <img
                                 src="/logo.png"
                                 alt="FinTechPro"
