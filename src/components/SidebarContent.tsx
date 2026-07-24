@@ -13,11 +13,13 @@ export function SidebarContent() {
 
                 <div className="mb-10 text-center">
                     <a href="/" className="inline-flex flex-col items-center group">
-                        <div className="relative w-40 h-40 transition-transform duration-500 group-hover:scale-110 drop-shadow-xl">
+                        <div className="relative w-40 h-40 transition-transform duration-500 group-hover:scale-110">
+                            {/* Soft dark blur localized only behind the text area (bottom 30%) */}
+                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-28 h-8 bg-slate-500/30 blur-[10px] rounded-[100%]" />
                             <img
                                 src="/logo.png"
                                 alt="FinTechPro"
-                                className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+                                className="relative w-full h-full object-contain"
                             />
                         </div>
                         <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-[0.2em] -mt-6">
