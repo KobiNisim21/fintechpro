@@ -1404,7 +1404,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                     }
 
                     // SPY Benchmarking
-                    if (portfolioStarted && spyClose !== undefined && spyClose !== null) {
+                    if (spyClose !== undefined && spyClose !== null) {
                         if (prevSpyClose > 0) {
                             const spyDaily = (spyClose - prevSpyClose) / prevSpyClose;
                             spCumReturn = ((1 + spCumReturn) * (1 + spyDaily)) - 1;
