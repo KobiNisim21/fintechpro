@@ -1,8 +1,10 @@
 import { Sidebar } from './components/Sidebar';
 import { MobileNav } from './components/MobileNav';
+import { BottomTabBar } from './components/BottomTabBar';
+import { PullToRefresh } from './components/PullToRefresh';
 import { PortfolioHero } from './components/PortfolioHero';
 import { StockGrid } from './components/StockGrid';
-import { PortfolioProvider } from './context/PortfolioContext';
+import { PortfolioProvider, usePortfolio } from './context/PortfolioContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { MarketNewsProvider } from './context/MarketNewsContext';
 import { LiveAlertsProvider } from './context/LiveAlertsContext';
@@ -12,7 +14,7 @@ import { RegisterForm } from './components/RegisterForm';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ConnectionStatus } from './components/ConnectionStatus';
-import { lazy, Suspense, useState, startTransition } from 'react';
+import { lazy, Suspense, useState, startTransition, useCallback } from 'react';
 import { LayoutGrid, PieChart, Eye, CalendarDays } from 'lucide-react';
 import { AddPositionDialog } from './components/AddPositionDialog';
 
@@ -38,6 +40,11 @@ function ViewSkeleton() {
 
 function Dashboard() {
   const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist' | 'calendar'>('holdings');
+  const { fetchPositions } = usePortfolio();
+
+  const handleRefresh = useCallback(async () => {
+    await fetchPositions();
+  }, [fetchPositions]);
 
   return (
     <ErrorBoundary>
@@ -56,24 +63,21 @@ function Dashboard() {
       </div>
 
         {/* Main Content */}
-        <main className="flex-1 h-full overflow-y-auto px-4 pb-4 md:p-8 space-y-6 md:space-y-8 w-full min-w-0 pt-28 md:pt-8 pb-32">
-          {/* Hero Card */}
-        <PortfolioHero />
+        <main className="flex-1 h-full overflow-y-auto px-4 md:p-8 space-y-6 md:space-y-8 w-full min-w-0 pt-20 md:pt-8 pb-24 md:pb-8">
+          <PullToRefresh onRefresh={handleRefresh}>
+            {/* Hero Card */}
+            <PortfolioHero />
 
-        {/* Portfolio Content */}
-        <section>
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-            <div className="flex items-center justify-between w-full md:w-auto">
-              <h2 className="text-xl md:text-2xl font-bold text-slate-800">
-                {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : viewMode === 'watchlist' ? 'Watchlist' : 'Market Calendar'}
-              </h2>
-              {/* Mobile Add Button - Visible only on mobile */}
-              <div className="md:hidden">
-                <AddPositionDialog />
-              </div>
-            </div>
+            {/* Portfolio Content */}
+            <section>
+              <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                <div className="flex items-center justify-between w-full md:w-auto">
+                  <h2 className="text-xl md:text-2xl font-bold text-slate-800">
+                    {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : viewMode === 'watchlist' ? 'Watchlist' : 'Market Calendar'}
+                  </h2>
+                </div>
 
-            <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-3">
               {/* View Toggle */}
               <div className="flex p-1 bg-slate-200/50 rounded-xl">
                 <button
@@ -118,10 +122,8 @@ function Dashboard() {
                 </button>
               </div>
 
-              {/* Desktop Add Button - Hidden on mobile */}
-              <div className="hidden md:block">
-                <AddPositionDialog />
-              </div>
+              {/* Desktop Add Button */}
+              <AddPositionDialog />
             </div>
           </div>
 
@@ -149,8 +151,12 @@ function Dashboard() {
               <PortfolioChart />
             </Suspense>
           </section>
+          </PullToRefresh>
         </main>
       </div>
+
+      {/* Bottom Tab Bar - mobile only */}
+      <BottomTabBar viewMode={viewMode} onViewChange={(mode) => startTransition(() => setViewMode(mode))} />
     </div>
     </ErrorBoundary>
   );

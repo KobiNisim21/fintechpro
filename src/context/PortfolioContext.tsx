@@ -57,6 +57,7 @@ interface PortfolioContextType {
     profiles: Record<string, CompanyProfile>;
   } | null;
   setInsightsData: (data: any) => void;
+  fetchPositions: () => Promise<void>;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
@@ -686,6 +687,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         positionsLoading: loading,
         positionsReady,
         error,
+        fetchPositions,
         addPosition,
         updatePosition,
         removePosition,

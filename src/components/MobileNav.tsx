@@ -1,35 +1,15 @@
-import { Menu } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
-import { SidebarContent } from './SidebarContent';
-import { Button } from '@/components/ui/button';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { AddPositionDialog } from './AddPositionDialog';
 
 export function MobileNav() {
-    return (
-        <div className="flex items-center justify-between p-4 bg-white/80 backdrop-blur-xl shadow-[var(--shadow-ios-card)] rounded-b-[32px] border-none x-4 relative z-50">
-            <div className="flex items-center gap-3">
-                <a href="/" className="flex items-center gap-3">
-                    <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain drop-shadow-md" />
-                    <h1 className="text-xl font-bold  text-[var(--color-ios-fg)] tracking-tight">
-                        FinTechPro
-                    </h1>
-                </a>
-            </div>
-
-            <Sheet>
-                <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="w-12 h-12 rounded-[20px] bg-[var(--color-ios-input)] shadow-none text-[var(--color-ios-fg)] hover:bg-white hover:shadow-[var(--shadow-ios-card)] active:scale-[0.92] transition-all">
-                        <Menu className="h-6 w-6" strokeWidth={2.5} />
-                        <span className="sr-only">Open menu</span>
-                    </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="p-0 border-none bg-[var(--color-ios-bg)] w-80 shadow-[var(--shadow-ios-card)]">
-                    <VisuallyHidden>
-                        <SheetTitle>Menu</SheetTitle>
-                    </VisuallyHidden>
-                    <SidebarContent />
-                </SheetContent>
-            </Sheet>
-        </div>
-    );
+  return (
+    <div className="flex items-center justify-between px-4 py-3 bg-white/80 backdrop-blur-xl shadow-[0_2px_20px_rgba(0,0,0,0.04)] rounded-b-2xl relative z-50">
+      <div className="flex items-center gap-2.5">
+        <img src="/logo.png" alt="Logo" className="w-7 h-7 object-contain" />
+        <h1 className="text-lg font-bold text-slate-800 tracking-tight">FinTechPro</h1>
+      </div>
+      <div className="flex items-center gap-2">
+        <AddPositionDialog />
+      </div>
+    </div>
+  );
 }

@@ -1,79 +1,42 @@
 import { useEffect, useState } from 'react';
-import { getSocket } from '../services/socket';
+import { getConnectionState, onConnectionStateChange } from '../services/socket';
 
 export function ConnectionStatus() {
-  const [status, setStatus] = useState<'connected' | 'reconnecting' | 'disconnected'>('disconnected');
+  const [status, setStatus] = useState(getConnectionState());
   const [visible, setVisible] = useState(false);
-  const [detailsVisible, setDetailsVisible] = useState(false);
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
-
-    const onConnect = () => {
-      setStatus('connected');
+    const unsub = onConnectionStateChange((state) => {
+      setStatus(state);
       setVisible(true);
-      setTimeout(() => setVisible(false), 3000);
-    };
-
-    const onDisconnect = () => {
-      setStatus('disconnected');
-      setVisible(true);
-    };
-
-    const onReconnectAttempt = () => {
-      setStatus('reconnecting');
-      setVisible(true);
-    };
-
-    if (socket.connected) {
-      onConnect();
-    } else {
-      onDisconnect();
-    }
-
-    socket.on('connect', onConnect);
-    socket.on('disconnect', onDisconnect);
-    socket.io.on('reconnect_attempt', onReconnectAttempt);
-
-    return () => {
-      socket.off('connect', onConnect);
-      socket.off('disconnect', onDisconnect);
-      socket.io.off('reconnect_attempt', onReconnectAttempt);
-    };
+      if (state === 'connected') {
+        const timer = setTimeout(() => setVisible(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    });
+    return unsub;
   }, []);
 
-  if (!visible && status === 'connected' && !detailsVisible) return null;
+  if (!visible && status === 'connected') return null;
+  if (status === 'disconnected' && !visible) return null;
+
+  const config = {
+    connected: { color: 'bg-green-500', label: 'Live', ping: false },
+    connecting: { color: 'bg-yellow-500', label: 'Connecting...', ping: true },
+    reconnecting: { color: 'bg-yellow-500', label: 'Reconnecting...', ping: true },
+    disconnected: { color: 'bg-red-500', label: 'Offline', ping: false },
+  }[status];
 
   return (
-    <div 
-      className="fixed bottom-4 right-4 z-50 flex flex-col items-end"
-      onMouseEnter={() => setDetailsVisible(true)}
-      onMouseLeave={() => setDetailsVisible(false)}
-      onClick={() => setDetailsVisible(!detailsVisible)}
-    >
-      <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-full px-4 py-2 flex items-center gap-2 cursor-pointer border border-slate-200 transition-all">
-        <div className="relative flex h-3 w-3">
-          {status === 'reconnecting' && (
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+    <div className="fixed bottom-20 md:bottom-4 right-4 z-[60]">
+      <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-full px-3.5 py-1.5 flex items-center gap-2 border border-slate-200/50">
+        <div className="relative flex h-2.5 w-2.5">
+          {config.ping && (
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${config.color} opacity-75`} />
           )}
-          <span className={`relative inline-flex rounded-full h-3 w-3 ${
-            status === 'connected' ? 'bg-green-500' :
-            status === 'reconnecting' ? 'bg-yellow-500' : 'bg-red-500'
-          }`}></span>
+          <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${config.color}`} />
         </div>
-        
-        {detailsVisible ? (
-          <span className="text-sm font-medium text-slate-700">
-            {status === 'connected' ? 'Live' : 
-             status === 'reconnecting' ? 'Reconnecting...' : 'Offline'}
-          </span>
-        ) : (
-          <span className="text-sm font-medium text-slate-700">
-            {status === 'connected' ? 'Live' : 
-             status === 'reconnecting' ? 'Reconnecting' : 'Offline'}
-          </span>
-        )}
+        <span className="text-xs font-medium text-slate-600">{config.label}</span>
       </div>
     </div>
   );
