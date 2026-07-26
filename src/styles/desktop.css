@@ -1,0 +1,103 @@
+/* ============================================================
+   Desktop Optimizations (md: 768px+)
+   Scales down oversized mobile-first styles for comfortable
+   desktop reading without touching mobile layout at all.
+   ============================================================ */
+
+/* Scale down the base font size on desktop for tighter, denser UI */
+@media (min-width: 768px) {
+  :root {
+    --font-size: 14px;
+  }
+}
+
+/* On very large screens, constrain the main content width */
+@media (min-width: 1440px) {
+  .desktop-content-constraint {
+    max-width: 1200px;
+  }
+}
+
+/* Sidebar: slightly narrower on desktop for more content room */
+@media (min-width: 768px) {
+  .desktop-sidebar {
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+  }
+}
+
+/* PortfolioHero: reduce padding and font sizes on desktop */
+@media (min-width: 768px) {
+  .desktop-hero {
+    padding: 1.5rem 2rem;
+    border-radius: 1.25rem;
+  }
+
+  .desktop-hero .hero-balance-ils {
+    font-size: 2.5rem;
+    line-height: 1.1;
+  }
+
+  .desktop-hero .hero-balance-usd {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .desktop-hero .hero-currency-label {
+    font-size: 1rem;
+  }
+
+  .desktop-hero .hero-period-card {
+    padding: 0.5rem 0.75rem;
+    min-width: 72px;
+  }
+
+  .desktop-hero .hero-period-label {
+    font-size: 9px;
+    margin-bottom: 2px;
+  }
+
+  .desktop-hero .hero-period-value {
+    font-size: 1rem;
+  }
+
+  .desktop-hero .hero-exchange-card {
+    padding: 0.5rem 0.75rem;
+    min-width: 72px;
+  }
+}
+
+/* StockGrid: show multi-column grid on desktop */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .desktop-stock-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .desktop-stock-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}
+
+/* StockCard: compact on desktop */
+@media (min-width: 768px) {
+  .glass-card-solid {
+    border-radius: 1rem;
+  }
+}
+
+/* Section titles: smaller on desktop */
+@media (min-width: 768px) {
+  .desktop-section-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* Charts: constrain height on desktop */
+@media (min-width: 768px) {
+  .desktop-chart-container {
+    max-height: 380px;
+  }
+}

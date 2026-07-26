@@ -63,7 +63,7 @@ function Dashboard() {
       </div>
 
         {/* Main Content */}
-        <main className="flex-1 h-full overflow-y-auto px-4 md:p-8 space-y-6 md:space-y-8 w-full min-w-0 pt-20 md:pt-8 pb-24 md:pb-8">
+        <main className="flex-1 h-full overflow-y-auto px-4 md:px-6 md:py-6 space-y-6 md:space-y-6 w-full min-w-0 pt-20 md:pt-6 pb-24 md:pb-6">
           <PullToRefresh onRefresh={handleRefresh}>
             {/* Hero Card */}
             <PortfolioHero />
@@ -72,7 +72,7 @@ function Dashboard() {
             <section>
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                 <div className="flex items-center justify-between w-full md:w-auto">
-                  <h2 className="text-xl md:text-2xl font-bold text-slate-800">
+                  <h2 className="text-xl md:text-lg font-bold text-slate-800 desktop-section-title">
                     {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : viewMode === 'watchlist' ? 'Watchlist' : 'Market Calendar'}
                   </h2>
                 </div>
@@ -146,7 +146,7 @@ function Dashboard() {
 
         {/* Statistics & Analytics */}
         <section>
-            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-slate-800">Performance History</h2>
+            <h2 className="text-xl md:text-lg font-bold mb-4 md:mb-4 text-slate-800 desktop-section-title">Performance History</h2>
             <Suspense fallback={<ViewSkeleton />}>
               <PortfolioChart />
             </Suspense>

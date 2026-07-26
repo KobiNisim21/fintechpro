@@ -82,7 +82,7 @@ export function PortfolioHero() {
   }, [portfolioAnalytics?.benchmarkData]);
 
   return (
-    <div className="glass-card rounded-[32px] p-8 relative overflow-hidden">
+    <div className="glass-card rounded-[32px] md:rounded-[20px] p-8 relative overflow-hidden desktop-hero">
       <div className="relative z-10">
         <div className="flex flex-wrap items-start justify-between gap-6 mb-6">
           <div>
@@ -97,10 +97,10 @@ export function PortfolioHero() {
             {/* ILS Primary — large balance number matching reference */}
             <div className="mb-3">
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold tracking-tight text-slate-900">
+                <span className="text-5xl font-bold tracking-tight text-slate-900 hero-balance-ils">
                   ₪{totalValueILS.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                 </span>
-                <span className="text-2xl font-medium text-slate-500">ILS</span>
+                <span className="text-2xl font-medium text-slate-500 hero-currency-label">ILS</span>
               </div>
             </div>
 
@@ -113,10 +113,10 @@ export function PortfolioHero() {
             {/* USD Secondary */}
             <div className="mt-4">
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-slate-900">
+                <span className="text-3xl font-bold text-slate-900 hero-balance-usd">
                   ${totalValueUSD.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                 </span>
-                <span className="text-lg font-medium text-slate-500 uppercase">USD</span>
+                <span className="text-lg font-medium text-slate-500 uppercase hero-currency-label">USD</span>
               </div>
             </div>
 
@@ -140,9 +140,9 @@ export function PortfolioHero() {
               <div className="p-3 rounded-full hover:bg-white/50 transition-colors">
                 <Activity className="w-6 h-6 text-slate-600" strokeWidth={2} />
               </div>
-              <div className="glass-card-solid rounded-2xl flex flex-col items-center justify-center p-4 min-w-[90px] hover-lift">
+              <div className="glass-card-solid rounded-2xl flex flex-col items-center justify-center p-4 min-w-[90px] hover-lift hero-exchange-card">
                 <div className="text-[11px] text-slate-500 font-medium uppercase tracking-wider mb-1">USD/ILS</div>
-                <div className="text-lg font-bold text-slate-800 tracking-tight">{usdToIls.toFixed(4)}</div>
+                <div className="text-lg font-bold text-slate-800 tracking-tight">{ usdToIls.toFixed(4)}</div>
               </div>
             </div>
 
@@ -158,13 +158,13 @@ export function PortfolioHero() {
                   return (
                     <div
                       key={label}
-                      className={`glass-card-solid rounded-2xl flex flex-col items-center px-4 py-3.5 min-w-[85px] hover-lift ${isPositive
+                      className={`glass-card-solid rounded-2xl flex flex-col items-center px-4 py-3.5 min-w-[85px] hover-lift hero-period-card ${isPositive
                         ? 'bg-emerald-50/80'
                         : 'bg-rose-50/80'
                         }`}
                     >
-                      <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-1.5">{label} Return</span>
-                      <span className={`text-xl font-bold tracking-tight ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-1.5 hero-period-label">{label} Return</span>
+                      <span className={`text-xl font-bold tracking-tight hero-period-value ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {isPositive ? '+' : ''}{value.toFixed(1)}%
                       </span>
                     </div>
