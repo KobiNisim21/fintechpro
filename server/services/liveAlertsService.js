@@ -9,7 +9,7 @@ import { getQuote as fetchQuoteFromService, getBasicFinancials, getEarningsCalen
 // Configuration
 const PRICE_THRESHOLD_PERCENT = 2.0; // Alert when price moves more than 2%
 const MAX_ALERTS_PER_USER = 5; // Keep only the 5 most recent alerts
-const ALERT_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between same ticker alerts
+const ALERT_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours between same ticker alerts
 
 // In-memory storage
 const userAlerts = new Map(); // userId -> array of alerts
@@ -401,9 +401,13 @@ async function pollSpecialAlerts(io) {
             const earnings = await getEarningsCalendar(from, to);
 
             if (earnings && earnings.length > 0) {
+                const alreadyAlerted = new Set(); // dedupe within this poll cycle
+
                 for (const entry of earnings) {
                     const sym = entry.symbol;
                     if (!sym || !allTickers.has(sym)) continue;
+                    if (alreadyAlerted.has(sym)) continue; // skip duplicate tickers
+                    alreadyAlerted.add(sym);
 
                     const companyName = getCompanyName(sym);
                     const reportDate = entry.date || 'soon';
