@@ -39,14 +39,29 @@ export const register = async (req, res) => {
 
         if (user) {
             // Send verification email
+            let emailResult;
             try {
-                await sendVerificationEmail(email, name, verificationToken);
+                emailResult = await sendVerificationEmail(email, name, verificationToken);
             } catch (emailError) {
-                // If email fails, delete the user and return error
                 await User.deleteOne({ _id: user._id });
-                console.error('❌ Email send failed, rolling back user creation:', emailError.message);
                 return res.status(500).json({ 
                     message: 'Failed to send verification email. Please try again.' 
+                });
+            }
+
+            // If email credentials are wrong/missing, auto-verify so they can login for demo purposes
+            if (emailResult.simulated) {
+                user.emailVerified = true;
+                user.emailVerificationToken = null;
+                user.emailVerificationExpires = null;
+                await user.save();
+                
+                return res.status(201).json({
+                    _id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    token: generateToken(user._id),
+                    requiresVerification: false // Bypassed
                 });
             }
 

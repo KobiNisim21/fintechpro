@@ -183,93 +183,93 @@ export function processPriceUpdate(io, ticker, currentPrice, previousClose, chan
     const direction = changePercent > 0 ? 'up' : 'down';
     const companyName = getCompanyName(ticker);
 
-    // Get all connected sockets and check their portfolios
-    io.fetchSockets().then(async (sockets) => {
-        const userPortfolios = await getAllUserPortfolios();
+    const userPortfolios = await getAllUserPortfolios();
 
-        for (const socket of sockets) {
-            const userId = socket.userId;
-            if (!userId) continue;
+    // Map of users who should receive this alert via socket immediately
+    const usersToNotify = new Set();
 
-            const userTickers = userPortfolios.get(userId);
-            if (!userTickers || !userTickers.has(ticker)) continue;
+    // Generate and store alert for ALL users holding this ticker
+    for (const [userId, userTickers] of userPortfolios.entries()) {
+        if (!userTickers.has(ticker)) continue;
+        if (!canSendAlert(userId, ticker)) continue;
 
-            // Check cooldown
-            if (!canSendAlert(userId, ticker)) continue;
+        const alert = {
+            id: generateAlertId(),
+            type: alertType,
+            ticker: ticker,
+            companyName: companyName,
+            message: `${companyName} ${direction} ${absChange.toFixed(1)}% today`,
+            value: changePercent,
+            timestamp: new Date(),
+            relativeTime: 'just now'
+        };
 
-            // Create alert
-            const alert = {
-                id: generateAlertId(),
-                type: alertType,
-                ticker: ticker,
-                companyName: companyName,
-                message: `${companyName} ${direction} ${absChange.toFixed(1)}% today`,
-                value: changePercent,
-                timestamp: new Date(),
-                relativeTime: 'just now'
-            };
+        addAlert(userId, alert);
+        recordAlertSent(userId, ticker);
+        usersToNotify.add(userId);
+    }
 
-            // Add to user's alerts
-            const alerts = addAlert(userId, alert);
-            recordAlertSent(userId, ticker);
+    // Emit to connected sockets
+    if (usersToNotify.size > 0) {
+        io.fetchSockets().then(sockets => {
+            for (const socket of sockets) {
+                const userId = socket.userId;
+                if (!userId || !usersToNotify.has(userId)) continue;
 
-            // Emit to this user's socket
-            socket.emit('live-alert', {
-                alert: alert,
-                allAlerts: alerts.map(a => ({
-                    ...a,
-                    relativeTime: formatRelativeTime(a.timestamp)
-                }))
-            });
-
-            console.log(`🔔 Alert sent to user ${userId}: ${alert.message}`);
-        }
-    });
+                const alerts = getAlertsForUser(userId);
+                socket.emit('live-alert', {
+                    alert: alerts[0], // Most recent
+                    allAlerts: alerts
+                });
+                console.log(`🔔 Alert sent to user ${userId}: ${alerts[0].message}`);
+            }
+        });
+    }
 }
 
 /**
  * Generate news-based alert
  */
-export function processNewsAlert(io, ticker, headline, newsType = 'news') {
+export async function processNewsAlert(io, ticker, headline, newsType = 'news') {
     const companyName = getCompanyName(ticker);
+    const userPortfolios = await getAllUserPortfolios();
+    const usersToNotify = new Set();
 
-    io.fetchSockets().then(async (sockets) => {
-        const userPortfolios = await getAllUserPortfolios();
+    for (const [userId, userTickers] of userPortfolios.entries()) {
+        if (!userTickers.has(ticker)) continue;
+        if (!canSendAlert(userId, `news-${ticker}`)) continue;
 
-        for (const socket of sockets) {
-            const userId = socket.userId;
-            if (!userId) continue;
+        const alert = {
+            id: generateAlertId(),
+            type: newsType,
+            ticker: ticker,
+            companyName: companyName,
+            message: headline,
+            value: null,
+            timestamp: new Date(),
+            relativeTime: 'just now'
+        };
 
-            const userTickers = userPortfolios.get(userId);
-            if (!userTickers || !userTickers.has(ticker)) continue;
+        addAlert(userId, alert);
+        recordAlertSent(userId, `news-${ticker}`);
+        usersToNotify.add(userId);
+    }
 
-            // Check cooldown for news
-            if (!canSendAlert(userId, `news-${ticker}`)) continue;
+    if (usersToNotify.size > 0) {
+        io.fetchSockets().then(sockets => {
+            for (const socket of sockets) {
+                const userId = socket.userId;
+                if (!userId || !usersToNotify.has(userId)) continue;
 
-            const alert = {
-                id: generateAlertId(),
-                type: 'news',
-                ticker: ticker,
-                companyName: companyName,
-                message: headline,
-                timestamp: new Date(),
-                relativeTime: 'just now'
-            };
-
-            const alerts = addAlert(userId, alert);
-            recordAlertSent(userId, `news-${ticker}`);
-
-            socket.emit('live-alert', {
-                alert: alert,
-                allAlerts: alerts.map(a => ({
-                    ...a,
-                    relativeTime: formatRelativeTime(a.timestamp)
-                }))
-            });
-
-            console.log(`📰 News alert sent to user ${userId}: ${headline.substring(0, 50)}...`);
-        }
-    });
+                const alerts = getAlertsForUser(userId);
+                socket.emit('live-alert', {
+                    alert: alerts[0],
+                    allAlerts: alerts
+                });
+                console.log(`📰 News alert sent to user ${userId}: ${headline.substring(0, 50)}...`);
+            }
+        });
+    }
 }
 
 /**
@@ -446,42 +446,45 @@ async function pollSpecialAlerts(io) {
  * Emit a special alert (52w-low or earnings) to relevant users
  */
 function emitSpecialAlert(io, userPortfolios, ticker, alertData) {
-    io.fetchSockets().then(sockets => {
-        for (const socket of sockets) {
-            const userId = socket.userId;
-            if (!userId) continue;
+    const usersToNotify = new Set();
 
-            const userTickers = userPortfolios.get(userId);
-            if (!userTickers || !userTickers.has(ticker)) continue;
+    for (const [userId, userTickers] of userPortfolios.entries()) {
+        if (!userTickers.has(ticker)) continue;
 
-            const cooldownKey = `${alertData.type}-${ticker}`;
-            if (!canSendAlert(userId, cooldownKey)) continue;
+        const cooldownKey = `${alertData.type}-${ticker}`;
+        if (!canSendAlert(userId, cooldownKey)) continue;
 
-            const alert = {
-                id: generateAlertId(),
-                type: alertData.type,
-                ticker: ticker,
-                companyName: getCompanyName(ticker),
-                message: alertData.message,
-                value: alertData.value,
-                timestamp: new Date(),
-                relativeTime: 'just now'
-            };
+        const alert = {
+            id: generateAlertId(),
+            type: alertData.type,
+            ticker: ticker,
+            companyName: getCompanyName(ticker),
+            message: alertData.message,
+            value: alertData.value,
+            timestamp: new Date(),
+            relativeTime: 'just now'
+        };
 
-            const alerts = addAlert(userId, alert);
-            recordAlertSent(userId, cooldownKey);
+        addAlert(userId, alert);
+        recordAlertSent(userId, cooldownKey);
+        usersToNotify.add(userId);
+    }
 
-            socket.emit('live-alert', {
-                alert: alert,
-                allAlerts: alerts.map(a => ({
-                    ...a,
-                    relativeTime: formatRelativeTime(a.timestamp)
-                }))
-            });
+    if (usersToNotify.size > 0) {
+        io.fetchSockets().then(sockets => {
+            for (const socket of sockets) {
+                const userId = socket.userId;
+                if (!userId || !usersToNotify.has(userId)) continue;
 
-            console.log(`🔔 [SPECIAL] ${alertData.type} alert -> user ${userId}: ${alertData.message}`);
-        }
-    });
+                const alerts = getAlertsForUser(userId);
+                socket.emit('live-alert', {
+                    alert: alerts[0],
+                    allAlerts: alerts
+                });
+                console.log(`🔔 [SPECIAL] ${alertData.type} alert -> user ${userId}: ${alertData.message}`);
+            }
+        });
+    }
 }
 
 /**
