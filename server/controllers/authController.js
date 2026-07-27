@@ -45,7 +45,7 @@ export const register = async (req, res) => {
             } catch (emailError) {
                 await User.deleteOne({ _id: user._id });
                 return res.status(500).json({ 
-                    message: 'Failed to send verification email. Please try again.' 
+                    message: `Failed to send verification email: ${emailError.message}` 
                 });
             }
 
