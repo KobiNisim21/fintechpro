@@ -25,9 +25,7 @@ export async function sendVerificationEmail(email, name, token) {
     const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
 
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn('⚠️ EMAIL_USER or EMAIL_PASS not set. Skipping real email send.');
-        console.log(`📧 SIMULATED: Verification email for ${email}. Link: ${verifyUrl}`);
-        return { success: true, simulated: true, verifyUrl };
+        throw new Error('Server misconfiguration: EMAIL_USER or EMAIL_PASS environment variables are missing in Render.');
     }
 
     const transporter = createTransporter();
