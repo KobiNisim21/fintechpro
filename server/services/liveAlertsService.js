@@ -279,9 +279,12 @@ export function sendInitialAlerts(socket) {
     if (!socket.userId) return;
 
     const alerts = getAlertsForUser(socket.userId);
+    socket.emit('live-alerts-init', { alerts });
+    
     if (alerts.length > 0) {
-        socket.emit('live-alerts-init', { alerts });
         console.log(`📤 Sent ${alerts.length} initial alerts to user ${socket.userId}`);
+    } else {
+        console.log(`📤 Sent empty initial alerts to user ${socket.userId}`);
     }
 }
 
