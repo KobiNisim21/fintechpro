@@ -70,13 +70,13 @@ export function LiveAlerts() {
                                         <Calendar className="w-4 h-4 text-[var(--color-ios-info-alt)] shrink-0" />
                                     )}
 
-                                    <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                                        <p className="text-sm font-bold text-[var(--color-ios-fg)] truncate">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-[var(--color-ios-fg)] line-clamp-2 leading-snug">
                                             {alert.message}
                                         </p>
 
                                         {/* Ticker */}
-                                        <span className="text-xs px-2 py-0.5 rounded-md bg-[var(--color-ios-input)] text-[var(--color-ios-secondary)] font-bold tracking-wider uppercase shrink-0  shadow-none">
+                                        <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-md bg-[var(--color-ios-input)] text-[var(--color-ios-secondary)] font-bold tracking-wider uppercase shadow-none">
                                             ${alert.ticker}
                                         </span>
                                     </div>
