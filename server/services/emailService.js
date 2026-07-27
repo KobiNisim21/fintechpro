@@ -25,7 +25,7 @@ export async function sendVerificationEmail(email, name, token) {
     const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
 
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        throw new Error('Server misconfiguration: EMAIL_USER or EMAIL_PASS environment variables are missing in Render.');
+        throw new Error('Server misconfiguration: EMAIL_USER or EMAIL_PASS environment variables are missing (check Vercel/Render).');
     }
 
     const transporter = createTransporter();
