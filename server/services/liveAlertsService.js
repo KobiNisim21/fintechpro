@@ -171,7 +171,7 @@ async function getAllUserPortfolios() {
 /**
  * Process a price update and generate alert if threshold crossed
  */
-export function processPriceUpdate(io, ticker, currentPrice, previousClose, changePercent) {
+export async function processPriceUpdate(io, ticker, currentPrice, previousClose, changePercent) {
     const absChange = Math.abs(changePercent);
 
     // Only alert if change exceeds threshold
