@@ -49,22 +49,6 @@ export const register = async (req, res) => {
                 });
             }
 
-            // If email credentials are wrong/missing, auto-verify so they can login for demo purposes
-            if (emailResult.simulated) {
-                user.emailVerified = true;
-                user.emailVerificationToken = null;
-                user.emailVerificationExpires = null;
-                await user.save();
-                
-                return res.status(201).json({
-                    _id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    token: generateToken(user._id),
-                    requiresVerification: false // Bypassed
-                });
-            }
-
             res.status(201).json({
                 message: 'Registration successful! Please check your email to verify your account.',
                 requiresVerification: true
@@ -131,6 +115,13 @@ export const login = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (user && (await user.comparePassword(password))) {
+            // Migration for legacy users (created before email verification feature)
+            // They have emailVerified=false but DO NOT have an emailVerificationToken
+            if (user.emailVerified === false && !user.emailVerificationToken) {
+                user.emailVerified = true;
+                await user.save();
+            }
+
             // Block login if email not verified
             if (!user.emailVerified) {
                 return res.status(403).json({ 

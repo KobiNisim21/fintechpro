@@ -17,9 +17,6 @@ const newsBuffer = new Map(); // userId -> NewsItem[]
 // Global buffer of recent news (for new connections)
 let globalRecentNews = [];
 
-// Track already-seen items to avoid duplicates
-const seenItems = new Set();
-
 /**
  * Sanitize HTML content - remove all HTML tags
  */
@@ -97,21 +94,26 @@ async function fetchFinnhubNews(ticker) {
   }
 }
 
+// Store seen items per user to prevent duplicates
+const userSeenItems = new Map();
+
 /**
  * Add news items to user's buffer - maintains chronological order (newest first)
  */
 function addToBuffer(userId, items) {
   if (!newsBuffer.has(userId)) {
     newsBuffer.set(userId, []);
+    userSeenItems.set(userId, new Set());
   }
 
   const buffer = newsBuffer.get(userId);
+  const seen = userSeenItems.get(userId);
   const now = Date.now();
 
   // Add new items (only if not seen before)
   items.forEach(item => {
-    if (!seenItems.has(item.id)) {
-      seenItems.add(item.id);
+    if (!seen.has(item.id)) {
+      seen.add(item.id);
       buffer.push(item);
     }
   });
@@ -267,26 +269,6 @@ export function startNewsPollingService(io) {
 
       // Send buffered news on connect
       let buffer = getBufferedNews(socket.userId);
-
-      // If user buffer is empty, use global news (all items, sorted by date)
-      if (buffer.length === 0 && globalRecentNews.length > 0) {
-        // Take ALL global news items and sort by date (newest first)
-        buffer = [...globalRecentNews]
-          .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
-          .slice(0, MAX_BUFFER_SIZE);
-
-        // Mark matching tickers for highlighting
-        buffer = buffer.map(item => ({
-          ...item,
-          tickers: item.tickers.filter(t => userTickerSet.has(t)).length > 0
-            ? item.tickers.filter(t => userTickerSet.has(t))
-            : item.tickers
-        }));
-
-        if (buffer.length > 0) {
-          addToBuffer(socket.userId, buffer);
-        }
-      }
 
       console.log(`📦 Buffer has ${buffer.length} items for user ${socket.userId}`);
 
