@@ -115,8 +115,18 @@ function addAlert(userId, alert) {
  */
 export function getAlertsForUser(userId) {
     const alerts = userAlerts.get(userId) || [];
+    // Deduplicate by ticker+message — keep only the newest occurrence of each
+    const seen = new Set();
+    const deduped = alerts.filter(alert => {
+        const key = `${alert.ticker}-${alert.message}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+    // Also update the stored list to avoid growing indefinitely
+    userAlerts.set(userId, deduped);
     // Update relative times
-    return alerts.map(alert => ({
+    return deduped.map(alert => ({
         ...alert,
         relativeTime: formatRelativeTime(alert.timestamp)
     }));
