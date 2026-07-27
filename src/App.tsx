@@ -10,6 +10,7 @@ import { MarketNewsProvider } from './context/MarketNewsContext';
 import { LiveAlertsProvider } from './context/LiveAlertsContext';
 import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
+import { VerifyEmail } from './components/VerifyEmail';
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -188,6 +189,7 @@ function AppContent() {
         path="/" 
         element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} 
       />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

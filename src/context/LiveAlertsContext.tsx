@@ -65,15 +65,30 @@ export function LiveAlertsProvider({ children }: { children: ReactNode }) {
         // Initial alerts on connect
         socket.on('live-alerts-init', (data: { alerts: LiveAlert[] }) => {
             console.log('🔔 [ALERTS-FE] Received initial alerts:', data.alerts.length, data.alerts);
-            setAlerts(data.alerts);
+            // Deduplicate by ticker+message — keep first occurrence (newest)
+            const seen = new Set<string>();
+            const deduped = data.alerts.filter(a => {
+                const key = `${a.ticker}-${a.message}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+            setAlerts(deduped);
             setLoading(false);
         });
 
         // New alert received
         socket.on('live-alert', (data: { alert: LiveAlert; allAlerts: LiveAlert[] }) => {
             console.log('🔔 [ALERTS-FE] 🚨 NEW LIVE ALERT:', data.alert.message);
-            console.log('🔔 [ALERTS-FE] All alerts now:', data.allAlerts.length, data.allAlerts);
-            setAlerts(data.allAlerts);
+            // Deduplicate allAlerts from server
+            const seen = new Set<string>();
+            const deduped = data.allAlerts.filter(a => {
+                const key = `${a.ticker}-${a.message}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+            setAlerts(deduped);
             setHasNewAlerts(true);
         });
 

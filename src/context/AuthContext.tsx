@@ -12,7 +12,7 @@ interface AuthContextType {
     token: string | null;
     loading: boolean;
     login: (data: LoginData) => Promise<void>;
-    register: (data: RegisterData) => Promise<void>;
+    register: (data: RegisterData) => Promise<any>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -47,20 +47,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(userData));
         } catch (error: any) {
-            throw new Error(error.response?.data?.message || 'Login failed');
+            const msg = error.response?.data?.message || 'Login failed';
+            throw new Error(msg);
         }
     };
 
-    const register = async (data: RegisterData) => {
+    const register = async (data: RegisterData): Promise<any> => {
         try {
-            const response: AuthResponse = await authAPI.register(data);
-            const { token, ...userData } = response;
-
+            const response = await authAPI.register(data);
+            // If email verification required, don't log in — just return the response
+            if ((response as any)?.requiresVerification) {
+                return response;
+            }
+            // Otherwise (e.g. admin bypass), log in immediately
+            const { token, ...userData } = response as AuthResponse;
             setToken(token);
             setUser(userData);
-
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(userData));
+            return response;
         } catch (error: any) {
             throw new Error(error.response?.data?.message || 'Registration failed');
         }
