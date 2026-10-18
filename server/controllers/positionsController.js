@@ -22,7 +22,7 @@ export const getPositions = async (req, res) => {
 // @access  Private
 export const addPosition = async (req, res) => {
     try {
-        let { symbol, name, quantity, averagePrice, date } = req.body;
+        let { symbol, name, quantity, averagePrice, date, broker } = req.body;
 
         if (!symbol || typeof symbol !== 'string') {
             return res.status(400).json({ message: 'Symbol is required' });
@@ -49,16 +49,38 @@ export const addPosition = async (req, res) => {
             });
         }
 
+        const assignedBroker = (broker && typeof broker === 'string' && broker.trim()) ? broker.trim() : 'Default';
+
+        // Check if an existing position for this user, symbol, and broker already exists
+        let existingPosition = await Position.findOne({
+            user: req.user._id,
+            symbol: cleanSymbol,
+            broker: assignedBroker,
+            isDeleted: { $ne: true }
+        });
+
+        if (existingPosition) {
+            existingPosition.lots.push({
+                quantity: Number(quantity),
+                price: Number(averagePrice),
+                date: date ? new Date(date) : new Date()
+            });
+            existingPosition.markModified('lots');
+            const saved = await existingPosition.save();
+            return res.status(200).json(saved);
+        }
+
         const position = await Position.create({
             user: req.user._id,
             symbol: cleanSymbol,
             name: name || cleanSymbol,
+            broker: assignedBroker,
             quantity: Number(quantity),
             averagePrice: Number(averagePrice),
             lots: [{
                 quantity: Number(quantity),
                 price: Number(averagePrice),
-                date: date || Date.now()
+                date: date ? new Date(date) : new Date()
             }]
         });
 
@@ -84,10 +106,14 @@ export const updatePosition = async (req, res) => {
             return res.status(401).json({ message: 'Not authorized' });
         }
 
-        const { quantity, averagePrice, lots } = req.body;
+        const { quantity, averagePrice, lots, broker } = req.body;
 
         console.log(`[UPDATE] Updating position ${position.symbol} (${position._id})`);
         console.log(`[UPDATE] Payload lots:`, lots ? `${lots.length} lots provided` : 'No lots provided');
+
+        if (broker !== undefined) {
+            position.broker = (typeof broker === 'string' && broker.trim()) ? broker.trim() : 'Default';
+        }
 
         // If 'lots' are provided, they take precedence and will trigger auto-calc
         if (lots && Array.isArray(lots)) {

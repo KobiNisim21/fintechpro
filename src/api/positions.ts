@@ -13,6 +13,7 @@ export interface Position {
     name: string;
     quantity: number;
     averagePrice: number;
+    broker?: string;
     lots?: Lot[];
     createdAt: string;
     updatedAt: string;
@@ -23,12 +24,14 @@ export interface CreatePositionData {
     name: string;
     quantity: number;
     averagePrice: number;
+    broker?: string;
     date?: string | Date;
 }
 
 export interface UpdatePositionData {
     quantity?: number;
     averagePrice?: number;
+    broker?: string;
     lots?: Lot[];
 }
 

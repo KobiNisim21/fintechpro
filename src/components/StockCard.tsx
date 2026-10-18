@@ -183,7 +183,14 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
           {/* Header */}
           <div className="flex items-start justify-between mb-1">
             <div>
-              <h3 className="font-bold text-slate-800 text-base">{stock.symbol}</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-bold text-slate-800 text-base">{stock.symbol}</h3>
+                {stock.broker && stock.broker !== 'Default' && (
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+                    {stock.broker}
+                  </span>
+                )}
+              </div>
               <p className="text-[13px] font-medium text-slate-500 truncate max-w-[120px]">{stock.name}</p>
             </div>
 

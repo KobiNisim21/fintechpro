@@ -35,7 +35,8 @@ const positionSchema = new mongoose.Schema({
     broker: {
         type: String,
         default: 'Default',
-        trim: true
+        trim: true,
+        set: v => (v && typeof v === 'string' && v.trim()) ? v.trim() : 'Default'
     },
     isDeleted: {
         type: Boolean,
@@ -55,6 +56,9 @@ const positionSchema = new mongoose.Schema({
         default: Date.now
     }
 });
+
+// Compound index for broker-based position splitting
+positionSchema.index({ user: 1, symbol: 1, broker: 1 });
 
 // Update timestamp & aggregates on save
 positionSchema.pre('save', function (next) {

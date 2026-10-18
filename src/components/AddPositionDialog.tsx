@@ -31,6 +31,7 @@ export function AddPositionDialog() {
         name: '',
         quantity: '',
         averagePrice: '',
+        broker: 'Default',
         date: new Date().toISOString().split('T')[0], // Default to today
     });
 
@@ -115,7 +116,8 @@ export function AddPositionDialog() {
                 formData.name || `${formData.symbol.toUpperCase()} Inc.`,
                 Number(formData.quantity),
                 Number(formData.averagePrice),
-                new Date(formData.date) // Pass the date
+                new Date(formData.date),
+                formData.broker || 'Default'
             );
 
             setFormData({
@@ -123,6 +125,7 @@ export function AddPositionDialog() {
                 name: '',
                 quantity: '',
                 averagePrice: '',
+                broker: 'Default',
                 date: new Date().toISOString().split('T')[0]
             });
             setSearchValue('');
@@ -259,6 +262,17 @@ export function AddPositionDialog() {
                                 value={formData.date}
                                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                 required
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                            <Label htmlFor="broker" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest text-right block">Broker</Label>
+                            <Input
+                                id="broker"
+                                className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                placeholder="Default (or Blink, IBI...)"
+                                value={formData.broker}
+                                onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
                             />
                         </div>
 

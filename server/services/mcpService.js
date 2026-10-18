@@ -62,9 +62,10 @@ export async function undoAuditAction(userId, auditLogId) {
 
     switch (action) {
         case 'add_position': {
+            const brokerFilter = afterState?.broker || beforeState?.broker || 'Default';
             if (!beforeState) {
                 // Was a newly created position -> soft delete it
-                const pos = await Position.findOne({ user: userId, symbol, isDeleted: { $ne: true } });
+                const pos = await Position.findOne({ user: userId, symbol, broker: brokerFilter, isDeleted: { $ne: true } });
                 if (pos) {
                     pos.isDeleted = true;
                     pos.deletedAt = new Date();
@@ -72,7 +73,7 @@ export async function undoAuditAction(userId, auditLogId) {
                 }
             } else {
                 // An additional lot was added -> restore previous quantity, averagePrice, and lots
-                const pos = await Position.findOne({ user: userId, symbol, isDeleted: { $ne: true } });
+                const pos = await Position.findOne({ user: userId, symbol, broker: brokerFilter, isDeleted: { $ne: true } });
                 if (pos) {
                     pos.quantity = beforeState.quantity;
                     pos.averagePrice = beforeState.averagePrice;
@@ -85,8 +86,9 @@ export async function undoAuditAction(userId, auditLogId) {
         }
 
         case 'remove_position': {
+            const brokerFilter = beforeState?.broker || 'Default';
             // Restore soft-deleted position
-            let pos = await Position.findOne({ user: userId, symbol, isDeleted: true });
+            let pos = await Position.findOne({ user: userId, symbol, broker: brokerFilter, isDeleted: true });
             if (!pos) {
                 // If it was hard deleted in past or not found
                 if (beforeState) {
@@ -116,7 +118,8 @@ export async function undoAuditAction(userId, auditLogId) {
         }
 
         case 'sell_position': {
-            let pos = await Position.findOne({ user: userId, symbol });
+            const brokerFilter = beforeState?.broker || 'Default';
+            let pos = await Position.findOne({ user: userId, symbol, broker: brokerFilter });
             if (!pos) {
                 // Entire position was liquidated
                 if (beforeState) {
@@ -144,7 +147,8 @@ export async function undoAuditAction(userId, auditLogId) {
         }
 
         case 'update_position': {
-            const pos = await Position.findOne({ user: userId, symbol, isDeleted: { $ne: true } });
+            const brokerFilter = beforeState?.broker || 'Default';
+            const pos = await Position.findOne({ user: userId, symbol, broker: brokerFilter, isDeleted: { $ne: true } });
             if (pos && beforeState) {
                 pos.quantity = beforeState.quantity;
                 pos.averagePrice = beforeState.averagePrice;
@@ -457,8 +461,8 @@ export async function addOrUpdatePosition(userId, { symbol, quantity, price, nam
         } catch {}
     }
 
-    const assignedBroker = broker && typeof broker === 'string' ? broker.trim() : 'Default';
-    let position = await Position.findOne({ user: userId, symbol: cleanSymbol, isDeleted: { $ne: true } });
+    const assignedBroker = (broker && typeof broker === 'string' && broker.trim()) || 'Default';
+    let position = await Position.findOne({ user: userId, symbol: cleanSymbol, broker: assignedBroker, isDeleted: { $ne: true } });
 
     if (position) {
         if (buyPrice === null || isNaN(buyPrice) || buyPrice <= 0) {
@@ -489,10 +493,6 @@ export async function addOrUpdatePosition(userId, { symbol, quantity, price, nam
             price: buyPrice,
             date: lotDate
         });
-
-        if (broker && position.broker === 'Default') {
-            position.broker = assignedBroker;
-        }
 
         position.markModified('lots');
         await position.save();
@@ -528,7 +528,7 @@ export async function addOrUpdatePosition(userId, { symbol, quantity, price, nam
             pricePaidUSD: Number(buyPrice.toFixed(2)),
             newTotalShares: position.quantity,
             newAveragePriceUSD: Number(position.averagePrice.toFixed(2)),
-            message: `Successfully added ${qty} shares of ${cleanSymbol} at $${buyPrice.toFixed(2)}. New total: ${position.quantity} shares with blended average price of $${position.averagePrice.toFixed(2)}.`
+            message: `Successfully added ${qty} shares of ${cleanSymbol} at $${buyPrice.toFixed(2)} in account '${position.broker}'. New total: ${position.quantity} shares with blended average price of $${position.averagePrice.toFixed(2)}.`
         };
     } else {
         if (buyPrice === null || isNaN(buyPrice) || buyPrice <= 0) {
@@ -604,11 +604,20 @@ export async function sellPosition(userId, { symbol, quantity, broker }, apiKeyC
     }
 
     const query = { user: userId, symbol: cleanSymbol, isDeleted: { $ne: true } };
-    if (broker) query.broker = broker.trim();
+    if (broker && typeof broker === 'string' && broker.trim()) {
+        query.broker = broker.trim();
+    } else {
+        const matching = await Position.find({ user: userId, symbol: cleanSymbol, isDeleted: { $ne: true } });
+        if (matching.length > 1) {
+            const brokerList = matching.map(p => `'${p.broker || 'Default'}'`).join(', ');
+            throw new Error(`Multiple positions found for ${cleanSymbol} across brokers: ${brokerList}. Please specify the 'broker' argument (e.g. broker: 'IBI') to target the specific account.`);
+        }
+    }
 
     const position = await Position.findOne(query);
     if (!position) {
-        throw new Error(`Position '${cleanSymbol}' was not found in your active portfolio.`);
+        const brokerMsg = query.broker ? ` in broker '${query.broker}'` : '';
+        throw new Error(`Position '${cleanSymbol}'${brokerMsg} was not found in your active portfolio.`);
     }
 
     const beforeState = {
@@ -726,11 +735,20 @@ export async function removePosition(userId, { symbol, broker, confirm = true },
     }
 
     const query = { user: userId, symbol: cleanSymbol, isDeleted: { $ne: true } };
-    if (broker) query.broker = broker.trim();
+    if (broker && typeof broker === 'string' && broker.trim()) {
+        query.broker = broker.trim();
+    } else {
+        const matching = await Position.find({ user: userId, symbol: cleanSymbol, isDeleted: { $ne: true } });
+        if (matching.length > 1) {
+            const brokerList = matching.map(p => `'${p.broker || 'Default'}'`).join(', ');
+            throw new Error(`Multiple positions found for ${cleanSymbol} across brokers: ${brokerList}. Please specify the 'broker' argument (e.g. broker: 'IBI') to target the specific account.`);
+        }
+    }
 
     const position = await Position.findOne(query);
     if (!position) {
-        throw new Error(`Position '${cleanSymbol}' was not found in your portfolio.`);
+        const brokerMsg = query.broker ? ` in broker '${query.broker}'` : '';
+        throw new Error(`Position '${cleanSymbol}'${brokerMsg} was not found in your portfolio.`);
     }
 
     const beforeState = {
@@ -786,11 +804,20 @@ export async function updatePositionHolding(userId, { symbol, quantity, averageP
     }
 
     const query = { user: userId, symbol: cleanSymbol, isDeleted: { $ne: true } };
-    if (broker) query.broker = broker.trim();
+    if (broker && typeof broker === 'string' && broker.trim()) {
+        query.broker = broker.trim();
+    } else {
+        const matching = await Position.find({ user: userId, symbol: cleanSymbol, isDeleted: { $ne: true } });
+        if (matching.length > 1) {
+            const brokerList = matching.map(p => `'${p.broker || 'Default'}'`).join(', ');
+            throw new Error(`Multiple positions found for ${cleanSymbol} across brokers: ${brokerList}. Please specify the 'broker' argument (e.g. broker: 'IBI') to target the specific account.`);
+        }
+    }
 
     const position = await Position.findOne(query);
     if (!position) {
-        throw new Error(`Position '${cleanSymbol}' was not found in your portfolio.`);
+        const brokerMsg = query.broker ? ` in broker '${query.broker}'` : '';
+        throw new Error(`Position '${cleanSymbol}'${brokerMsg} was not found in your portfolio.`);
     }
 
     const beforeState = {
@@ -809,7 +836,6 @@ export async function updatePositionHolding(userId, { symbol, quantity, averageP
         price: avgPrice,
         date: new Date()
     }];
-    if (broker) position.broker = broker.trim();
     position.markModified('lots');
     await position.save();
 
@@ -822,7 +848,7 @@ export async function updatePositionHolding(userId, { symbol, quantity, averageP
         lots: JSON.parse(JSON.stringify(position.lots || []))
     };
 
-    const details = `Updated ${cleanSymbol}: quantity set to ${qty}, average price to $${avgPrice.toFixed(2)}.`;
+    const details = `Updated ${cleanSymbol} (${position.broker}): quantity set to ${qty}, average price to $${avgPrice.toFixed(2)}.`;
 
     await logAuditAction({
         userId,
@@ -838,9 +864,10 @@ export async function updatePositionHolding(userId, { symbol, quantity, averageP
         success: true,
         action: 'UPDATED_POSITION',
         symbol: cleanSymbol,
+        broker: position.broker,
         quantity: position.quantity,
         averagePriceUSD: Number(position.averagePrice.toFixed(2)),
-        message: `Successfully updated ${cleanSymbol} to ${position.quantity} shares at an average cost of $${position.averagePrice.toFixed(2)}.`
+        message: `Successfully updated ${cleanSymbol} in account '${position.broker}' to ${position.quantity} shares at an average cost of $${position.averagePrice.toFixed(2)}.`
     };
 }
 
@@ -1042,21 +1069,45 @@ export function createMcpServer(user, apiKeyContext = null) {
         'get_position_details',
         "Get detailed information on a specific stock position in the user's portfolio, including buy lot history, purchase dates, and broker.",
         {
-            symbol: z.string().describe("Stock ticker symbol or fund ID, e.g. 'AAPL', 'NVDA', or '5131425'")
+            symbol: z.string().describe("Stock ticker symbol or fund ID, e.g. 'AAPL', 'NVDA', or '5131425'"),
+            broker: z.string().optional().describe("Broker or account name (e.g. 'Blink', 'IBI'). Optional, required if same symbol is held across multiple brokers.")
         },
-        async ({ symbol }) => {
+        async ({ symbol, broker }) => {
             const clean = normalizeSymbol(symbol);
-            const pos = await Position.findOne({
+            const query = {
                 user: user._id,
                 symbol: clean,
                 isDeleted: { $ne: true }
-            }).lean();
+            };
+
+            if (broker && typeof broker === 'string' && broker.trim()) {
+                query.broker = broker.trim();
+            } else {
+                const matching = await Position.find({
+                    user: user._id,
+                    symbol: clean,
+                    isDeleted: { $ne: true }
+                }).lean();
+
+                if (matching.length > 1) {
+                    const brokerList = matching.map(p => `'${p.broker || 'Default'}'`).join(', ');
+                    return {
+                        content: [{
+                            type: 'text',
+                            text: `Multiple positions found for '${clean}' across brokers: ${brokerList}. Please specify the 'broker' argument (e.g. broker: 'IBI') to see details for a specific account.`
+                        }]
+                    };
+                }
+            }
+
+            const pos = await Position.findOne(query).lean();
 
             if (!pos) {
+                const brokerMsg = query.broker ? ` in broker '${query.broker}'` : '';
                 return {
                     content: [{
                         type: 'text',
-                        text: `Position for symbol '${clean}' was not found in active portfolio.`
+                        text: `Position for symbol '${clean}'${brokerMsg} was not found in active portfolio.`
                     }]
                 };
             }

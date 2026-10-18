@@ -26,6 +26,7 @@ export interface Position {
 
   quantity: number;
   averagePrice: number;
+  broker?: string;
   lots?: Lot[]; // Array of purchase lots
   sparklineData: number[];
   color: string;
@@ -41,7 +42,7 @@ interface PortfolioContextType {
   positionsLoading: boolean;
   positionsReady: boolean;
   error: string | null;
-  addPosition: (symbol: string, name: string, quantity: number, averagePrice: number, date?: string | Date) => Promise<void>;
+  addPosition: (symbol: string, name: string, quantity: number, averagePrice: number, date?: string | Date, broker?: string) => Promise<void>;
   updatePosition: (id: string, quantity?: number, averagePrice?: number, lots?: Lot[]) => Promise<void>;
   removePosition: (id: string) => Promise<void>;
 
@@ -331,6 +332,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           name: pos.name,
           quantity: pos.quantity,
           averagePrice: pos.averagePrice,
+          broker: pos.broker || 'Default',
           lots: pos.lots,
           price: currentPrice,
           change,
@@ -549,15 +551,17 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, positions.length]);
 
-  const addPosition = async (symbol: string, name: string, quantity: number, averagePrice: number, date?: string | Date) => {
+  const addPosition = async (symbol: string, name: string, quantity: number, averagePrice: number, date?: string | Date, broker?: string) => {
     try {
       setError(null);
+      const assignedBroker = (broker && typeof broker === 'string' && broker.trim()) ? broker.trim() : 'Default';
       const newPosition = await positionsAPI.create({
         symbol: symbol.toUpperCase(),
         name,
         quantity,
         averagePrice, // Ensure this field is sent
         date: date || new Date(),
+        broker: assignedBroker,
       });
 
       // Try to fetch current price, but don't fail if it doesn't work
@@ -583,6 +587,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         _id: newPosition._id,
         symbol: newPosition.symbol,
         name: newPosition.name,
+        broker: newPosition.broker || assignedBroker,
         quantity: newPosition.quantity,
         averagePrice: newPosition.averagePrice,
         lots: newPosition.lots,
@@ -604,7 +609,19 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       };
 
       setPositions((prev) => {
-        const updated = [...prev, positionWithPrice];
+        const existingIdx = prev.findIndex(p => p._id === newPosition._id);
+        let updated: Position[];
+        if (existingIdx >= 0) {
+          updated = prev.map((p, idx) => idx === existingIdx ? {
+            ...p,
+            quantity: newPosition.quantity,
+            averagePrice: newPosition.averagePrice,
+            lots: newPosition.lots,
+            broker: newPosition.broker || p.broker || assignedBroker
+          } : p);
+        } else {
+          updated = [...prev, positionWithPrice];
+        }
         saveCachedPositions(updated);
         return updated;
       });

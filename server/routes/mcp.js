@@ -434,7 +434,8 @@ const MCP_TOOLS_DEFINITIONS = [
         inputSchema: {
             type: 'object',
             properties: {
-                symbol: { type: 'string', description: "Stock ticker symbol or fund ID, e.g. 'AAPL', 'NVDA', or '5131425'" }
+                symbol: { type: 'string', description: "Stock ticker symbol or fund ID, e.g. 'AAPL', 'NVDA', or '5131425'" },
+                broker: { type: 'string', description: "Broker or account name (e.g. 'Blink', 'IBI'). Optional, required if same symbol is held across multiple brokers." }
             },
             required: ['symbol']
         },
@@ -523,7 +524,7 @@ const MCP_TOOLS_DEFINITIONS = [
             properties: {
                 symbol: { type: 'string', description: "Stock ticker symbol to sell, e.g. 'NVDA'" },
                 quantity: { type: 'number', description: "Number of shares sold (optional, closes position if omitted or >= total)" },
-                broker: { type: 'string', description: "Broker name if position is in a specific broker" }
+                broker: { type: 'string', description: "Broker or account name (e.g. 'Blink', 'IBI'). Optional, required if same symbol is held across multiple brokers." }
             },
             required: ['symbol']
         },
@@ -540,7 +541,7 @@ const MCP_TOOLS_DEFINITIONS = [
             type: 'object',
             properties: {
                 symbol: { type: 'string', description: "Stock ticker symbol to remove, e.g. 'NVDA'" },
-                broker: { type: 'string', description: "Broker name (optional)" },
+                broker: { type: 'string', description: "Broker or account name (e.g. 'Blink', 'IBI'). Optional, required if same symbol is held across multiple brokers." },
                 confirm: { type: 'boolean', description: "Must be true to confirm removal" }
             },
             required: ['symbol']
@@ -560,7 +561,7 @@ const MCP_TOOLS_DEFINITIONS = [
                 symbol: { type: 'string', description: "Stock ticker symbol to update, e.g. 'NVDA'" },
                 quantity: { type: 'number', description: "New total quantity of shares" },
                 averagePrice: { type: 'number', description: "New average price per share in USD" },
-                broker: { type: 'string', description: "Broker name (optional)" }
+                broker: { type: 'string', description: "Broker or account name (e.g. 'Blink', 'IBI'). Optional, required if same symbol is held across multiple brokers." }
             },
             required: ['symbol', 'quantity', 'averagePrice']
         },
@@ -722,13 +723,28 @@ router.post('/', async (req, res) => {
 
             if (toolName === 'get_position_details') {
                 const symbol = args.symbol?.toUpperCase();
+                const broker = args.broker ? String(args.broker).trim() : null;
                 const data = await getPortfolioMetrics(user._id);
-                const pos = data.positions.find((p) => p.symbol === symbol);
-                if (!pos) {
+                let matching = data.positions.filter((p) => p.symbol === symbol);
+
+                if (broker) {
+                    matching = matching.filter((p) => (p.broker || 'Default').toLowerCase() === broker.toLowerCase());
+                } else if (matching.length > 1) {
+                    const brokerList = matching.map(p => `'${p.broker || 'Default'}'`).join(', ');
                     return res.json({
                         jsonrpc: '2.0',
                         id,
-                        result: { content: [{ type: 'text', text: `Position '${symbol}' not found in active portfolio.` }] }
+                        result: { content: [{ type: 'text', text: `Multiple positions found for '${symbol}' across brokers: ${brokerList}. Please specify the 'broker' argument (e.g. broker: 'IBI') to target the specific account.` }] }
+                    });
+                }
+
+                const pos = matching[0];
+                if (!pos) {
+                    const brokerMsg = broker ? ` in broker '${broker}'` : '';
+                    return res.json({
+                        jsonrpc: '2.0',
+                        id,
+                        result: { content: [{ type: 'text', text: `Position '${symbol}'${brokerMsg} not found in active portfolio.` }] }
                     });
                 }
                 return res.json({
