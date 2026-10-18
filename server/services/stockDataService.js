@@ -156,25 +156,36 @@ async function dedupedFetch(key, fetchFn) {
  * Called by both stocksController and liveAlertsService.
  */
 export async function getQuote(symbol) {
-    const cacheKey = `quote_${symbol}`;
+    if (!symbol || typeof symbol !== 'string') {
+        throw new Error('Symbol is required');
+    }
+
+    let cleanSymbol = symbol.trim().toUpperCase();
+    if (cleanSymbol === 'TA125' || cleanSymbol === 'TA-125' || cleanSymbol === '^TA125') {
+        cleanSymbol = '^TA125.TA';
+    } else if (/^\d{6,8}$/.test(cleanSymbol)) {
+        cleanSymbol = `FUND:${cleanSymbol}`;
+    }
+
+    const cacheKey = `quote_${cleanSymbol}`;
 
     // Check cache first
     const cached = getCached(cacheKey, CACHE_DURATIONS.quote);
     if (cached) return cached;
 
     // HANDLE ISRAELI STOCKS (TASE) via Yahoo Finance
-    if (symbol.endsWith('.TA')) {
+    if (cleanSymbol.endsWith('.TA')) {
         return dedupedFetch(cacheKey, async () => {
             console.log(`נ‡®נ‡± Fetching TASE quote for ${symbol} from Yahoo Finance...`);
             try {
                 // Fetch quote and forex rate in parallel using circuit breakers
                 const [quote, forexData] = await Promise.all([
-                    yahooCircuitBreaker(() => yahooFinance.quote(symbol)),
+                    yahooCircuitBreaker(() => yahooFinance.quote(cleanSymbol)),
                     getForexRate()
                 ]);
 
                 if (!quote || quote.regularMarketPrice === undefined) {
-                    throw new Error(`No Yahoo Finance data for ${symbol}`);
+                    throw new Error(`No Yahoo Finance data for ${cleanSymbol}`);
                 }
 
                 // TASE prices are in Agorot (ILA) -> Convert to ILS (/100) -> Convert to USD (/rate)
@@ -222,8 +233,8 @@ export async function getQuote(symbol) {
     }
 
     // HANDLE ISRAELI MUTUAL FUNDS via TASE API
-    if (symbol.startsWith('FUND:')) {
-        const fundId = symbol.split(':')[1];
+    if (cleanSymbol.startsWith('FUND:')) {
+        const fundId = cleanSymbol.split(':')[1];
         return dedupedFetch(cacheKey, async () => {
             console.log(`🇮🇱 Fetching TASE NAV for Mutual Fund ${fundId} in getQuote...`);
             try {
@@ -280,7 +291,7 @@ export async function getQuote(symbol) {
         const apiKey = getApiKey();
         if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
 
-        const url = `${FINNHUB_BASE_URL}/quote?symbol=${symbol}&token=${apiKey}`;
+        const url = `${FINNHUB_BASE_URL}/quote?symbol=${cleanSymbol}&token=${apiKey}`;
         const data = await finnhubCircuitBreaker(() =>
             finnhubRateLimiter.execute(async () => {
                 const response = await fetch(url);
@@ -351,14 +362,25 @@ export async function searchStocks(query) {
  * Uses cache + in-flight dedup.
  */
 export async function getExtendedQuote(symbol) {
-    const cacheKey = `extended_quote_${symbol}`;
+    if (!symbol || typeof symbol !== 'string') {
+        throw new Error('Symbol is required');
+    }
+
+    let cleanSymbol = symbol.trim().toUpperCase();
+    if (cleanSymbol === 'TA125' || cleanSymbol === 'TA-125' || cleanSymbol === '^TA125') {
+        cleanSymbol = '^TA125.TA';
+    } else if (/^\d{6,8}$/.test(cleanSymbol)) {
+        cleanSymbol = `FUND:${cleanSymbol}`;
+    }
+
+    const cacheKey = `extended_quote_${cleanSymbol}`;
 
     const cached = getCached(cacheKey, CACHE_DURATIONS.extendedQuote);
     if (cached) return cached;
 
     // HANDLE ISRAELI MUTUAL FUNDS
-    if (symbol.startsWith('FUND:')) {
-        const fundId = symbol.split(':')[1];
+    if (cleanSymbol.startsWith('FUND:')) {
+        const fundId = cleanSymbol.split(':')[1];
         return dedupedFetch(cacheKey, async () => {
             try {
                 const [navData, forexData] = await Promise.all([
@@ -378,7 +400,7 @@ export async function getExtendedQuote(symbol) {
                 const changeInUSD = changeInILS / usdRate;
 
                 const result = {
-                    symbol: symbol,
+                    symbol: cleanSymbol,
                     regularMarketPrice: priceInUSD,
                     regularMarketPreviousClose: priceInUSD - changeInUSD,
                     regularMarketChange: changeInUSD,
@@ -396,17 +418,17 @@ export async function getExtendedQuote(symbol) {
                 setCache(cacheKey, result);
                 return result;
             } catch (error) {
-                console.error(`❌ TASE Fund Extended Quote error for ${symbol}:`, error.message);
+                console.error(`❌ TASE Fund Extended Quote error for ${cleanSymbol}:`, error.message);
                 throw error;
             }
         });
     }
 
     return dedupedFetch(cacheKey, async () => {
-        const quote = await yahooFinance.quote(symbol);
+        const quote = await yahooFinance.quote(cleanSymbol);
 
         if (!quote) {
-            throw new Error(`No Yahoo Finance data for ${symbol}`);
+            throw new Error(`No Yahoo Finance data for ${cleanSymbol}`);
         }
 
         const result = {
@@ -464,19 +486,42 @@ export async function getExtendedQuote(symbol) {
 export async function getBatchExtendedQuotes(symbols) {
     if (!symbols || symbols.length === 0) return {};
 
+    // Normalize symbols while maintaining mapping to original requested symbols
+    const symbolMapping = new Map(); // original -> normalized
+    const normalizedToOriginals = new Map(); // normalized -> [originals]
+
+    for (const raw of symbols) {
+        if (!raw || typeof raw !== 'string') continue;
+        const orig = raw.trim();
+        let norm = orig.toUpperCase();
+        if (norm === 'TA125' || norm === 'TA-125' || norm === '^TA125') {
+            norm = '^TA125.TA';
+        } else if (/^\d{6,8}$/.test(norm)) {
+            norm = `FUND:${norm}`;
+        }
+        symbolMapping.set(orig, norm);
+        if (!normalizedToOriginals.has(norm)) {
+            normalizedToOriginals.set(norm, []);
+        }
+        normalizedToOriginals.get(norm).push(orig);
+    }
+
     // Filter out symbols that are already cached
     const uncachedSymbols = [];
     const results = {};
-    const fundSymbols = []; // Symbols that start with FUND:
+    const fundSymbols = []; // Normalized symbols that start with FUND:
 
-    for (const symbol of symbols) {
-        const cached = getCached(`extended_quote_${symbol}`, CACHE_DURATIONS.extendedQuote);
+    for (const [norm, origs] of normalizedToOriginals.entries()) {
+        const cached = getCached(`extended_quote_${norm}`, CACHE_DURATIONS.extendedQuote);
         if (cached) {
-            results[symbol] = cached;
-        } else if (symbol.startsWith('FUND:')) {
-            fundSymbols.push(symbol);
+            results[norm] = cached;
+            for (const orig of origs) {
+                results[orig] = cached;
+            }
+        } else if (norm.startsWith('FUND:')) {
+            fundSymbols.push(norm);
         } else {
-            uncachedSymbols.push(symbol);
+            uncachedSymbols.push(norm);
         }
     }
 
@@ -492,7 +537,6 @@ export async function getBatchExtendedQuotes(symbols) {
     }
 
     if (fundSymbols.length > 0) {
-
         for (const symbol of fundSymbols) {
             try {
                 const fundId = symbol.split(':')[1];
@@ -501,9 +545,11 @@ export async function getBatchExtendedQuotes(symbols) {
                 // Analytics Guard: if price fetch failed or returned 0, use cached value
                 if (!navData.price || navData.price === 0 || navData.error) {
                     console.warn(`[IsraeliSecurities] Price=0 or error for ${symbol}. Using cached value if available.`);
-                    const cached = getCache(`extended_quote_${symbol}`);
+                    const cached = getCached(`extended_quote_${symbol}`, CACHE_DURATIONS.extendedQuote);
                     if (cached) {
                         results[symbol] = cached;
+                        const origs = normalizedToOriginals.get(symbol) || [];
+                        for (const orig of origs) results[orig] = cached;
                         console.log(`[IsraeliSecurities] Using cached price for ${symbol}: $${cached.regularMarketPrice}`);
                     }
                     continue;
@@ -512,7 +558,7 @@ export async function getBatchExtendedQuotes(symbols) {
                 // Convert to USD: Price_USD = (Price_Agorot / 100) / Rate_ILS_per_USD
                 // navData.price is already in ILS (priceAgorot / 100 from the service)
                 const priceInUSD = navData.price / usdIlsRate;
-                const changeInUSD = navData.change / usdIlsRate;
+                const changeInUSD = (navData.change || 0) / usdIlsRate;
 
                 // Debug Logging
                 const priceAgorot = navData.price * 100;
@@ -523,28 +569,40 @@ export async function getBatchExtendedQuotes(symbols) {
                     regularMarketPrice: priceInUSD,
                     regularMarketPreviousClose: priceInUSD - changeInUSD,
                     regularMarketChange: changeInUSD,
-                    regularMarketChangePercent: navData.changePercent,
+                    regularMarketChangePercent: navData.changePercent || 0,
                     marketState: 'CLOSED', // Funds only update once a day
                     exchangeTimezoneName: 'Asia/Jerusalem',
                     currency: 'USD' // System assumes USD base
                 };
                 setCache(`extended_quote_${symbol}`, result);
                 results[symbol] = result;
+                const origs = normalizedToOriginals.get(symbol) || [];
+                for (const orig of origs) {
+                    results[orig] = result;
+                }
             } catch (err) {
                 console.error(`[IsraeliSecurities] Failed to fetch NAV for ${symbol}:`, err);
                 // Analytics Guard: use cached value on exception
-                const cached = getCache(`extended_quote_${symbol}`);
+                const cached = getCached(`extended_quote_${symbol}`, CACHE_DURATIONS.extendedQuote);
                 if (cached) {
                     results[symbol] = cached;
+                    const origs = normalizedToOriginals.get(symbol) || [];
+                    for (const orig of origs) results[orig] = cached;
                     console.log(`[IsraeliSecurities] Using cached price for ${symbol} after error`);
                 }
             }
         }
     }
 
-    // If all cached, return immediately
+    // If all cached or processed, populate original keys and return
     if (uncachedSymbols.length === 0) {
-        console.log(`ג… Batch extended quotes: all ${symbols.length} from cache`);
+        for (const raw of symbols) {
+            const norm = symbolMapping.get(raw);
+            if (norm && results[norm] && !results[raw]) {
+                results[raw] = results[norm];
+            }
+        }
+        console.log(`✅ Batch extended quotes: all ${symbols.length} resolved`);
         return results;
     }
 
@@ -553,7 +611,7 @@ export async function getBatchExtendedQuotes(symbols) {
 
     try {
         const batchResults = await dedupedFetch(batchKey, async () => {
-            console.log(`נ“ Batch fetching ${uncachedSymbols.length} extended quotes from Yahoo Finance: ${uncachedSymbols.join(', ')}`);
+            console.log(`📊 Batch fetching ${uncachedSymbols.length} extended quotes from Yahoo Finance: ${uncachedSymbols.join(', ')}`);
 
             // yahoo-finance2 supports array of symbols!
             const quotes = await yahooFinance.quote(uncachedSymbols);
@@ -622,10 +680,27 @@ export async function getBatchExtendedQuotes(symbols) {
             return batchData;
         });
 
-        return { ...results, ...batchResults };
+        // Merge batchResults into results and map back to original requested symbols
+        const finalResults = { ...results, ...batchResults };
+        for (const [norm, origs] of normalizedToOriginals.entries()) {
+            if (finalResults[norm]) {
+                for (const orig of origs) {
+                    finalResults[orig] = finalResults[norm];
+                }
+            }
+        }
+
+        return finalResults;
     } catch (error) {
-        console.error(`ג Batch extended quote error:`, error.message);
+        console.error(`❌ Batch extended quote error:`, error.message);
         // Return whatever we had from cache
+        for (const [norm, origs] of normalizedToOriginals.entries()) {
+            if (results[norm]) {
+                for (const orig of origs) {
+                    results[orig] = results[norm];
+                }
+            }
+        }
         return results;
     }
 }

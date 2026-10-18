@@ -421,8 +421,9 @@ export async function getWatchlistItems(userId) {
 export function normalizeSymbol(symbol) {
     if (!symbol || typeof symbol !== 'string') return '';
     let clean = symbol.trim().toUpperCase();
-    // If it's a numeric ID (e.g. 5131425), format as FUND:5131425
-    if (/^\d{6,8}$/.test(clean)) {
+    if (clean === 'TA125' || clean === 'TA-125' || clean === '^TA125') {
+        clean = '^TA125.TA';
+    } else if (/^\d{6,8}$/.test(clean)) {
         clean = `FUND:${clean}`;
     }
     return clean;

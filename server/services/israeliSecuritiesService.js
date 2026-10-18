@@ -1,43 +1,110 @@
+import fetch from 'node-fetch';
+import mongoose from 'mongoose';
 import { israeliCatalog } from '../data/israeliCatalog.js';
 import { makeProxyRequest } from '../utils/proxyUtils.js';
 import CachedPrice from '../models/CachedPrice.js';
+
+/**
+ * Fetch daily fund price directly from Funder (free, public, real-time daily NAV)
+ */
+export async function fetchFundFromFunder(fundId) {
+    try {
+        const cleanId = String(fundId).replace(/\D/g, '');
+        if (!cleanId) return null;
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+
+        const res = await fetch(`https://www.funder.co.il/fund/${cleanId}`, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            },
+            signal: controller.signal
+        });
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+            console.warn(`[Funder] Response status ${res.status} for fund ${cleanId}`);
+            return null;
+        }
+
+        const html = await res.text();
+        const match = html.match(/var fundData = (\{[\s\S]*?\});/);
+        if (!match) {
+            return null;
+        }
+
+        const data = JSON.parse(match[1]);
+        const f = data.x?.[0];
+        if (!f) return null;
+
+        const priceILS = Number(f.buyPrice || f.sellPrice || 0);
+        if (priceILS <= 0) return null;
+
+        const changePercent = Number(f['1day'] || 0);
+        const name = f.fundName || f.fundLongName || `קרן ${cleanId}`;
+
+        return {
+            fundId: cleanId,
+            priceILS,
+            changePercent,
+            name,
+            source: 'funder'
+        };
+    } catch (err) {
+        console.warn(`[Funder] Error fetching fund ${fundId}:`, err.message);
+        return null;
+    }
+}
 
 /**
  * Perform a simple fuzzy search on Hebrew/English names in the catalog
  */
 export function searchIsraeliSecurities(query) {
     const data = israeliCatalog;
-    console.log("[DEBUG] Catalog Size:", data.length);
 
     if (!query) return [];
 
     const lowerQuery = query.toLowerCase().trim();
 
     // Check if user is searching for an exact fund ID directly
-    const directMatch = data.filter(item => {
+    let directMatch = data.filter(item => {
         const symbol = String(item.symbol || '').toLowerCase().trim();
         const fundId = String(item.fundId || '').toLowerCase().trim();
-        const safeQuery = String(query).toLowerCase().trim();
-        return symbol === safeQuery || fundId === safeQuery;
+        const alias = String(item.alias || '').toLowerCase().trim();
+        return symbol === lowerQuery || fundId === lowerQuery || alias === lowerQuery;
     });
 
     let results = [];
-    if (directMatch.length > 0 && /^\d+$/.test(lowerQuery)) {
+    if (directMatch.length > 0) {
         results = directMatch;
+    } else if (/^\d{6,8}$/.test(lowerQuery)) {
+        // Dynamic match for any 6-8 digit Israeli fund ID even if not yet in catalog
+        results = [{
+            symbol: `FUND:${lowerQuery}`,
+            fundId: lowerQuery,
+            hebrewName: `קרן נאמנות ${lowerQuery}`,
+            englishName: `Mutual Fund ${lowerQuery}`,
+            type: 'fund',
+            exchange: 'TASE'
+        }];
     } else {
-        const queryWords = lowerQuery.split(/\s+/);
+        const queryWords = lowerQuery.replace(/["'״׳]/g, '').split(/\s+/);
 
         results = data.filter(item => {
-            const hName = String(item.hebrewName || '').toLowerCase();
+            const hName = String(item.hebrewName || '').toLowerCase().replace(/["'״׳]/g, '');
             const eName = String(item.englishName || '').toLowerCase();
             const symbol = String(item.symbol || '').toLowerCase();
             const fundId = String(item.fundId || '').toLowerCase();
+            const alias = String(item.alias || '').toLowerCase();
 
             return queryWords.every(word =>
                 hName.includes(word) ||
                 eName.includes(word) ||
                 symbol.includes(word) ||
-                fundId.includes(word)
+                fundId.includes(word) ||
+                alias.includes(word)
             );
         });
     }
@@ -48,7 +115,7 @@ export function searchIsraeliSecurities(query) {
         description: `${item.hebrewName} | ${item.englishName}`,
         displaySymbol: item.symbol,
         symbol: item.symbol,
-        type: item.type === 'fund' ? 'MUTUAL FUND' : 'Common Stock',
+        type: item.type === 'fund' ? 'MUTUAL FUND' : item.type === 'index' ? 'INDEX' : 'Common Stock',
         israeliData: item
     }));
 }
@@ -56,54 +123,98 @@ export function searchIsraeliSecurities(query) {
 // ============================================
 // CACHE-FIRST ARCHITECTURE
 // ============================================
-// fetchFundNAV() → reads from MongoDB cache (instant, never blocks)
-// refreshFundPrice() → uses proxy to update the DB cache (slow, for background/manual use)
 
 /**
- * Fetch fund NAV from the DATABASE CACHE.
- * This is called by the dashboard — it NEVER makes a proxy call.
- * Returns instantly with cached data or a safe fallback.
+ * Fetch fund NAV from the DATABASE CACHE, with auto-fetch from Funder if missing/stale.
+ * Guaranteed to return updated daily price without blocking proxy locks.
  */
 export async function fetchFundNAV(fundId) {
-    try {
-        const cached = await CachedPrice.findOne({ fundId });
+    const cleanId = String(fundId).replace(/\D/g, '');
+    let cached = null;
 
-        if (cached) {
-            const ageHours = (Date.now() - cached.updatedAt.getTime()) / (1000 * 60 * 60);
-            console.log(`[IsraeliCache] Fund ${fundId}: priceILS=${cached.priceILS}, priceUSD=${cached.priceUSD}, age=${ageHours.toFixed(1)}h`);
+    // Check DB cache only if Mongoose is connected
+    try {
+        if (mongoose.connection && mongoose.connection.readyState === 1) {
+            cached = await CachedPrice.findOne({ fundId: cleanId });
+
+            if (cached && cached.priceILS > 0) {
+                const ageHours = (Date.now() - cached.updatedAt.getTime()) / (1000 * 60 * 60);
+
+                // Fresh cache (< 24 hours): return immediately
+                if (ageHours < 24) {
+                    console.log(`[IsraeliCache] Fund ${cleanId}: priceILS=${cached.priceILS}, age=${ageHours.toFixed(1)}h (from cache)`);
+                    return {
+                        price: cached.priceILS,
+                        change: 0,
+                        changePercent: cached.changePercent || 0,
+                        currency: 'ILS',
+                        name: cached.name,
+                        timestamp: Math.floor(cached.updatedAt.getTime() / 1000),
+                        fromCache: true,
+                        ageHours: Math.round(ageHours * 10) / 10
+                    };
+                }
+            }
+        }
+    } catch (dbErr) {
+        console.warn(`[IsraeliCache] DB read skipped for ${cleanId}:`, dbErr.message);
+    }
+
+    // Cache missing, stale, or DB not connected -> fetch latest daily price from Funder!
+    try {
+        console.log(`[FundNAV] Fetching fresh daily price for fund ${cleanId} from Funder...`);
+        const funderData = await fetchFundFromFunder(cleanId);
+        if (funderData && funderData.priceILS > 0) {
+            // Attempt to update cache asynchronously if DB is connected
+            try {
+                if (mongoose.connection && mongoose.connection.readyState === 1) {
+                    await setCachedPrice(cleanId, funderData.priceILS, 3.65, {
+                        changePercent: funderData.changePercent,
+                        name: funderData.name,
+                        source: 'funder'
+                    });
+                }
+            } catch (saveErr) {
+                console.warn(`[IsraeliCache] Could not save cache for ${cleanId}:`, saveErr.message);
+            }
 
             return {
-                price: cached.priceILS,
+                price: funderData.priceILS,
                 change: 0,
-                changePercent: cached.changePercent || 0,
+                changePercent: funderData.changePercent,
                 currency: 'ILS',
-                timestamp: Math.floor(cached.updatedAt.getTime() / 1000),
-                fromCache: true,
-                ageHours: Math.round(ageHours * 10) / 10
+                name: funderData.name,
+                timestamp: Math.floor(Date.now() / 1000),
+                fromCache: false,
+                ageHours: 0
             };
         }
+    } catch (funderErr) {
+        console.warn(`[FundNAV] Funder fetch failed for ${cleanId}:`, funderErr.message);
+    }
 
-        // No cached data at all — return safe fallback
-        console.warn(`[IsraeliCache] No cached price for fund ${fundId}. Use /api/stocks/refresh-israeli-prices to populate.`);
+    // Fallback to older cache if Funder fetch failed
+    if (cached && cached.priceILS > 0) {
         return {
-            price: 0,
+            price: cached.priceILS,
             change: 0,
-            changePercent: 0,
+            changePercent: cached.changePercent || 0,
             currency: 'ILS',
-            timestamp: Math.floor(Date.now() / 1000),
-            error: 'No cached price available. Please refresh Israeli prices.'
-        };
-    } catch (err) {
-        console.error(`[IsraeliCache] DB read error for ${fundId}:`, err.message);
-        return {
-            price: 0,
-            change: 0,
-            changePercent: 0,
-            currency: 'ILS',
-            timestamp: Math.floor(Date.now() / 1000),
-            error: err.message
+            name: cached.name,
+            timestamp: Math.floor(cached.updatedAt.getTime() / 1000),
+            fromCache: true,
+            ageHours: Math.round((Date.now() - cached.updatedAt.getTime()) / (1000 * 60 * 60))
         };
     }
+
+    return {
+        price: 0,
+        change: 0,
+        changePercent: 0,
+        currency: 'ILS',
+        timestamp: Math.floor(Date.now() / 1000),
+        error: `No cached price available for fund ${cleanId}.`
+    };
 }
 
 /**
@@ -130,13 +241,15 @@ export async function setCachedPrice(fundId, priceILS, exchangeRate, extra = {})
         updatedAt: new Date()
     };
 
-    await CachedPrice.findOneAndUpdate(
-        { fundId },
-        update,
-        { upsert: true, new: true }
-    );
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+        await CachedPrice.findOneAndUpdate(
+            { fundId },
+            update,
+            { upsert: true, new: true }
+        );
+        console.log(`[IsraeliCache] Updated fund ${fundId}: ILS=${priceILS}, USD=${priceUSD.toFixed(4)}, rate=${exchangeRate}`);
+    }
 
-    console.log(`[IsraeliCache] Updated fund ${fundId}: ILS=${priceILS}, USD=${priceUSD.toFixed(4)}, rate=${exchangeRate}`);
     return update;
 }
 
@@ -146,11 +259,32 @@ export async function setCachedPrice(fundId, priceILS, exchangeRate, extra = {})
  * It should ONLY be called from the manual refresh endpoint, never from the dashboard.
  */
 export async function refreshFundPriceViaProxy(fundId, exchangeRate = 3.65) {
+    // 1. Try fast, reliable Funder fetch first (no proxy or credentials required)
+    try {
+        const funderData = await fetchFundFromFunder(fundId);
+        if (funderData && funderData.priceILS > 0) {
+            await setCachedPrice(fundId, funderData.priceILS, exchangeRate, {
+                changePercent: funderData.changePercent,
+                name: funderData.name,
+                source: 'funder'
+            });
+            return {
+                fundId,
+                priceILS: funderData.priceILS,
+                priceUSD: funderData.priceILS / exchangeRate,
+                changePercent: funderData.changePercent,
+                source: 'funder'
+            };
+        }
+    } catch (funderErr) {
+        console.warn(`[Refresh] Funder fetch failed for ${fundId}, falling back to TASE proxy:`, funderErr.message);
+    }
+
     const clientId = process.env.TASE_CLIENT_ID;
     const clientSecret = process.env.TASE_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-        throw new Error('TASE_CLIENT_ID or TASE_CLIENT_SECRET not configured');
+        throw new Error('TASE credentials not configured and Funder fallback was unavailable');
     }
 
     // Step 1: Get OAuth token

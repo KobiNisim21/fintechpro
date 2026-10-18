@@ -22,13 +22,28 @@ export const getPositions = async (req, res) => {
 // @access  Private
 export const addPosition = async (req, res) => {
     try {
-        const { symbol, name, quantity, averagePrice, date } = req.body;
+        let { symbol, name, quantity, averagePrice, date } = req.body;
+
+        if (!symbol || typeof symbol !== 'string') {
+            return res.status(400).json({ message: 'Symbol is required' });
+        }
+
+        let cleanSymbol = symbol.trim().toUpperCase();
+        if (cleanSymbol === 'TA125' || cleanSymbol === 'TA-125' || cleanSymbol === '^TA125') {
+            cleanSymbol = '^TA125.TA';
+            if (!name) name = 'מדד ת"א 125';
+        } else if (/^\d{6,8}$/.test(cleanSymbol)) {
+            cleanSymbol = `FUND:${cleanSymbol}`;
+        }
 
         // 1. Validate symbol existence
         try {
-            await stockData.getQuote(symbol);
+            const quote = await stockData.getQuote(cleanSymbol);
+            if (!name && quote && quote.name) {
+                name = quote.name;
+            }
         } catch (error) {
-            console.warn(`❌ Validation failed for symbol ${symbol}: ${error.message}`);
+            console.warn(`❌ Validation failed for symbol ${cleanSymbol}: ${error.message}`);
             return res.status(400).json({
                 message: `Invalid ticker symbol: ${symbol.toUpperCase()}. Please check and try again.`
             });
@@ -36,13 +51,13 @@ export const addPosition = async (req, res) => {
 
         const position = await Position.create({
             user: req.user._id,
-            symbol: symbol.toUpperCase(),
-            name,
-            quantity,
-            averagePrice,
+            symbol: cleanSymbol,
+            name: name || cleanSymbol,
+            quantity: Number(quantity),
+            averagePrice: Number(averagePrice),
             lots: [{
-                quantity,
-                price: averagePrice,
+                quantity: Number(quantity),
+                price: Number(averagePrice),
                 date: date || Date.now()
             }]
         });

@@ -368,13 +368,18 @@ export const getStockCandles = async (req, res) => {
             return res.status(400).json({ message: 'Missing from/to parameters' });
         }
 
+        let cleanSymbol = symbol ? symbol.trim().toUpperCase() : '';
+        if (cleanSymbol === 'TA125' || cleanSymbol === 'TA-125' || cleanSymbol === '^TA125') {
+            cleanSymbol = '^TA125.TA';
+        }
+
         // TASE Mutual Funds don't have historical data on Yahoo Finance.
-        if (symbol.startsWith('FUND:')) {
-            console.log(`[HISTORY] Skipping Yahoo Finance history block for ${symbol}`);
+        if (cleanSymbol.startsWith('FUND:') || /^\d{6,8}$/.test(cleanSymbol)) {
+            console.log(`[HISTORY] Skipping Yahoo Finance history block for ${cleanSymbol}`);
             return res.json({ c: [], t: [], s: 'no_data' });
         }
 
-        const cacheKey = `candles_yahoo_${symbol}_${from}_${to}`;
+        const cacheKey = `candles_yahoo_${cleanSymbol}_${from}_${to}`;
 
         // Check cache (1 hour)
         const cached = candleCache.get(cacheKey);
@@ -382,7 +387,7 @@ export const getStockCandles = async (req, res) => {
             return res.json(cached.data);
         }
 
-        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${from}&period2=${to}&interval=1d&includePrePost=false`;
+        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(cleanSymbol)}?period1=${from}&period2=${to}&interval=1d&includePrePost=false`;
 
         const response = await fetch(yahooUrl, {
             headers: {
@@ -437,19 +442,24 @@ export const getBatchHistory = async (req, res) => {
 
         const results = {};
         const fetchPromises = symbolList.map(async (symbol) => {
-            if (symbol.startsWith('FUND:')) {
+            let cleanSymbol = symbol ? symbol.trim().toUpperCase() : '';
+            if (cleanSymbol === 'TA125' || cleanSymbol === 'TA-125' || cleanSymbol === '^TA125') {
+                cleanSymbol = '^TA125.TA';
+            }
+
+            if (cleanSymbol.startsWith('FUND:') || /^\d{6,8}$/.test(cleanSymbol)) {
                 results[symbol] = { c: [], t: [], s: 'no_data' };
                 return;
             }
 
-            const cacheKey = `candles_yahoo_${symbol}_${from}_${to}`;
+            const cacheKey = `candles_yahoo_${cleanSymbol}_${from}_${to}`;
             const cached = candleCache.get(cacheKey);
             if (cached && Date.now() - cached.timestamp < 60 * 60 * 1000) {
                 results[symbol] = cached.data;
                 return;
             }
 
-            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${from}&period2=${to}&interval=1d&includePrePost=false`;
+            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(cleanSymbol)}?period1=${from}&period2=${to}&interval=1d&includePrePost=false`;
             
             const response = await fetch(yahooUrl, {
                 headers: {
@@ -645,19 +655,24 @@ export const getPortfolioSnapshot = async (req, res) => {
         // We'll just construct the internal fetch logic to avoid making an HTTP call to our own API
         const historyResults = {};
         const historyPromises = symbols.map(async (symbol) => {
-            if (symbol.startsWith('FUND:')) {
+            let cleanSymbol = symbol ? symbol.trim().toUpperCase() : '';
+            if (cleanSymbol === 'TA125' || cleanSymbol === 'TA-125' || cleanSymbol === '^TA125') {
+                cleanSymbol = '^TA125.TA';
+            }
+
+            if (cleanSymbol.startsWith('FUND:') || /^\d{6,8}$/.test(cleanSymbol)) {
                 historyResults[symbol] = { c: [], t: [], s: 'no_data' };
                 return;
             }
 
-            const cacheKey = `candles_yahoo_${symbol}_${from}_${to}`;
+            const cacheKey = `candles_yahoo_${cleanSymbol}_${from}_${to}`;
             const cached = candleCache.get(cacheKey);
             if (cached && Date.now() - cached.timestamp < 60 * 60 * 1000) {
                 historyResults[symbol] = cached.data;
                 return;
             }
 
-            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${from}&period2=${to}&interval=1d&includePrePost=false`;
+            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(cleanSymbol)}?period1=${from}&period2=${to}&interval=1d&includePrePost=false`;
             
             try {
                 const response = await fetch(yahooUrl, {

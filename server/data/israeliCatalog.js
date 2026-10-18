@@ -1,5 +1,52 @@
 export const israeliCatalog = [
     {
+        "symbol": "TA125",
+        "alias": "^TA125.TA",
+        "hebrewName": "מדד ת\"א 125",
+        "englishName": "TA-125 Index",
+        "type": "index",
+        "exchange": "TASE"
+    },
+    {
+        "symbol": "^TA125.TA",
+        "hebrewName": "מדד ת\"א 125 (תל אביב)",
+        "englishName": "Tel Aviv 125 Index",
+        "type": "index",
+        "exchange": "TASE"
+    },
+    {
+        "symbol": "FUND:5136866",
+        "fundId": "5136866",
+        "hebrewName": "איילון כספית ניהול הנזילות",
+        "englishName": "Ayalon Liquidity Management Money Market",
+        "type": "fund",
+        "exchange": "TASE"
+    },
+    {
+        "symbol": "FUND:5109889",
+        "fundId": "5109889",
+        "hebrewName": "MTF מחקה ת\"א 125 (מגדל)",
+        "englishName": "Migdal MTF TA-125 Index Tracker",
+        "type": "fund",
+        "exchange": "TASE"
+    },
+    {
+        "symbol": "FUND:5112628",
+        "fundId": "5112628",
+        "hebrewName": "אי.בי.אי. מחקה ת\"א 125",
+        "englishName": "IBI TA-125 Index Tracker",
+        "type": "fund",
+        "exchange": "TASE"
+    },
+    {
+        "symbol": "FUND:5113063",
+        "fundId": "5113063",
+        "hebrewName": "מור מחקה ת\"א 125",
+        "englishName": "More TA-125 Index Tracker",
+        "type": "fund",
+        "exchange": "TASE"
+    },
+    {
         "symbol": "TEVA.TA",
         "hebrewName": "טבע תעשיות פרמצבטיות",
         "englishName": "Teva Pharmaceutical",

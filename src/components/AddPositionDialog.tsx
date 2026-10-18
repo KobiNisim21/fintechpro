@@ -200,13 +200,27 @@ export function AddPositionDialog() {
                                                     <CommandItem
                                                         key={stock.symbol}
                                                         value={stock.symbol}
-                                                        onSelect={(_) => {
-                                                            setFormData({
-                                                                ...formData,
-                                                                symbol: stock.symbol, // Use exact symbol from API
-                                                                name: stock.description
-                                                            });
+                                                        onSelect={async (_) => {
+                                                            const sym = stock.symbol;
+                                                            const desc = stock.description;
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                symbol: sym,
+                                                                name: desc
+                                                            }));
                                                             setOpenCombobox(false);
+
+                                                            try {
+                                                                const quote = await stocksAPI.getQuote(sym);
+                                                                if (quote && typeof quote.c === 'number' && quote.c > 0) {
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        averagePrice: prev.averagePrice ? prev.averagePrice : String(quote.c.toFixed(2))
+                                                                    }));
+                                                                }
+                                                            } catch {
+                                                                // Quietly ignore if quote fetch fails
+                                                            }
                                                         }}
                                                         className="text-[var(--color-ios-fg)] aria-selected:bg-[var(--color-ios-fg)]/5 cursor-pointer rounded-[12px] my-1 data-[selected=true]:bg-[var(--color-ios-fg)]/10"
                                                     >
