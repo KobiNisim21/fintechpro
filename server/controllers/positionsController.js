@@ -6,7 +6,7 @@ import * as stockData from '../services/stockDataService.js';
 // @access  Private
 export const getPositions = async (req, res) => {
     try {
-        const positions = await Position.find({ user: req.user._id }).sort({ createdAt: -1 });
+        const positions = await Position.find({ user: req.user._id, isDeleted: { $ne: true } }).sort({ createdAt: -1 });
         res.json(positions);
     } catch (error) {
         res.status(500).json({ message: error.message });
