@@ -1,18 +1,18 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authAPI, AuthResponse, LoginData, RegisterData } from '../api/auth';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { authAPI, AuthResponse } from '../api/auth';
 
 interface User {
     _id: string;
     name: string;
     email: string;
+    picture?: string;
 }
 
 interface AuthContextType {
     user: User | null;
     token: string | null;
     loading: boolean;
-    login: (data: LoginData) => Promise<void>;
-    register: (data: RegisterData) => Promise<any>;
+    loginWithGoogle: (credential: string) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -36,47 +36,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
     }, []);
 
-    const login = async (data: LoginData) => {
+    const loginWithGoogle = useCallback(async (credential: string) => {
         try {
-            const response: AuthResponse = await authAPI.login(data);
-            const { token, ...userData } = response;
+            const response: AuthResponse = await authAPI.googleAuth(credential);
+            const { token: newToken, ...userData } = response;
 
-            setToken(token);
+            setToken(newToken);
             setUser(userData);
 
-            localStorage.setItem('token', token);
+            localStorage.setItem('token', newToken);
             localStorage.setItem('user', JSON.stringify(userData));
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'Login failed';
+            const msg = error.response?.data?.message || 'Google authentication failed';
             throw new Error(msg);
         }
-    };
+    }, []);
 
-    const register = async (data: RegisterData): Promise<any> => {
-        try {
-            const response = await authAPI.register(data);
-            // If email verification required, don't log in — just return the response
-            if ((response as any)?.requiresVerification) {
-                return response;
-            }
-            // Otherwise (e.g. admin bypass), log in immediately
-            const { token, ...userData } = response as AuthResponse;
-            setToken(token);
-            setUser(userData);
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(userData));
-            return response;
-        } catch (error: any) {
-            throw new Error(error.response?.data?.message || 'Registration failed');
-        }
-    };
-
-    const logout = () => {
+    const logout = useCallback(() => {
         setUser(null);
         setToken(null);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-    };
+    }, []);
 
     return (
         <AuthContext.Provider
@@ -84,8 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 user,
                 token,
                 loading,
-                login,
-                register,
+                loginWithGoogle,
                 logout,
                 isAuthenticated: !!token && !!user,
             }}

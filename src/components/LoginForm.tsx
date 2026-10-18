@@ -1,23 +1,25 @@
 import { useState } from 'react';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
 
-export function LoginForm() {
-    const { login } = useAuth();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
+function GoogleLoginInner() {
+    const { loginWithGoogle } = useAuth();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
+    const handleSuccess = async (credentialResponse: any) => {
+        if (!credentialResponse.credential) {
+            setError('No credential received from Google');
+            return;
+        }
+
         setLoading(true);
+        setError('');
 
         try {
-            await login({ email, password });
+            await loginWithGoogle(credentialResponse.credential);
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -26,60 +28,78 @@ export function LoginForm() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-ios-bg-gradient)' }}>
-            <div className="w-full max-w-md p-8 space-y-6 glass-card rounded-[32px]">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold text-slate-800">Welcome Back</h1>
-                    <p className="text-slate-500 mt-2">Sign in to your TraderAI account</p>
+        <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--color-ios-bg-gradient)' }}>
+            <div className="w-full max-w-md p-8 space-y-8 glass-card rounded-[32px]">
+                {/* Logo & Title */}
+                <div className="text-center space-y-3">
+                    <div className="flex justify-center">
+                        <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-3xl flex items-center justify-center shadow-lg shadow-emerald-200">
+                            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tight">FinTechPro</h1>
+                    <p className="text-slate-500 text-sm">Real-time portfolio management & market insights</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {error && (
-                        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm">
-                            {error}
-                        </div>
-                    )}
+                {/* Error message */}
+                {error && (
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm text-center">
+                        {error}
+                    </div>
+                )}
 
-                    <div>
-                        <Label htmlFor="email" className="text-slate-600">Email</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="mt-1 bg-slate-50 border-slate-200 text-slate-800 rounded-xl focus:ring-2 focus:ring-slate-300"
-                            required
+                {/* Loading state */}
+                {loading && (
+                    <div className="flex items-center justify-center py-4">
+                        <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-3 text-slate-500 text-sm">Signing you in...</span>
+                    </div>
+                )}
+
+                {/* Google Sign In Button */}
+                {!loading && (
+                    <div className="flex justify-center">
+                        <GoogleLogin
+                            onSuccess={handleSuccess}
+                            onError={() => setError('Google sign-in was cancelled or failed')}
+                            theme="outline"
+                            size="large"
+                            shape="pill"
+                            text="continue_with"
+                            width="320"
                         />
                     </div>
+                )}
 
-                    <div>
-                        <Label htmlFor="password" className="text-slate-600">Password</Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="mt-1 bg-slate-50 border-slate-200 text-slate-800 rounded-xl focus:ring-2 focus:ring-slate-300"
-                            required
-                        />
-                    </div>
-
-                    <Button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-11 font-semibold"
-                    >
-                        {loading ? 'Signing in...' : 'Sign In'}
-                    </Button>
-                </form>
-
-                <div className="text-center text-sm text-slate-500">
-                    Don't have an account?{' '}
-                    <a href="/register" className="text-emerald-500 hover:text-emerald-600 font-medium">
-                        Sign up
-                    </a>
+                {/* Footer */}
+                <div className="text-center">
+                    <p className="text-xs text-slate-400">
+                        By signing in, you agree to our Terms of Service.
+                        <br />Your portfolio data is stored securely.
+                    </p>
                 </div>
             </div>
         </div>
+    );
+}
+
+export function LoginForm() {
+    if (!GOOGLE_CLIENT_ID) {
+        return (
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-ios-bg-gradient)' }}>
+                <div className="w-full max-w-md p-8 glass-card rounded-[32px] text-center">
+                    <h1 className="text-2xl font-bold text-slate-800 mb-4">Configuration Error</h1>
+                    <p className="text-rose-500 text-sm">VITE_GOOGLE_CLIENT_ID is not set. Please configure it in your environment variables.</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+            <GoogleLoginInner />
+        </GoogleOAuthProvider>
     );
 }

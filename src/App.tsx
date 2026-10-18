@@ -9,10 +9,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { MarketNewsProvider } from './context/MarketNewsContext';
 import { LiveAlertsProvider } from './context/LiveAlertsContext';
 import { LoginForm } from './components/LoginForm';
-import { RegisterForm } from './components/RegisterForm';
-import { VerifyEmail } from './components/VerifyEmail';
 
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import { lazy, Suspense, useState, startTransition, useCallback } from 'react';
@@ -165,7 +163,6 @@ function Dashboard() {
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
-  const location = useLocation();
 
   if (loading) {
     return (
@@ -182,14 +179,9 @@ function AppContent() {
         element={isAuthenticated ? <Navigate to="/" replace /> : <LoginForm />} 
       />
       <Route 
-        path="/register" 
-        element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterForm />} 
-      />
-      <Route 
         path="/" 
         element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} 
       />
-      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

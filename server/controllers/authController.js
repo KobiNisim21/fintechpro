@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
-import { sendVerificationEmail } from '../services/emailService.js';
+
+const googleClient = new OAuth2Client();
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -10,137 +11,71 @@ const generateToken = (id) => {
     });
 };
 
-// @desc    Register new user (requires email verification)
-// @route   POST /api/auth/register
+// @desc    Authenticate with Google (login or register)
+// @route   POST /api/auth/google
 // @access  Public
-export const register = async (req, res) => {
+export const googleAuth = async (req, res) => {
     try {
-        const { email, password, name } = req.body;
+        const { credential } = req.body;
 
-        // Check if user already exists
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-            return res.status(400).json({ message: 'User already exists' });
+        if (!credential) {
+            return res.status(400).json({ message: 'Google credential is required' });
         }
 
-        // Generate email verification token
-        const verificationToken = crypto.randomBytes(32).toString('hex');
-        const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-        // Create user (not yet verified)
-        const user = await User.create({
-            email,
-            password,
-            name,
-            emailVerified: false,
-            emailVerificationToken: verificationToken,
-            emailVerificationExpires: verificationExpires
+        // Verify the Google ID token
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
         });
+
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Google account must have an email address' });
+        }
+
+        // Find existing user by googleId or email
+        let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
         if (user) {
-            // Send verification email
-            let emailResult;
-            try {
-                emailResult = await sendVerificationEmail(email, name, verificationToken);
-            } catch (emailError) {
-                await User.deleteOne({ _id: user._id });
-                return res.status(500).json({ 
-                    message: `Failed to send verification email: ${emailError.message}` 
-                });
+            // Link Google account if user exists by email but not yet linked
+            if (!user.googleId) {
+                user.googleId = googleId;
+                user.picture = picture || user.picture;
+                // Update name only if user doesn't have one
+                if (!user.name || user.name === email) {
+                    user.name = name;
+                }
+                await user.save();
+                console.log(`🔗 Linked Google account for existing user: ${email}`);
             }
-
-            res.status(201).json({
-                message: 'Registration successful! Please check your email to verify your account.',
-                requiresVerification: true
-            });
         } else {
-            res.status(400).json({ message: 'Invalid user data' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-// @desc    Verify email address
-// @route   GET /api/auth/verify-email?token=xxx
-// @access  Public
-export const verifyEmail = async (req, res) => {
-    try {
-        const { token } = req.query;
-
-        if (!token) {
-            return res.status(400).json({ message: 'Verification token is required' });
-        }
-
-        const user = await User.findOne({
-            emailVerificationToken: token,
-            emailVerificationExpires: { $gt: new Date() }
-        });
-
-        if (!user) {
-            return res.status(400).json({ 
-                message: 'Invalid or expired verification link. Please register again.' 
+            // Create new user
+            user = await User.create({
+                email,
+                name: name || email.split('@')[0],
+                googleId,
+                picture
             });
+            console.log(`🆕 New user registered via Google: ${email}`);
         }
 
-        // Mark as verified
-        user.emailVerified = true;
-        user.emailVerificationToken = null;
-        user.emailVerificationExpires = null;
-        await user.save();
+        const token = generateToken(user._id);
 
-        console.log(`✅ Email verified for user: ${user.email}`);
-
-        // Return token so user is automatically logged in
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
-            token: generateToken(user._id),
-            message: 'Email verified successfully! Welcome to FinTechPro.'
+            picture: user.picture,
+            token
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
-export const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        // Check for user
-        const user = await User.findOne({ email });
-
-        if (user && (await user.comparePassword(password))) {
-            // Migration for legacy users (created before email verification feature)
-            // They have emailVerified=false but DO NOT have an emailVerificationToken
-            if (user.emailVerified === false && !user.emailVerificationToken) {
-                user.emailVerified = true;
-                await user.save();
-            }
-
-            // Block login if email not verified
-            if (!user.emailVerified) {
-                return res.status(403).json({ 
-                    message: 'Please verify your email address before logging in. Check your inbox.',
-                    requiresVerification: true
-                });
-            }
-
-            res.json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                token: generateToken(user._id)
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password' });
+        console.error('Google auth error:', error.message);
+        if (error.message.includes('Token used too late') || error.message.includes('Invalid token')) {
+            return res.status(401).json({ message: 'Google authentication expired. Please try again.' });
         }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Authentication failed. Please try again.' });
     }
 };
 
@@ -151,6 +86,7 @@ export const getMe = async (req, res) => {
     res.json({
         _id: req.user._id,
         name: req.user.name,
-        email: req.user.email
+        email: req.user.email,
+        picture: req.user.picture
     });
 };
