@@ -53,6 +53,12 @@ app.use(async (req, res, next) => {
     }
 });
 
+// Disable OAuth auto-discovery for MCP clients (prevents SPA catch-all returning 200 HTML)
+app.all(
+    ['/.well-known/oauth-authorization-server*', '/.well-known/oauth-protected-resource*', '/.well-known/openid-configuration*', '/register', '/authorize', '/token'],
+    (req, res) => res.status(404).json({ error: 'not_found' })
+);
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/positions', positionsRoutes);

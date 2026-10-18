@@ -51,7 +51,7 @@ router.get('/token', protect, async (req, res) => {
             token: user.mcpApiKey || null,
             createdAt: user.mcpApiKeyCreatedAt || null,
             sseUrl: user.mcpApiKey ? `${baseUrl}/api/mcp/sse?token=${user.mcpApiKey}` : null,
-            httpUrl: user.mcpApiKey ? `${baseUrl}/api/mcp` : null
+            httpUrl: user.mcpApiKey ? `${baseUrl}/api/mcp?token=${user.mcpApiKey}` : null
         });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -82,7 +82,7 @@ router.post('/token', protect, async (req, res) => {
             token: newToken,
             createdAt: user.mcpApiKeyCreatedAt,
             sseUrl: `${baseUrl}/api/mcp/sse?token=${newToken}`,
-            httpUrl: `${baseUrl}/api/mcp`
+            httpUrl: `${baseUrl}/api/mcp?token=${newToken}`
         });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -176,7 +176,14 @@ router.post('/messages', async (req, res) => {
 // ========================================================
 // 3. Direct Stateless JSON-RPC HTTP POST Endpoint
 // (Works with any client, curl, or serverless deployment)
-// ========================================================
+// Streamable HTTP specification: return 405 Method Not Allowed for GET /api/mcp
+router.get('/', (req, res) => {
+    res.setHeader('Allow', 'POST');
+    res.status(405).json({
+        error: 'Method Not Allowed',
+        message: 'MCP endpoint requires POST (JSON-RPC 2.0). For SSE transport, use GET /api/mcp/sse.'
+    });
+});
 
 router.post('/', async (req, res) => {
     try {
