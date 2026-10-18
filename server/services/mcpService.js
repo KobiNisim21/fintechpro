@@ -147,6 +147,242 @@ export async function getWatchlistItems(userId) {
 }
 
 /**
+ * Add or increment shares in a position (Buy action)
+ */
+export async function addOrUpdatePosition(userId, { symbol, quantity, price, name, date }) {
+    if (!symbol || typeof symbol !== 'string') {
+        throw new Error('Stock symbol is required.');
+    }
+    const cleanSymbol = symbol.trim().toUpperCase();
+    const qty = Number(quantity);
+    if (!qty || isNaN(qty) || qty <= 0) {
+        throw new Error('Quantity must be a positive number.');
+    }
+
+    let buyPrice = price !== undefined && price !== null ? Number(price) : null;
+
+    // If price wasn't specified, try fetching real-time quote
+    if (buyPrice === null || isNaN(buyPrice) || buyPrice <= 0) {
+        try {
+            const quote = await stockData.getQuote(cleanSymbol);
+            if (quote && typeof quote.c === 'number' && quote.c > 0) {
+                buyPrice = quote.c;
+            }
+        } catch {}
+    }
+
+    let position = await Position.findOne({ user: userId, symbol: cleanSymbol });
+
+    if (position) {
+        if (buyPrice === null || isNaN(buyPrice) || buyPrice <= 0) {
+            buyPrice = position.averagePrice;
+        }
+
+        const lotDate = date ? new Date(date) : new Date();
+
+        if (!position.lots || position.lots.length === 0) {
+            position.lots = [{
+                quantity: position.quantity,
+                price: position.averagePrice,
+                date: position.createdAt || new Date()
+            }];
+        }
+
+        position.lots.push({
+            quantity: qty,
+            price: buyPrice,
+            date: lotDate
+        });
+
+        position.markModified('lots');
+        await position.save();
+
+        return {
+            success: true,
+            action: 'ADDED_LOT',
+            symbol: cleanSymbol,
+            name: position.name,
+            addedQuantity: qty,
+            pricePaidUSD: Number(buyPrice.toFixed(2)),
+            newTotalShares: position.quantity,
+            newAveragePriceUSD: Number(position.averagePrice.toFixed(2)),
+            message: `Successfully added ${qty} shares of ${cleanSymbol} at $${buyPrice.toFixed(2)}. New total: ${position.quantity} shares with blended average price of $${position.averagePrice.toFixed(2)}.`
+        };
+    } else {
+        if (buyPrice === null || isNaN(buyPrice) || buyPrice <= 0) {
+            throw new Error(`Could not determine market price for ${cleanSymbol}. Please provide an explicit price.`);
+        }
+
+        let stockName = name;
+        if (!stockName) {
+            try {
+                const quote = await stockData.getQuote(cleanSymbol);
+                stockName = quote?.name || cleanSymbol;
+            } catch {
+                stockName = cleanSymbol;
+            }
+        }
+
+        position = await Position.create({
+            user: userId,
+            symbol: cleanSymbol,
+            name: stockName,
+            quantity: qty,
+            averagePrice: buyPrice,
+            lots: [{
+                quantity: qty,
+                price: buyPrice,
+                date: date ? new Date(date) : new Date()
+            }]
+        });
+
+        return {
+            success: true,
+            action: 'CREATED_POSITION',
+            symbol: cleanSymbol,
+            name: position.name,
+            shares: qty,
+            averagePriceUSD: Number(buyPrice.toFixed(2)),
+            message: `Successfully added new position: ${qty} shares of ${cleanSymbol} (${position.name}) at $${buyPrice.toFixed(2)} per share.`
+        };
+    }
+}
+
+/**
+ * Sell or reduce shares in an existing position (Sell action)
+ */
+export async function sellPosition(userId, { symbol, quantity }) {
+    if (!symbol || typeof symbol !== 'string') {
+        throw new Error('Stock symbol is required.');
+    }
+    const cleanSymbol = symbol.trim().toUpperCase();
+    const position = await Position.findOne({ user: userId, symbol: cleanSymbol });
+
+    if (!position) {
+        throw new Error(`Position '${cleanSymbol}' was not found in your portfolio.`);
+    }
+
+    const sellQty = quantity !== undefined && quantity !== null ? Number(quantity) : null;
+
+    // Full position liquidation
+    if (!sellQty || isNaN(sellQty) || sellQty >= position.quantity) {
+        const removedShares = position.quantity;
+        await position.deleteOne();
+        return {
+            success: true,
+            action: 'CLOSED_POSITION',
+            symbol: cleanSymbol,
+            sharesSold: removedShares,
+            remainingShares: 0,
+            message: `Successfully closed position for ${cleanSymbol}. All ${removedShares} shares removed from your portfolio.`
+        };
+    }
+
+    // Partial sale (FIFO lot reduction)
+    let remainingToSell = sellQty;
+    const updatedLots = [];
+
+    for (const lot of (position.lots || [])) {
+        if (remainingToSell <= 0) {
+            updatedLots.push(lot);
+        } else if (lot.quantity <= remainingToSell) {
+            remainingToSell -= lot.quantity;
+        } else {
+            updatedLots.push({
+                quantity: lot.quantity - remainingToSell,
+                price: lot.price,
+                date: lot.date
+            });
+            remainingToSell = 0;
+        }
+    }
+
+    if (updatedLots.length === 0) {
+        position.quantity = Math.max(0, position.quantity - sellQty);
+    } else {
+        position.lots = updatedLots;
+        position.markModified('lots');
+    }
+
+    await position.save();
+
+    return {
+        success: true,
+        action: 'REDUCED_POSITION',
+        symbol: cleanSymbol,
+        sharesSold: sellQty,
+        remainingShares: position.quantity,
+        averagePriceUSD: Number(position.averagePrice.toFixed(2)),
+        message: `Successfully recorded sale of ${sellQty} shares of ${cleanSymbol}. Remaining: ${position.quantity} shares at average price $${position.averagePrice.toFixed(2)}.`
+    };
+}
+
+/**
+ * Completely remove a position from tracking
+ */
+export async function removePosition(userId, { symbol }) {
+    if (!symbol || typeof symbol !== 'string') {
+        throw new Error('Stock symbol is required.');
+    }
+    const cleanSymbol = symbol.trim().toUpperCase();
+    const position = await Position.findOneAndDelete({ user: userId, symbol: cleanSymbol });
+
+    if (!position) {
+        throw new Error(`Position '${cleanSymbol}' was not found in your portfolio.`);
+    }
+
+    return {
+        success: true,
+        action: 'REMOVED_POSITION',
+        symbol: cleanSymbol,
+        message: `Successfully removed ${cleanSymbol} (${position.name}) from your portfolio.`
+    };
+}
+
+/**
+ * Update / override position holding manually
+ */
+export async function updatePositionHolding(userId, { symbol, quantity, averagePrice }) {
+    if (!symbol || typeof symbol !== 'string') {
+        throw new Error('Stock symbol is required.');
+    }
+    const cleanSymbol = symbol.trim().toUpperCase();
+    const qty = Number(quantity);
+    const avgPrice = Number(averagePrice);
+
+    if (isNaN(qty) || qty <= 0) {
+        throw new Error('Quantity must be a positive number.');
+    }
+    if (isNaN(avgPrice) || avgPrice <= 0) {
+        throw new Error('Average price must be a positive number.');
+    }
+
+    const position = await Position.findOne({ user: userId, symbol: cleanSymbol });
+    if (!position) {
+        throw new Error(`Position '${cleanSymbol}' was not found in your portfolio.`);
+    }
+
+    position.quantity = qty;
+    position.averagePrice = avgPrice;
+    position.lots = [{
+        quantity: qty,
+        price: avgPrice,
+        date: new Date()
+    }];
+    position.markModified('lots');
+    await position.save();
+
+    return {
+        success: true,
+        action: 'UPDATED_POSITION',
+        symbol: cleanSymbol,
+        quantity: position.quantity,
+        averagePriceUSD: Number(position.averagePrice.toFixed(2)),
+        message: `Successfully updated ${cleanSymbol} to ${position.quantity} shares at an average cost of $${position.averagePrice.toFixed(2)}.`
+    };
+}
+
+/**
  * Factory to create a personalized MCP Server instance for an authenticated user
  */
 export function createMcpServer(user) {
@@ -154,6 +390,10 @@ export function createMcpServer(user) {
         name: `FinTechPro (${user.name})`,
         version: '1.0.0'
     });
+
+    // ==========================================
+    // READ TOOLS
+    // ==========================================
 
     // Tool 1: get_portfolio_summary
     server.tool(
@@ -288,6 +528,117 @@ export function createMcpServer(user) {
                         : "Your watchlist is currently empty."
                 }]
             };
+        }
+    );
+
+    // ==========================================
+    // WRITE / MANAGEMENT TOOLS (Auto-Tracking)
+    // ==========================================
+
+    // Tool 6: add_position (Record a Buy)
+    server.tool(
+        'add_position',
+        "Add a new stock or record additional purchased shares for an existing stock in the user's portfolio. Blends average cost automatically.",
+        {
+            symbol: z.string().describe("Stock ticker symbol, e.g. 'NVDA', 'AAPL', 'MSFT'"),
+            quantity: z.number().positive().describe("Number of shares bought (must be positive number)"),
+            price: z.number().positive().optional().describe("Purchase price per share in USD. If omitted, current real-time market price will be used automatically."),
+            name: z.string().optional().describe("Company or ETF name (optional, fetched automatically if omitted)"),
+            date: z.string().optional().describe("Purchase date in YYYY-MM-DD format (optional, defaults to today)")
+        },
+        async (args) => {
+            try {
+                const result = await addOrUpdatePosition(user._id, args);
+                return {
+                    content: [{
+                        type: 'text',
+                        text: JSON.stringify(result, null, 2)
+                    }]
+                };
+            } catch (err) {
+                return {
+                    isError: true,
+                    content: [{ type: 'text', text: `Failed to add position: ${err.message}` }]
+                };
+            }
+        }
+    );
+
+    // Tool 7: sell_position (Record a Sale)
+    server.tool(
+        'sell_position',
+        "Record a sale of shares or close an entire position in the user's portfolio. If quantity is omitted or equals/exceeds current shares, closes the position.",
+        {
+            symbol: z.string().describe("Stock ticker symbol to sell, e.g. 'NVDA'"),
+            quantity: z.number().positive().optional().describe("Number of shares sold. If omitted or >= total shares, the position is completely closed.")
+        },
+        async (args) => {
+            try {
+                const result = await sellPosition(user._id, args);
+                return {
+                    content: [{
+                        type: 'text',
+                        text: JSON.stringify(result, null, 2)
+                    }]
+                };
+            } catch (err) {
+                return {
+                    isError: true,
+                    content: [{ type: 'text', text: `Failed to sell position: ${err.message}` }]
+                };
+            }
+        }
+    );
+
+    // Tool 8: remove_position (Delete from Tracking)
+    server.tool(
+        'remove_position',
+        "Remove a stock position completely from the user's portfolio tracking.",
+        {
+            symbol: z.string().describe("Stock ticker symbol to remove, e.g. 'NVDA'")
+        },
+        async (args) => {
+            try {
+                const result = await removePosition(user._id, args);
+                return {
+                    content: [{
+                        type: 'text',
+                        text: JSON.stringify(result, null, 2)
+                    }]
+                };
+            } catch (err) {
+                return {
+                    isError: true,
+                    content: [{ type: 'text', text: `Failed to remove position: ${err.message}` }]
+                };
+            }
+        }
+    );
+
+    // Tool 9: update_position (Manual Correction)
+    server.tool(
+        'update_position',
+        "Manually correct/update the total quantity of shares and average purchase price for an existing position.",
+        {
+            symbol: z.string().describe("Stock ticker symbol to update, e.g. 'NVDA'"),
+            quantity: z.number().positive().describe("New total quantity of shares"),
+            averagePrice: z.number().positive().describe("New average price per share in USD")
+        },
+        async (args) => {
+            try {
+                const result = await updatePositionHolding(user._id, args);
+                return {
+                    content: [{
+                        type: 'text',
+                        text: JSON.stringify(result, null, 2)
+                    }]
+                };
+            } catch (err) {
+                return {
+                    isError: true,
+                    content: [{ type: 'text', text: `Failed to update position: ${err.message}` }]
+                };
+            }
         }
     );
 

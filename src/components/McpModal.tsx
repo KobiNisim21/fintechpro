@@ -166,12 +166,12 @@ export function McpModal() {
                             </div>
                         </div>
 
-                        {/* Read-Only Security Badge */}
+                        {/* Security & Action Badge */}
                         <div className="flex items-start sm:items-center gap-2.5 p-3 sm:p-3.5 bg-emerald-50/90 border border-emerald-200/70 rounded-2xl text-xs text-emerald-900 leading-relaxed mb-5">
                             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
                             <div>
-                                <span className="font-bold">הרשאת קריאה בלבד (<span dir="ltr">Read-Only</span>): </span>
-                                <span>הסוכן מקבל גישה לצפייה וניתוח בלבד, ואינו יכול לשנות או למחוק נתונים.</span>
+                                <span className="font-bold">מעקב וניהול תיק שוטף: </span>
+                                <span>הסוכן יכול לקרוא נתונים בזמן אמת וגם להוסיף, לעדכן או להסיר מניות בתיק לפי ההודעות שלך בצ'אט.</span>
                             </div>
                         </div>
 
@@ -380,9 +380,14 @@ export function McpModal() {
 
                                 {/* Tools List Preview */}
                                 <div className="pt-2 border-t border-slate-200/70 space-y-2">
-                                    <span className="text-xs font-bold text-slate-800 block">
-                                        כלים זמינים לסוכן ה-AI (5 כלים):
-                                    </span>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-slate-800">
+                                            כלים זמינים לסוכן ה-AI (9 כלים):
+                                        </span>
+                                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                                            קריאה ועדכון תיק
+                                        </span>
+                                    </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                                         <div className="p-2.5 bg-white rounded-xl border border-slate-200">
                                             <div dir="ltr" className="font-mono font-bold text-emerald-600 text-left">get_portfolio_summary</div>
@@ -391,6 +396,22 @@ export function McpModal() {
                                         <div className="p-2.5 bg-white rounded-xl border border-slate-200">
                                             <div dir="ltr" className="font-mono font-bold text-emerald-600 text-left">get_positions</div>
                                             <p className="text-slate-500 text-[11px] mt-1 text-right">כל המניות בתיק, מחירי שוק חיים, מחירי קנייה ומשקלים.</p>
+                                        </div>
+                                        <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                                            <div dir="ltr" className="font-mono font-bold text-emerald-600 text-left">add_position</div>
+                                            <p className="text-slate-500 text-[11px] mt-1 text-right">הוספת מניה חדשה או רישום קנייה נוספת (מחשב ממוצע אוטומטית).</p>
+                                        </div>
+                                        <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                                            <div dir="ltr" className="font-mono font-bold text-emerald-600 text-left">sell_position</div>
+                                            <p className="text-slate-500 text-[11px] mt-1 text-right">רישום מכירת מניות או סגירת פוזיציה קיימת בתיק.</p>
+                                        </div>
+                                        <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                                            <div dir="ltr" className="font-mono font-bold text-emerald-600 text-left">remove_position</div>
+                                            <p className="text-slate-500 text-[11px] mt-1 text-right">מחיקת מניה לחלוטין ממעקב התיק.</p>
+                                        </div>
+                                        <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                                            <div dir="ltr" className="font-mono font-bold text-emerald-600 text-left">update_position</div>
+                                            <p className="text-slate-500 text-[11px] mt-1 text-right">עדכון ידני של כמות מניות או מחיר ממוצע.</p>
                                         </div>
                                         <div className="p-2.5 bg-white rounded-xl border border-slate-200">
                                             <div dir="ltr" className="font-mono font-bold text-emerald-600 text-left">get_position_details</div>

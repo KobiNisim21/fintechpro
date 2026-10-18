@@ -2,7 +2,16 @@ import express from 'express';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import { protect } from '../middleware/auth.js';
-import { createMcpServer, getPortfolioMetrics, getPortfolioNews, getWatchlistItems } from '../services/mcpService.js';
+import { 
+    createMcpServer, 
+    getPortfolioMetrics, 
+    getPortfolioNews, 
+    getWatchlistItems,
+    addOrUpdatePosition,
+    sellPosition,
+    removePosition,
+    updatePositionHolding
+} from '../services/mcpService.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 
 const router = express.Router();
@@ -258,6 +267,57 @@ router.post('/', async (req, res) => {
                             name: 'get_watchlist',
                             description: "Get the user's watchlist symbols with their current market prices.",
                             inputSchema: { type: 'object', properties: {} }
+                        },
+                        {
+                            name: 'add_position',
+                            description: "Add a new stock or record additional purchased shares for an existing stock in the user's portfolio. Blends average cost automatically.",
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    symbol: { type: 'string', description: "Stock ticker symbol, e.g. 'NVDA', 'AAPL', 'MSFT'" },
+                                    quantity: { type: 'number', description: "Number of shares bought (must be positive number)" },
+                                    price: { type: 'number', description: "Purchase price per share in USD (optional, current market price used if omitted)" },
+                                    name: { type: 'string', description: "Company name (optional, fetched automatically if omitted)" },
+                                    date: { type: 'string', description: "Purchase date in YYYY-MM-DD format (optional, defaults to today)" }
+                                },
+                                required: ['symbol', 'quantity']
+                            }
+                        },
+                        {
+                            name: 'sell_position',
+                            description: "Record a sale of shares or close an entire position in the user's portfolio. If quantity is omitted or >= total shares, closes the position.",
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    symbol: { type: 'string', description: "Stock ticker symbol to sell, e.g. 'NVDA'" },
+                                    quantity: { type: 'number', description: "Number of shares sold (optional, closes position if omitted or >= total)" }
+                                },
+                                required: ['symbol']
+                            }
+                        },
+                        {
+                            name: 'remove_position',
+                            description: "Remove a stock position completely from the user's portfolio tracking.",
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    symbol: { type: 'string', description: "Stock ticker symbol to remove, e.g. 'NVDA'" }
+                                },
+                                required: ['symbol']
+                            }
+                        },
+                        {
+                            name: 'update_position',
+                            description: "Manually correct/update the total quantity of shares and average purchase price for an existing position.",
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    symbol: { type: 'string', description: "Stock ticker symbol to update, e.g. 'NVDA'" },
+                                    quantity: { type: 'number', description: "New total quantity of shares" },
+                                    averagePrice: { type: 'number', description: "New average price per share in USD" }
+                                },
+                                required: ['symbol', 'quantity', 'averagePrice']
+                            }
                         }
                     ]
                 }
@@ -321,6 +381,74 @@ router.post('/', async (req, res) => {
                     id,
                     result: { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] }
                 });
+            }
+
+            if (toolName === 'add_position') {
+                try {
+                    const result = await addOrUpdatePosition(user._id, args);
+                    return res.json({
+                        jsonrpc: '2.0',
+                        id,
+                        result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+                    });
+                } catch (err) {
+                    return res.json({
+                        jsonrpc: '2.0',
+                        id,
+                        result: { isError: true, content: [{ type: 'text', text: `Failed to add position: ${err.message}` }] }
+                    });
+                }
+            }
+
+            if (toolName === 'sell_position') {
+                try {
+                    const result = await sellPosition(user._id, args);
+                    return res.json({
+                        jsonrpc: '2.0',
+                        id,
+                        result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+                    });
+                } catch (err) {
+                    return res.json({
+                        jsonrpc: '2.0',
+                        id,
+                        result: { isError: true, content: [{ type: 'text', text: `Failed to sell position: ${err.message}` }] }
+                    });
+                }
+            }
+
+            if (toolName === 'remove_position') {
+                try {
+                    const result = await removePosition(user._id, args);
+                    return res.json({
+                        jsonrpc: '2.0',
+                        id,
+                        result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+                    });
+                } catch (err) {
+                    return res.json({
+                        jsonrpc: '2.0',
+                        id,
+                        result: { isError: true, content: [{ type: 'text', text: `Failed to remove position: ${err.message}` }] }
+                    });
+                }
+            }
+
+            if (toolName === 'update_position') {
+                try {
+                    const result = await updatePositionHolding(user._id, args);
+                    return res.json({
+                        jsonrpc: '2.0',
+                        id,
+                        result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+                    });
+                } catch (err) {
+                    return res.json({
+                        jsonrpc: '2.0',
+                        id,
+                        result: { isError: true, content: [{ type: 'text', text: `Failed to update position: ${err.message}` }] }
+                    });
+                }
             }
 
             return res.status(404).json({
