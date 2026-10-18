@@ -11,7 +11,7 @@ function GoogleLoginInner() {
 
     const handleSuccess = async (credentialResponse: any) => {
         if (!credentialResponse.credential) {
-            setError('No credential received from Google');
+            setError('לא התקבל אימות מגוגל');
             return;
         }
 
@@ -21,10 +21,16 @@ function GoogleLoginInner() {
         try {
             await loginWithGoogle(credentialResponse.credential);
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || 'ההתחברות נכשלה');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleError = () => {
+        setError(
+            'חלון ההתחברות של גוגל נחסם על ידי הדפדפן. אנא בדוק אם יש חוסם חלונות קופצים (Pop-up Blocker) או תוסף חוסם פרסומות (AdBlock) הפעיל בדפדפן.'
+        );
     };
 
     return (
@@ -45,8 +51,12 @@ function GoogleLoginInner() {
 
                 {/* Error message */}
                 {error && (
-                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm text-center">
+                    <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-sm text-center leading-relaxed">
+                        <div className="font-semibold mb-1">שים לב:</div>
                         {error}
+                        <div className="mt-2 text-xs text-rose-500">
+                            (בדוק בשורת הכתובות של הדפדפן למעלה אם מופיע אייקון חסימת חלון קופץ 🚫)
+                        </div>
                     </div>
                 )}
 
@@ -60,15 +70,16 @@ function GoogleLoginInner() {
 
                 {/* Google Sign In Button */}
                 {!loading && (
-                    <div className="flex justify-center">
+                    <div className="flex flex-col items-center gap-3">
                         <GoogleLogin
                             onSuccess={handleSuccess}
-                            onError={() => setError('Google sign-in was cancelled or failed')}
+                            onError={handleError}
                             theme="outline"
                             size="large"
                             shape="pill"
                             text="continue_with"
                             width="320"
+                            use_fedcm_for_button={true}
                         />
                     </div>
                 )}

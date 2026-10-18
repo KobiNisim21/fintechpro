@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fintechpro-v1';
+const CACHE_NAME = 'fintechpro-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -29,27 +29,43 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first for API, cache-first for static assets
+// Fetch: network-first for API, cache-first for same-origin static assets
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-
-  // API calls: network only (don't cache API responses in SW)
-  if (url.pathname.startsWith('/api/')) {
+  // ONLY handle GET requests
+  if (event.request.method !== 'GET') {
     return;
   }
 
-  // Static assets: stale-while-revalidate
+  const url = new URL(event.request.url);
+
+  // NEVER intercept cross-origin requests (e.g. Google OAuth, Google Fonts, external APIs)
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // NEVER intercept API or WebSocket calls
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/socket.io/')) {
+    return;
+  }
+
+  // Same-origin static assets
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request).then((response) => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => cached); // Offline: return cached
+      if (cached) {
+        // Return cached and update cache in background
+        fetch(event.request)
+          .then((response) => {
+            if (response && response.ok) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            }
+          })
+          .catch(() => {});
+        return cached;
+      }
 
-      return cached || fetchPromise;
+      // Not in cache, fetch directly from network
+      return fetch(event.request);
     })
   );
 });
