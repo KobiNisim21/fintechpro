@@ -2,6 +2,7 @@ import { LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { LiveMarketNews } from './LiveMarketNews';
 import { LiveAlerts } from './LiveAlerts';
+import { McpModal } from './McpModal';
 
 export function SidebarContent() {
     const { logout } = useAuth();
@@ -34,7 +35,8 @@ export function SidebarContent() {
                 {/* Live Market News from Socket.io */}
                 <LiveMarketNews />
             </div>
-            <div className="mt-auto px-6 py-6 border-t border-slate-200/50 bg-white/40 backdrop-blur-md shrink-0">
+            <div className="mt-auto px-6 py-6 border-t border-slate-200/50 bg-white/40 backdrop-blur-md shrink-0 space-y-3">
+                <McpModal />
                 <button
                     onClick={logout}
                     className="flex items-center justify-center gap-3 w-full p-4 rounded-2xl glass-card-solid text-slate-800 font-bold hover-lift transition-all duration-300"

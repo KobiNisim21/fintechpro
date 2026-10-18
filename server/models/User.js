@@ -23,6 +23,16 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    mcpApiKey: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true
+    },
+    mcpApiKeyCreatedAt: {
+        type: Date,
+        default: null
+    },
     createdAt: {
         type: Date,
         default: Date.now

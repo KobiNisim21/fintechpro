@@ -8,6 +8,7 @@ import positionsRoutes from './routes/positions.js';
 import stocksRoutes from './routes/stocks.js';
 import authRoutes from './routes/auth.js';
 import watchlistRoutes from './routes/watchlist.js';
+import mcpRoutes from './routes/mcp.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 // Get directory path for ES modules
@@ -57,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/positions', positionsRoutes);
 app.use('/api/stocks', stocksRoutes);
 app.use('/api/watchlist', watchlistRoutes);
+app.use('/api/mcp', mcpRoutes);
 
 // Health check
 app.get('/api/health', async (req, res) => {
