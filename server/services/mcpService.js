@@ -214,7 +214,7 @@ export async function getPortfolioMetrics(userId) {
     ]);
 
     // Compute Forex rates for ILS and EUR to USD
-    let usdIlsRate = 3.65;
+    let usdIlsRate = 3.11;
     try {
         const forex = await stockData.getForexRate();
         if (forex?.rate) usdIlsRate = forex.rate;

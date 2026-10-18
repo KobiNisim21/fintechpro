@@ -190,7 +190,7 @@ export function searchIsraeliSecurities(query) {
  * Fetch fund NAV from the DATABASE CACHE, with auto-fetch from Funder / Bizportal if missing/stale.
  * Guaranteed to return updated daily price and change without blocking proxy locks.
  */
-export async function fetchFundNAV(fundId) {
+export async function fetchFundNAV(fundId, exchangeRate = 3.11) {
     const cleanId = String(fundId).replace(/\D/g, '');
     if (!cleanId) {
         return {
@@ -265,7 +265,7 @@ export async function fetchFundNAV(fundId) {
 
         try {
             if (mongoose.connection && mongoose.connection.readyState === 1) {
-                await setCachedPrice(cleanId, liveData.priceILS, 3.65, {
+                await setCachedPrice(cleanId, liveData.priceILS, exchangeRate, {
                     changePercent,
                     name: liveData.name,
                     source: liveData.source
@@ -328,7 +328,7 @@ export async function fetchFundNAV(fundId) {
  * @param {number} exchangeRate - ILS/USD rate (e.g. 3.65)
  * @param {object} [extra] - Optional: { changePercent, name, source }
  */
-export async function setCachedPrice(fundId, priceILS, exchangeRate = 3.65, extra = {}) {
+export async function setCachedPrice(fundId, priceILS, exchangeRate = 3.11, extra = {}) {
     const cleanId = String(fundId).replace(/\D/g, '');
     const priceUSD = priceILS / exchangeRate;
 
@@ -359,7 +359,7 @@ export async function setCachedPrice(fundId, priceILS, exchangeRate = 3.65, extr
 /**
  * Refresh fund price using Funder, Bizportal, or TASE proxy.
  */
-export async function refreshFundPriceViaProxy(fundId, exchangeRate = 3.65) {
+export async function refreshFundPriceViaProxy(fundId, exchangeRate = 3.11) {
     const cleanId = String(fundId).replace(/\D/g, '');
 
     // 1. Try fast, reliable Funder fetch first

@@ -91,7 +91,7 @@ export const testTaseRaw = async (req, res) => {
 
         // Get live USD/ILS rate from Yahoo Finance (cached 6h)
         const forexData = await stockData.getForexRate();
-        const liveRate = forexData?.rate || 3.65;
+        const liveRate = forexData?.rate || 3.11;
         console.log(`[TASE Raw Test] Live USD/ILS rate: ${liveRate}`);
 
         // === If refresh=true, force refresh via multi-source scraper ===
@@ -177,7 +177,7 @@ export const setIsraeliPrice = async (req, res) => {
         let rate = exchangeRate;
         if (!rate) {
             const forexData = await stockData.getForexRate();
-            rate = forexData?.rate || 3.65;
+            rate = forexData?.rate || 3.11;
         }
         const result = await setCachedPrice(fundId, priceILS, rate, { name, source: 'manual' });
 
@@ -218,7 +218,7 @@ export const refreshIsraeliPrices = async (req, res) => {
         let rate = exchangeRate;
         if (!rate) {
             const forexData = await stockData.getForexRate();
-            rate = forexData?.rate || 3.65;
+            rate = forexData?.rate || 3.11;
         }
         console.log(`[Refresh] Starting proxy refresh for fund ${fundId} with rate ${rate}...`);
         const result = await refreshFundPriceViaProxy(fundId, rate);

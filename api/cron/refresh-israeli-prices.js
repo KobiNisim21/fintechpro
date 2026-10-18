@@ -49,15 +49,15 @@ export default async function handler(req, res) {
 
         console.log(`[Cron] Found ${allFundIds.length} funds to refresh: ${allFundIds.join(', ')}`);
 
-        // 2. Get live USD/ILS rate from Yahoo Finance (same source as the dashboard)
-        let exchangeRate = 3.65;
+        // 2. Get live USD/ILS rate from Yahoo Finance / Bank of Israel
+        let exchangeRate = 3.11;
         try {
             const forexData = await getForexRate();
             if (forexData && forexData.rate) {
                 exchangeRate = forexData.rate;
             }
         } catch (e) {
-            console.warn('[Cron] Forex fetch failed, using fallback rate 3.65');
+            console.warn('[Cron] Forex fetch failed, using fallback rate 3.11');
         }
         console.log(`[Cron] Using USD/ILS rate: ${exchangeRate}`);
 

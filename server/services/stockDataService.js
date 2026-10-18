@@ -195,7 +195,7 @@ export async function getQuote(symbol) {
                     priceInILS = priceInILS / 100;
                 }
 
-                const usdRate = forexData.rate || 3.65;
+                const usdRate = forexData?.rate || 3.11;
                 const priceInUSD = priceInILS / usdRate;
 
                 // Calculate change in USD (approximate using same rate)
@@ -252,7 +252,7 @@ export async function getQuote(symbol) {
                 const priceInILS = navData.price;
                 const changeInILS = navData.change || 0;
 
-                const usdRate = forexData?.rate || 3.65;
+                const usdRate = forexData?.rate || 3.11;
                 const priceInUSD = priceInILS / usdRate;
                 const changeInUSD = changeInILS / usdRate;
 
@@ -395,7 +395,7 @@ export async function getExtendedQuote(symbol) {
                 const priceInILS = navData.price;
                 const changeInILS = navData.change || 0;
 
-                const usdRate = forexData?.rate || 3.65;
+                const usdRate = forexData?.rate || 3.11;
                 const priceInUSD = priceInILS / usdRate;
                 const changeInUSD = changeInILS / usdRate;
 
@@ -450,7 +450,7 @@ export async function getExtendedQuote(symbol) {
             const divisor = result.currency === 'ILA' ? 100 : 1;
             try {
                 const forexData = await getForexRate();
-                const usdIlsRate = forexData.rate || 3.65;
+                const usdIlsRate = forexData?.rate || 3.11;
                 result.regularMarketPrice = (result.regularMarketPrice / divisor) / usdIlsRate;
                 if (result.regularMarketPreviousClose) result.regularMarketPreviousClose = (result.regularMarketPreviousClose / divisor) / usdIlsRate;
                 if (result.regularMarketChange) result.regularMarketChange = (result.regularMarketChange / divisor) / usdIlsRate;
@@ -526,7 +526,7 @@ export async function getBatchExtendedQuotes(symbols) {
     }
 
     // Process Israeli funds directly using the local service
-    let usdIlsRate = 3.65;
+    let usdIlsRate = 3.11;
     try {
         const forexData = await getForexRate();
         if (forexData && forexData.rate) {
@@ -540,7 +540,7 @@ export async function getBatchExtendedQuotes(symbols) {
         for (const symbol of fundSymbols) {
             try {
                 const fundId = symbol.split(':')[1];
-                const navData = await fetchFundNAV(fundId);
+                const navData = await fetchFundNAV(fundId, usdIlsRate);
 
                 // Analytics Guard: if price fetch failed or returned 0, use cached value
                 if (!navData.price || navData.price === 0 || navData.error) {
@@ -778,6 +778,8 @@ export async function getMarketNews() {
  * Get USD/ILS forex rate using Yahoo Finance (ILS=X)
  * Much more reliable than free tier APIs.
  */
+let lastKnownForexRate = 3.11;
+
 export async function getForexRate() {
     const cacheKey = 'forex_usd_ils';
 
@@ -785,36 +787,102 @@ export async function getForexRate() {
     if (cached) return cached;
 
     return dedupedFetch(cacheKey, async () => {
-        console.log('נ“¡ Fetching USD/ILS rate from Yahoo Finance (ILS=X)...');
-
+        // 1. Try Yahoo Finance
         try {
+            console.log('[Forex] Fetching USD/ILS rate from Yahoo Finance (ILS=X)...');
             const quote = await yahooFinance.quote('ILS=X');
 
-            if (!quote || !quote.regularMarketPrice) {
-                throw new Error('No forex data from Yahoo');
+            if (quote && quote.regularMarketPrice && quote.regularMarketPrice > 0) {
+                const rate = quote.regularMarketPrice;
+                lastKnownForexRate = rate;
+                const result = {
+                    rate,
+                    source: 'yahoo-finance',
+                    base: 'USD',
+                    target: 'ILS',
+                    lastUpdate: new Date().toISOString()
+                };
+                console.log(`[Forex] USD/ILS exchange rate (Yahoo): ${rate}`);
+                setCache(cacheKey, result);
+                return result;
             }
-
-            const rate = quote.regularMarketPrice;
-
-            const result = {
-                rate,
-                source: 'yahoo-finance',
-                base: 'USD',
-                target: 'ILS',
-                lastUpdate: new Date().toISOString()
-            };
-
-            console.log(`ג… USD/ILS exchange rate: ${rate}`);
-            setCache(cacheKey, result);
-            return result;
-        } catch (error) {
-            console.error('ג Forex fetch failed:', error.message);
-
-            // Fallback
-            const fallback = { rate: 3.65, source: 'fallback', lastUpdate: new Date().toISOString() };
-            setCache(cacheKey, fallback);
-            return fallback;
+        } catch (yahooErr) {
+            console.warn('[Forex] Yahoo Forex fetch failed:', yahooErr.message);
         }
+
+        // 2. Try Bank of Israel official public API
+        try {
+            console.log('[Forex] Trying Bank of Israel API for official USD/ILS rate...');
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+            const fetchFn = typeof globalThis.fetch === 'function' ? globalThis.fetch : fetch;
+            const res = await fetchFn('https://boi.org.il/PublicApi/GetExchangeRates', {
+                signal: controller.signal,
+                headers: { 'Accept': 'application/json' }
+            });
+            clearTimeout(timeout);
+            if (res.ok) {
+                const data = await res.json();
+                const usd = data?.exchangeRates?.find(x => x.key === 'USD');
+                if (usd && usd.currentExchangeRate && Number(usd.currentExchangeRate) > 0) {
+                    const rate = Number(usd.currentExchangeRate);
+                    lastKnownForexRate = rate;
+                    const result = {
+                        rate,
+                        source: 'bank-of-israel',
+                        base: 'USD',
+                        target: 'ILS',
+                        lastUpdate: new Date().toISOString()
+                    };
+                    console.log(`[Forex] USD/ILS exchange rate (Bank of Israel): ${rate}`);
+                    setCache(cacheKey, result);
+                    return result;
+                }
+            }
+        } catch (boiErr) {
+            console.warn('[Forex] Bank of Israel Forex fetch failed:', boiErr.message);
+        }
+
+        // 3. Try open.er-api.com
+        try {
+            console.log('[Forex] Trying Open Exchange Rate API for USD/ILS...');
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+            const fetchFn = typeof globalThis.fetch === 'function' ? globalThis.fetch : fetch;
+            const res = await fetchFn('https://open.er-api.com/v6/latest/USD', {
+                signal: controller.signal
+            });
+            clearTimeout(timeout);
+            if (res.ok) {
+                const data = await res.json();
+                if (data?.rates?.ILS && Number(data.rates.ILS) > 0) {
+                    const rate = Number(data.rates.ILS);
+                    lastKnownForexRate = rate;
+                    const result = {
+                        rate,
+                        source: 'open-er-api',
+                        base: 'USD',
+                        target: 'ILS',
+                        lastUpdate: new Date().toISOString()
+                    };
+                    console.log(`[Forex] USD/ILS exchange rate (Open-ER): ${rate}`);
+                    setCache(cacheKey, result);
+                    return result;
+                }
+            }
+        } catch (erErr) {
+            console.warn('[Forex] Open-ER Forex fetch failed:', erErr.message);
+        }
+
+        // 4. Fallback to last known live rate
+        console.warn(`[Forex] All live forex sources failed. Using last known rate: ${lastKnownForexRate}`);
+        const fallback = {
+            rate: lastKnownForexRate,
+            source: 'last-known',
+            lastUpdate: new Date().toISOString()
+        };
+        setCache(cacheKey, fallback);
+        return fallback;
     });
 }
 
