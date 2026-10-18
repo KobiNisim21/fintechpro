@@ -238,27 +238,27 @@ export async function getQuote(symbol) {
         return dedupedFetch(cacheKey, async () => {
             console.log(`🇮🇱 Fetching TASE NAV for Mutual Fund ${fundId} in getQuote...`);
             try {
-                // Fetch NAV and forex rate in parallel using circuit breakers
+                // Fetch NAV and forex rate in parallel
                 const [navData, forexData] = await Promise.all([
-                    taseCircuitBreaker(() => fetchFundNAV(fundId)),
+                    fetchFundNAV(fundId),
                     getForexRate()
                 ]);
 
-                if (!navData || navData.price === undefined) {
-                    throw new Error(`No NAV data for fund ${fundId}`);
+                if (!navData || !navData.price || navData.price <= 0) {
+                    throw new Error(`No NAV data for fund ${fundId}: ${navData?.error || 'price is 0'}`);
                 }
 
                 // navData.price is already ILS (Agorot / 100).
                 const priceInILS = navData.price;
                 const changeInILS = navData.change || 0;
 
-                const usdRate = forexData.rate || 3.65;
+                const usdRate = forexData?.rate || 3.65;
                 const priceInUSD = priceInILS / usdRate;
                 const changeInUSD = changeInILS / usdRate;
 
                 // For Debug Logging (Requested by User)
                 const priceAgorot = priceInILS * 100;
-                console.log(`[PRICE DEBUG] Asset: ${fundId} | Price (Agorot): ${priceAgorot} | USD: ${priceInUSD.toFixed(4)}`);
+                console.log(`[PRICE DEBUG] Asset: ${fundId} | Price (Agorot): ${priceAgorot} | USD: ${priceInUSD.toFixed(4)} | ChangeUSD: ${changeInUSD.toFixed(4)} | Change%: ${navData.changePercent}%`);
 
                 const result = {
                     c: priceInUSD,
@@ -266,7 +266,7 @@ export async function getQuote(symbol) {
                     dp: navData.changePercent || 0,
                     h: priceInUSD,
                     l: priceInUSD,
-                    o: priceInUSD,
+                    o: priceInUSD - changeInUSD,
                     pc: priceInUSD - changeInUSD,
                     t: navData.timestamp || Math.floor(Date.now() / 1000)
                 };
@@ -388,14 +388,14 @@ export async function getExtendedQuote(symbol) {
                     getForexRate()
                 ]);
 
-                if (!navData || navData.price === undefined) {
-                    throw new Error(`No NAV data for fund ${fundId}`);
+                if (!navData || !navData.price || navData.price <= 0) {
+                    throw new Error(`No NAV data for fund ${fundId}: ${navData?.error || 'price is 0'}`);
                 }
 
                 const priceInILS = navData.price;
                 const changeInILS = navData.change || 0;
 
-                const usdRate = forexData.rate || 3.65;
+                const usdRate = forexData?.rate || 3.65;
                 const priceInUSD = priceInILS / usdRate;
                 const changeInUSD = changeInILS / usdRate;
 

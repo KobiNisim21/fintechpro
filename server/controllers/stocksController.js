@@ -94,56 +94,68 @@ export const testTaseRaw = async (req, res) => {
         const liveRate = forexData?.rate || 3.65;
         console.log(`[TASE Raw Test] Live USD/ILS rate: ${liveRate}`);
 
-        // === CACHE-FIRST: Read from MongoDB instantly ===
-        const { fetchFundNAV: getFundFromCache } = await import('../services/israeliSecuritiesService.js');
-        const cached = await getFundFromCache(id);
+        // === If refresh=true, force refresh via multi-source scraper ===
+        if (refresh === 'true') {
+            console.log(`[TASE Raw Test] Force refresh requested for fund ${id}...`);
+            try {
+                const { refreshFundPriceViaProxy } = await import('../services/israeliSecuritiesService.js');
+                const result = await refreshFundPriceViaProxy(id, liveRate);
 
-        if (cached && cached.price > 0 && !cached.error && refresh !== 'true') {
-            // Return cached data immediately (< 100ms)
+                const changeILS = result.changePercent !== 0
+                    ? result.priceILS - (result.priceILS / (1 + result.changePercent / 100))
+                    : 0;
+
+                return res.json({
+                    success: true,
+                    source: result.source || 'refresh',
+                    elapsed_ms: Date.now() - startTime,
+                    fund_id: id,
+                    name: result.name,
+                    price_ils: result.priceILS,
+                    price_usd: result.priceUSD,
+                    change_ils: changeILS,
+                    change_usd: changeILS / liveRate,
+                    exchange_rate: liveRate,
+                    change_percent: result.changePercent,
+                    from_cache: false
+                });
+            } catch (refreshErr) {
+                return res.status(502).json({
+                    error: 'Refresh failed',
+                    details: refreshErr.message,
+                    elapsed_ms: Date.now() - startTime,
+                    fund_id: id
+                });
+            }
+        }
+
+        // === Normal fetch: checks cache (< 6h) -> Funder -> Bizportal -> stale cache ===
+        const { fetchFundNAV } = await import('../services/israeliSecuritiesService.js');
+        const data = await fetchFundNAV(id);
+
+        if (data && data.price > 0) {
             return res.json({
                 success: true,
-                source: 'db_cache',
+                source: data.source || (data.fromCache ? 'db_cache' : 'live'),
                 elapsed_ms: Date.now() - startTime,
                 fund_id: id,
-                price_ils: cached.price,
-                price_usd: cached.price / liveRate,
+                name: data.name,
+                price_ils: data.price,
+                price_usd: data.price / liveRate,
+                change_ils: data.change,
+                change_usd: (data.change || 0) / liveRate,
                 exchange_rate: liveRate,
-                change_percent: cached.changePercent,
-                age_hours: cached.ageHours || 'unknown',
-                from_cache: true,
-                hint: 'Add ?refresh=true to force a proxy refresh (slow, ~30s)'
+                change_percent: data.changePercent,
+                age_hours: data.ageHours ?? 0,
+                from_cache: !!data.fromCache,
+                hint: 'Add ?refresh=true to force a fresh scrape and cache update'
             });
         }
 
-        // === If no cache OR refresh=true, try proxy refresh ===
-        console.log(`[TASE Raw Test] No cache or refresh requested for fund ${id}. Trying proxy...`);
-
-        try {
-            const { refreshFundPriceViaProxy } = await import('../services/israeliSecuritiesService.js');
-            const result = await refreshFundPriceViaProxy(id, liveRate);
-
-            return res.json({
-                success: true,
-                source: 'proxy_refresh',
-                elapsed_ms: Date.now() - startTime,
-                fund_id: id,
-                price_ils: result.priceILS,
-                price_usd: result.priceUSD,
-                price_agorot: result.priceAgorot,
-                change_percent: result.changePercent,
-                hint: 'Price has been saved to DB cache for instant future access'
-            });
-        } catch (proxyErr) {
-            // Proxy failed — return whatever we have (even if price=0)
-            return res.status(502).json({
-                error: 'Proxy refresh failed',
-                proxy_error: proxyErr.message,
-                elapsed_ms: Date.now() - startTime,
-                fund_id: id,
-                cached_data: cached || null,
-                hint: 'Use POST /api/stocks/set-israeli-price to manually set the price'
-            });
-        }
+        return res.status(404).json({
+            error: data?.error || `Could not fetch price for fund ${id}`,
+            elapsed_ms: Date.now() - startTime
+        });
 
     } catch (err) {
         res.status(500).json({ error: err.message, elapsed_ms: Date.now() - startTime });

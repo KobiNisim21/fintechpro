@@ -15,10 +15,12 @@ export async function fetchFundFromFunder(fundId) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 8000);
 
-        const res = await fetch(`https://www.funder.co.il/fund/${cleanId}`, {
+        const fetchFn = typeof globalThis.fetch === 'function' ? globalThis.fetch : fetch;
+        const res = await fetchFn(`https://www.funder.co.il/fund/${cleanId}`, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7'
             },
             signal: controller.signal
         });
@@ -54,6 +56,66 @@ export async function fetchFundFromFunder(fundId) {
         };
     } catch (err) {
         console.warn(`[Funder] Error fetching fund ${fundId}:`, err.message);
+        return null;
+    }
+}
+
+/**
+ * Fetch daily fund price directly from Bizportal (free, public, real-time daily NAV, robust)
+ */
+export async function fetchFundFromBizportal(fundId) {
+    try {
+        const cleanId = String(fundId).replace(/\D/g, '');
+        if (!cleanId) return null;
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+
+        const fetchFn = typeof globalThis.fetch === 'function' ? globalThis.fetch : fetch;
+        const res = await fetchFn(`https://www.bizportal.co.il/mutualfunds/quote/generalview/${cleanId}`, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7'
+            },
+            signal: controller.signal
+        });
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+            console.warn(`[Bizportal] Response status ${res.status} for fund ${cleanId}`);
+            return null;
+        }
+
+        const html = await res.text();
+        const priceMatch = html.match(/מחיר פדיון<\/div><div class="num">([0-9.,]+)<\/div>/) ||
+                           html.match(/מחיר קנייה<\/div><div class="num">([0-9.,]+)<\/div>/) ||
+                           html.match(/class="label">מחיר פדיון<\/span><span class="num">([0-9.,]+)<\/span>/);
+        if (!priceMatch) {
+            console.warn(`[Bizportal] Price match not found for fund ${cleanId}`);
+            return null;
+        }
+
+        const priceILS = Number(priceMatch[1].replace(/,/g, ''));
+        if (isNaN(priceILS) || priceILS <= 0) return null;
+
+        const percentMatch = html.match(/<span class="num percent [^"]*"><span>([+-]?[0-9.,]+)%<\/span><\/span>/) ||
+                             html.match(/class="num percent [^"]*">([+-]?[0-9.,]+)%/);
+        const changePercent = percentMatch ? Number(percentMatch[1].replace(/,/g, '')) : 0;
+
+        const titleMatch = html.match(/<h1 class="paper_h1">\s*([^<]+?)\s*<\/h1>/) ||
+                           html.match(/<title>\s*([^|]+?)\s*\|\s*ביזפורטל/);
+        const name = titleMatch ? titleMatch[1].trim() : `קרן ${cleanId}`;
+
+        return {
+            fundId: cleanId,
+            priceILS,
+            changePercent,
+            name,
+            source: 'bizportal'
+        };
+    } catch (err) {
+        console.warn(`[Bizportal] Error fetching fund ${fundId}:`, err.message);
         return null;
     }
 }
@@ -125,14 +187,25 @@ export function searchIsraeliSecurities(query) {
 // ============================================
 
 /**
- * Fetch fund NAV from the DATABASE CACHE, with auto-fetch from Funder if missing/stale.
- * Guaranteed to return updated daily price without blocking proxy locks.
+ * Fetch fund NAV from the DATABASE CACHE, with auto-fetch from Funder / Bizportal if missing/stale.
+ * Guaranteed to return updated daily price and change without blocking proxy locks.
  */
 export async function fetchFundNAV(fundId) {
     const cleanId = String(fundId).replace(/\D/g, '');
+    if (!cleanId) {
+        return {
+            price: 0,
+            change: 0,
+            changePercent: 0,
+            currency: 'ILS',
+            timestamp: Math.floor(Date.now() / 1000),
+            error: 'Invalid fund ID'
+        };
+    }
+
     let cached = null;
 
-    // Check DB cache only if Mongoose is connected
+    // 1. Check DB cache if Mongoose is connected
     try {
         if (mongoose.connection && mongoose.connection.readyState === 1) {
             cached = await CachedPrice.findOne({ fundId: cleanId });
@@ -140,18 +213,23 @@ export async function fetchFundNAV(fundId) {
             if (cached && cached.priceILS > 0) {
                 const ageHours = (Date.now() - cached.updatedAt.getTime()) / (1000 * 60 * 60);
 
-                // Fresh cache (< 24 hours): return immediately
-                if (ageHours < 24) {
-                    console.log(`[IsraeliCache] Fund ${cleanId}: priceILS=${cached.priceILS}, age=${ageHours.toFixed(1)}h (from cache)`);
+                // Fresh cache (< 6 hours): return immediately
+                if (ageHours < 6) {
+                    const changePercent = cached.changePercent || 0;
+                    const changeILS = changePercent !== 0
+                        ? cached.priceILS - (cached.priceILS / (1 + changePercent / 100))
+                        : 0;
+                    console.log(`[IsraeliCache] Fund ${cleanId}: priceILS=${cached.priceILS}, changePercent=${changePercent}%, age=${ageHours.toFixed(1)}h (from cache)`);
                     return {
                         price: cached.priceILS,
-                        change: 0,
-                        changePercent: cached.changePercent || 0,
+                        change: changeILS,
+                        changePercent,
                         currency: 'ILS',
                         name: cached.name,
                         timestamp: Math.floor(cached.updatedAt.getTime() / 1000),
                         fromCache: true,
-                        ageHours: Math.round(ageHours * 10) / 10
+                        ageHours: Math.round(ageHours * 10) / 10,
+                        source: cached.source || 'cache'
                     };
                 }
             }
@@ -160,50 +238,74 @@ export async function fetchFundNAV(fundId) {
         console.warn(`[IsraeliCache] DB read skipped for ${cleanId}:`, dbErr.message);
     }
 
-    // Cache missing, stale, or DB not connected -> fetch latest daily price from Funder!
+    // 2. Fetch live data: Try Funder first, then Bizportal fallback
+    let liveData = null;
     try {
-        console.log(`[FundNAV] Fetching fresh daily price for fund ${cleanId} from Funder...`);
-        const funderData = await fetchFundFromFunder(cleanId);
-        if (funderData && funderData.priceILS > 0) {
-            // Attempt to update cache asynchronously if DB is connected
-            try {
-                if (mongoose.connection && mongoose.connection.readyState === 1) {
-                    await setCachedPrice(cleanId, funderData.priceILS, 3.65, {
-                        changePercent: funderData.changePercent,
-                        name: funderData.name,
-                        source: 'funder'
-                    });
-                }
-            } catch (saveErr) {
-                console.warn(`[IsraeliCache] Could not save cache for ${cleanId}:`, saveErr.message);
-            }
-
-            return {
-                price: funderData.priceILS,
-                change: 0,
-                changePercent: funderData.changePercent,
-                currency: 'ILS',
-                name: funderData.name,
-                timestamp: Math.floor(Date.now() / 1000),
-                fromCache: false,
-                ageHours: 0
-            };
-        }
+        console.log(`[FundNAV] Fetching live price for fund ${cleanId} from Funder...`);
+        liveData = await fetchFundFromFunder(cleanId);
     } catch (funderErr) {
         console.warn(`[FundNAV] Funder fetch failed for ${cleanId}:`, funderErr.message);
     }
 
-    // Fallback to older cache if Funder fetch failed
+    if (!liveData || !liveData.priceILS || liveData.priceILS <= 0) {
+        try {
+            console.log(`[FundNAV] Trying Bizportal for fund ${cleanId}...`);
+            liveData = await fetchFundFromBizportal(cleanId);
+        } catch (bizErr) {
+            console.warn(`[FundNAV] Bizportal fetch failed for ${cleanId}:`, bizErr.message);
+        }
+    }
+
+    // 3. If live fetch succeeded: update cache and return
+    if (liveData && liveData.priceILS > 0) {
+        const changePercent = liveData.changePercent || 0;
+        const changeILS = changePercent !== 0
+            ? liveData.priceILS - (liveData.priceILS / (1 + changePercent / 100))
+            : 0;
+
+        try {
+            if (mongoose.connection && mongoose.connection.readyState === 1) {
+                await setCachedPrice(cleanId, liveData.priceILS, 3.65, {
+                    changePercent,
+                    name: liveData.name,
+                    source: liveData.source
+                });
+            }
+        } catch (saveErr) {
+            console.warn(`[IsraeliCache] Could not save cache for ${cleanId}:`, saveErr.message);
+        }
+
+        return {
+            price: liveData.priceILS,
+            change: changeILS,
+            changePercent,
+            currency: 'ILS',
+            name: liveData.name,
+            timestamp: Math.floor(Date.now() / 1000),
+            fromCache: false,
+            ageHours: 0,
+            source: liveData.source
+        };
+    }
+
+    // 4. Fallback to older cache if live fetch failed
     if (cached && cached.priceILS > 0) {
+        const ageHours = (Date.now() - cached.updatedAt.getTime()) / (1000 * 60 * 60);
+        const changePercent = cached.changePercent || 0;
+        const changeILS = changePercent !== 0
+            ? cached.priceILS - (cached.priceILS / (1 + changePercent / 100))
+            : 0;
+        console.log(`[FundNAV] Live fetch failed, using older DB cache for fund ${cleanId} (${ageHours.toFixed(1)}h old)`);
         return {
             price: cached.priceILS,
-            change: 0,
-            changePercent: cached.changePercent || 0,
+            change: changeILS,
+            changePercent,
             currency: 'ILS',
             name: cached.name,
             timestamp: Math.floor(cached.updatedAt.getTime() / 1000),
             fromCache: true,
-            ageHours: Math.round((Date.now() - cached.updatedAt.getTime()) / (1000 * 60 * 60))
+            ageHours: Math.round(ageHours * 10) / 10,
+            source: cached.source || 'cache'
         };
     }
 
@@ -213,7 +315,7 @@ export async function fetchFundNAV(fundId) {
         changePercent: 0,
         currency: 'ILS',
         timestamp: Math.floor(Date.now() / 1000),
-        error: `No cached price available for fund ${cleanId}.`
+        error: `No price available for fund ${cleanId} from Funder, Bizportal, or DB cache.`
     };
 }
 
@@ -226,12 +328,13 @@ export async function fetchFundNAV(fundId) {
  * @param {number} exchangeRate - ILS/USD rate (e.g. 3.65)
  * @param {object} [extra] - Optional: { changePercent, name, source }
  */
-export async function setCachedPrice(fundId, priceILS, exchangeRate, extra = {}) {
+export async function setCachedPrice(fundId, priceILS, exchangeRate = 3.65, extra = {}) {
+    const cleanId = String(fundId).replace(/\D/g, '');
     const priceUSD = priceILS / exchangeRate;
 
     const update = {
-        fundId,
-        symbol: `FUND:${fundId}`,
+        fundId: cleanId,
+        symbol: `FUND:${cleanId}`,
         priceILS,
         priceUSD,
         exchangeRate,
@@ -243,33 +346,34 @@ export async function setCachedPrice(fundId, priceILS, exchangeRate, extra = {})
 
     if (mongoose.connection && mongoose.connection.readyState === 1) {
         await CachedPrice.findOneAndUpdate(
-            { fundId },
+            { fundId: cleanId },
             update,
             { upsert: true, new: true }
         );
-        console.log(`[IsraeliCache] Updated fund ${fundId}: ILS=${priceILS}, USD=${priceUSD.toFixed(4)}, rate=${exchangeRate}`);
+        console.log(`[IsraeliCache] Updated fund ${cleanId}: ILS=${priceILS}, USD=${priceUSD.toFixed(4)}, rate=${exchangeRate}`);
     }
 
     return update;
 }
 
 /**
- * Refresh fund price using the TASE proxy (slow, background use only).
- * This function makes 2 sequential ScrapingAnt calls (token + data).
- * It should ONLY be called from the manual refresh endpoint, never from the dashboard.
+ * Refresh fund price using Funder, Bizportal, or TASE proxy.
  */
 export async function refreshFundPriceViaProxy(fundId, exchangeRate = 3.65) {
-    // 1. Try fast, reliable Funder fetch first (no proxy or credentials required)
+    const cleanId = String(fundId).replace(/\D/g, '');
+
+    // 1. Try fast, reliable Funder fetch first
     try {
-        const funderData = await fetchFundFromFunder(fundId);
+        const funderData = await fetchFundFromFunder(cleanId);
         if (funderData && funderData.priceILS > 0) {
-            await setCachedPrice(fundId, funderData.priceILS, exchangeRate, {
+            await setCachedPrice(cleanId, funderData.priceILS, exchangeRate, {
                 changePercent: funderData.changePercent,
                 name: funderData.name,
                 source: 'funder'
             });
             return {
-                fundId,
+                fundId: cleanId,
+                name: funderData.name,
                 priceILS: funderData.priceILS,
                 priceUSD: funderData.priceILS / exchangeRate,
                 changePercent: funderData.changePercent,
@@ -277,14 +381,36 @@ export async function refreshFundPriceViaProxy(fundId, exchangeRate = 3.65) {
             };
         }
     } catch (funderErr) {
-        console.warn(`[Refresh] Funder fetch failed for ${fundId}, falling back to TASE proxy:`, funderErr.message);
+        console.warn(`[Refresh] Funder fetch failed for ${cleanId}:`, funderErr.message);
+    }
+
+    // 2. Try Bizportal fallback
+    try {
+        const bizData = await fetchFundFromBizportal(cleanId);
+        if (bizData && bizData.priceILS > 0) {
+            await setCachedPrice(cleanId, bizData.priceILS, exchangeRate, {
+                changePercent: bizData.changePercent,
+                name: bizData.name,
+                source: 'bizportal'
+            });
+            return {
+                fundId: cleanId,
+                name: bizData.name,
+                priceILS: bizData.priceILS,
+                priceUSD: bizData.priceILS / exchangeRate,
+                changePercent: bizData.changePercent,
+                source: 'bizportal'
+            };
+        }
+    } catch (bizErr) {
+        console.warn(`[Refresh] Bizportal fetch failed for ${cleanId}:`, bizErr.message);
     }
 
     const clientId = process.env.TASE_CLIENT_ID;
     const clientSecret = process.env.TASE_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-        throw new Error('TASE credentials not configured and Funder fallback was unavailable');
+        throw new Error('TASE credentials not configured and web sources (Funder, Bizportal) were unavailable');
     }
 
     // Step 1: Get OAuth token
