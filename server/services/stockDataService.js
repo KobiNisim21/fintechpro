@@ -248,7 +248,7 @@ export async function getQuote(symbol) {
                     throw new Error(`No NAV data for fund ${fundId}: ${navData?.error || 'price is 0'}`);
                 }
 
-                // navData.price is already ILS (Agorot / 100).
+                // navData.price is in ILS (already converted from Agorot in the scraper).
                 const priceInILS = navData.price;
                 const changeInILS = navData.change || 0;
 
@@ -257,8 +257,7 @@ export async function getQuote(symbol) {
                 const changeInUSD = changeInILS / usdRate;
 
                 // For Debug Logging (Requested by User)
-                const priceAgorot = priceInILS * 100;
-                console.log(`[PRICE DEBUG] Asset: ${fundId} | Price (Agorot): ${priceAgorot} | USD: ${priceInUSD.toFixed(4)} | ChangeUSD: ${changeInUSD.toFixed(4)} | Change%: ${navData.changePercent}%`);
+                console.log(`[PRICE DEBUG] Asset: ${fundId} | Price ILS: ${priceInILS.toFixed(4)} | USD: ${priceInUSD.toFixed(4)} | ChangeUSD: ${changeInUSD.toFixed(4)} | Change%: ${navData.changePercent}%`);
 
                 const result = {
                     c: priceInUSD,
@@ -555,14 +554,13 @@ export async function getBatchExtendedQuotes(symbols) {
                     continue;
                 }
 
-                // Convert to USD: Price_USD = (Price_Agorot / 100) / Rate_ILS_per_USD
-                // navData.price is already in ILS (priceAgorot / 100 from the service)
+                // Convert to USD: navData.price is already in ILS (converted from Agorot in the scraper)
+                
                 const priceInUSD = navData.price / usdIlsRate;
                 const changeInUSD = (navData.change || 0) / usdIlsRate;
 
                 // Debug Logging
-                const priceAgorot = navData.price * 100;
-                console.log(`[PRICE DEBUG] Asset: ${fundId} | Price (Agorot): ${priceAgorot} | ILS: ${navData.price.toFixed(2)} | USD: ${priceInUSD.toFixed(4)} | Rate: ${usdIlsRate}`);
+                console.log(`[PRICE DEBUG] Asset: ${fundId} | Price ILS: ${navData.price.toFixed(4)} | USD: ${priceInUSD.toFixed(4)} | Rate: ${usdIlsRate}`);
 
                 const result = {
                     symbol: symbol,

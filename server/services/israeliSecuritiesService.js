@@ -5,7 +5,8 @@ import { makeProxyRequest } from '../utils/proxyUtils.js';
 import CachedPrice from '../models/CachedPrice.js';
 
 /**
- * Fetch daily fund price directly from Funder (free, public, real-time daily NAV)
+ * Fetch daily fund price directly from Funder (free, public, real-time daily NAV).
+ * NOTE: Funder returns prices in Agorot (hundredths of a Shekel). We convert to ILS here.
  */
 export async function fetchFundFromFunder(fundId) {
     try {
@@ -41,11 +42,16 @@ export async function fetchFundFromFunder(fundId) {
         const f = data.x?.[0];
         if (!f) return null;
 
-        const priceILS = Number(f.buyPrice || f.sellPrice || 0);
-        if (priceILS <= 0) return null;
+        const priceAgorot = Number(f.buyPrice || f.sellPrice || 0);
+        if (priceAgorot <= 0) return null;
+
+        // Convert Agorot → ILS (divide by 100)
+        const priceILS = priceAgorot / 100;
 
         const changePercent = Number(f['1day'] || 0);
         const name = f.fundName || f.fundLongName || `קרן ${cleanId}`;
+
+        console.log(`[Funder] Fund ${cleanId}: raw=${priceAgorot} Agorot → ${priceILS.toFixed(4)} ILS`);
 
         return {
             fundId: cleanId,
@@ -61,7 +67,8 @@ export async function fetchFundFromFunder(fundId) {
 }
 
 /**
- * Fetch daily fund price directly from Bizportal (free, public, real-time daily NAV, robust)
+ * Fetch daily fund price directly from Bizportal (free, public, real-time daily NAV, robust).
+ * NOTE: Bizportal returns prices in Agorot (hundredths of a Shekel). We convert to ILS here.
  */
 export async function fetchFundFromBizportal(fundId) {
     try {
@@ -96,8 +103,11 @@ export async function fetchFundFromBizportal(fundId) {
             return null;
         }
 
-        const priceILS = Number(priceMatch[1].replace(/,/g, ''));
-        if (isNaN(priceILS) || priceILS <= 0) return null;
+        const priceAgorot = Number(priceMatch[1].replace(/,/g, ''));
+        if (isNaN(priceAgorot) || priceAgorot <= 0) return null;
+
+        // Convert Agorot → ILS (divide by 100)
+        const priceILS = priceAgorot / 100;
 
         const percentMatch = html.match(/<span class="num percent [^"]*"><span>([+-]?[0-9.,]+)%<\/span><\/span>/) ||
                              html.match(/class="num percent [^"]*">([+-]?[0-9.,]+)%/);
@@ -106,6 +116,8 @@ export async function fetchFundFromBizportal(fundId) {
         const titleMatch = html.match(/<h1 class="paper_h1">\s*([^<]+?)\s*<\/h1>/) ||
                            html.match(/<title>\s*([^|]+?)\s*\|\s*ביזפורטל/);
         const name = titleMatch ? titleMatch[1].trim() : `קרן ${cleanId}`;
+
+        console.log(`[Bizportal] Fund ${cleanId}: raw=${priceAgorot} Agorot → ${priceILS.toFixed(4)} ILS`);
 
         return {
             fundId: cleanId,
