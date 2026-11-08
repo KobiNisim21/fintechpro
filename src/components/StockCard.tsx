@@ -342,9 +342,9 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                 <span className="w-8"></span>
               </div>
               {lots.map((lot, index) => (
-                <div key={index} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_44px] sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_44px] gap-2 items-center glass-card-solid p-2 rounded-[20px] text-sm hover-lift">
+                <div key={index} className="grid grid-cols-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_44px] gap-2 items-center glass-card-solid p-2 rounded-[20px] text-sm hover-lift">
                   {/* Date Input - Editable */}
-                  <label className="col-span-3 sm:col-span-1 min-w-0">
+                  <label className="col-span-2 sm:col-span-1 min-w-0">
                     <span className="text-xs sm:sr-only">Purchase date</span>
                   <Input
                     aria-label={`Purchase date for lot ${index + 1}`}
@@ -384,7 +384,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                     type="button"
                     aria-label={`Remove lot ${index + 1} from draft`}
                     onClick={() => removeLot(index)}
-                    className="w-11 h-11 self-end flex items-center justify-center rounded-[20px] text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                    className="col-span-2 sm:col-span-1 justify-self-end w-11 h-11 self-end flex items-center justify-center rounded-[20px] text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
                   >
                     <X className="w-5 h-5" strokeWidth={3} />
                   </button>

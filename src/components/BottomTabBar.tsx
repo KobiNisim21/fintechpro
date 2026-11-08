@@ -62,7 +62,7 @@ export function BottomTabBar({ viewMode, onViewChange, alertCount = 0 }: BottomT
               )}
             </button>
           </SheetTrigger>
-          <SheetContent side="right" className="p-0 border-none bg-[var(--color-ios-bg)] w-80 shadow-[var(--shadow-ios-card)]">
+          <SheetContent side="right" aria-describedby={undefined} className="p-0 border-none bg-[var(--color-ios-bg)] w-80 shadow-[var(--shadow-ios-card)]">
             <VisuallyHidden>
               <SheetTitle>Menu</SheetTitle>
             </VisuallyHidden>
