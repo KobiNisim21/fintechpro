@@ -124,7 +124,7 @@ export function PortfolioHero() {
           </div>
 
           {/* ── Right Column: Returns + Activity/Exchange ── */}
-          <div className="flex flex-col items-end gap-5">
+          <div className="hero-secondary flex flex-col items-end gap-5">
             {/* Activity Indicator & Exchange Rate */}
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-full hover:bg-white/50 transition-colors">
@@ -139,7 +139,7 @@ export function PortfolioHero() {
 
             {/* ── Period Returns (Weekly / Monthly / Yearly) ── */}
             {periodReturns && (
-              <div className="flex flex-row gap-3 mt-2">
+              <div className="hero-period-row flex flex-row gap-3 mt-2">
                 {([
                   { label: '1W', value: periodReturns.weekly },
                   { label: '1M', value: periodReturns.monthly },

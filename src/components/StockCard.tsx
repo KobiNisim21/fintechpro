@@ -290,8 +290,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
             <div className="text-[9px] text-slate-400 font-medium uppercase mb-2">
               {stock.marketStatus === 'pre-market' && 'Pre-market INFO'}
               {stock.marketStatus === 'after-hours' && 'After-hours INFO'}
-              {stock.marketStatus === 'closed' && 'Pre-market INFO'}
-              {!stock.marketStatus && 'Pre-market INFO'}
+              {stock.marketStatus === 'closed' && 'Market closed'}
             </div>
           )}
 
@@ -336,42 +335,56 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
           <div className="space-y-6">
             {/* Lots List */}
             <div className="space-y-3 bg-slate-50 p-4 rounded-2xl">
-              <div className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-2 items-center text-[11px] font-semibold text-slate-500 px-3 uppercase tracking-wider">
+              <div className="hidden sm:grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_44px] gap-2 items-center text-[11px] font-semibold text-slate-500 px-3 uppercase tracking-wider">
                 <span>Date</span>
                 <span className="text-right">Qty</span>
                 <span className="text-right">Price</span>
                 <span className="w-8"></span>
               </div>
               {lots.map((lot, index) => (
-                <div key={index} className="grid grid-cols-[1.5fr_1fr_1fr_auto] gap-2 items-center glass-card-solid p-2 rounded-xl text-sm hover-lift">
+                <div key={index} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_44px] sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_44px] gap-2 items-center glass-card-solid p-2 rounded-[20px] text-sm hover-lift">
                   {/* Date Input - Editable */}
+                  <label className="col-span-3 sm:col-span-1 min-w-0">
+                    <span className="text-xs sm:sr-only">Purchase date</span>
                   <Input
+                    aria-label={`Purchase date for lot ${index + 1}`}
                     type="date"
                     value={typeof lot.date === 'string' ? lot.date.split('T')[0] : new Date(lot.date).toISOString().split('T')[0]}
                     onChange={(e) => updateLot(index, 'date', e.target.value)}
-                    className="h-9 text-[13px] bg-transparent border-none focus-visible:ring-0 p-1 text-slate-800 font-medium scheme-light"
+                    className="min-w-0 w-full h-11 text-[13px] bg-transparent border-none p-1 text-slate-800 font-medium scheme-light"
                   />
+                  </label>
 
                   {/* Quantity Input - Editable */}
+                  <label className="min-w-0">
+                    <span className="text-xs sm:sr-only">Quantity</span>
                   <Input
+                    aria-label={`Quantity for lot ${index + 1}`}
                     type="number"
                     step="any"
                     value={lot.quantity}
                     onChange={(e) => updateLot(index, 'quantity', e.target.value)}
-                    className="h-9 text-[14px] bg-transparent border-none focus-visible:ring-0 p-1 text-right font-bold text-slate-800"
+                    className="min-w-0 w-full h-11 text-[14px] bg-transparent border-none p-1 text-right font-bold text-slate-800"
                   />
+                  </label>
 
                   {/* Price Input - Editable */}
+                  <label className="min-w-0">
+                    <span className="text-xs sm:sr-only">Price</span>
                   <Input
+                    aria-label={`Price for lot ${index + 1}`}
                     type="number"
                     value={lot.price}
                     onChange={(e) => updateLot(index, 'price', e.target.value)}
-                    className="h-9 text-[14px] bg-transparent border-none focus-visible:ring-0 p-1 text-right font-semibold text-slate-800"
+                    className="min-w-0 w-full h-11 text-[14px] bg-transparent border-none p-1 text-right font-semibold text-slate-800"
                   />
+                  </label>
 
                   <button
+                    type="button"
+                    aria-label={`Remove lot ${index + 1} from draft`}
                     onClick={() => removeLot(index)}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                    className="w-11 h-11 self-end flex items-center justify-center rounded-[20px] text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
                   >
                     <X className="w-5 h-5" strokeWidth={3} />
                   </button>
@@ -382,7 +395,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
             {/* Add Lot Form */}
             {showAddLot ? (
               <div className="bg-slate-50 p-5 rounded-2xl space-y-4 border border-slate-200">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider ml-1 mb-1 block">Date</Label>
                     <Input
@@ -403,7 +416,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                       placeholder="Qty"
                     />
                   </div>
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider ml-1 mb-1 block">Price per Share</Label>
                     <Input
                       type="number"
@@ -415,7 +428,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                     />
                   </div>
                 </div>
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
                   <Button size="sm" variant="ghost" onClick={() => setShowAddLot(false)} className="h-10 px-4 rounded-xl text-[13px] font-medium text-slate-500 transition-colors">Cancel</Button>
                   <Button size="sm" onClick={handleAddLot} className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">Add Lot</Button>
                 </div>
@@ -444,7 +457,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 mt-8">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-8">
               <Button
                 type="button"
                 onClick={() => setEditOpen(false)}

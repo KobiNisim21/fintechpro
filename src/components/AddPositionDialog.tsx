@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, X, Check, ChevronsUpDown } from 'lucide-react';
+﻿import { useState, useEffect } from 'react';
+import { Plus, Check, ChevronsUpDown } from 'lucide-react';
 import { SimpleDialog } from './SimpleDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -147,15 +147,8 @@ export function AddPositionDialog() {
                 <span className=" tracking-wide">Add Position</span>
             </Button>
 
-            <SimpleDialog open={open} onClose={() => setOpen(false)}>
+            <SimpleDialog open={open} onClose={() => setOpen(false)} title="Add new position">
                 <div className="relative px-2">
-                    <button
-                        onClick={() => setOpen(false)}
-                        className="absolute -top-2 -right-2 w-10 h-10 flex items-center justify-center rounded-[16px] text-[var(--color-ios-secondary)] hover:text-rose-500 hover:bg-rose-50 active:scale-[0.92] transition-all"
-                    >
-                        <X className="w-5 h-5" strokeWidth={2.5} />
-                    </button>
-
                     <h2 className="text-2xl font-bold  text-[var(--color-ios-fg)] mb-2">
                         Add New Position
                     </h2>
@@ -170,7 +163,7 @@ export function AddPositionDialog() {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                        <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                             <Label htmlFor="symbol" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Symbol</Label>
                             <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
                                 <PopoverTrigger asChild>
@@ -238,7 +231,7 @@ export function AddPositionDialog() {
                                                                 <span className="font-bold ">{stock.displaySymbol}</span>
                                                                 {stock.israeliData && (
                                                                     <span className="text-[10px] px-2 py-0.5 rounded-[8px] bg-blue-100 text-blue-600 font-bold whitespace-nowrap">
-                                                                        {stock.israeliData.type === 'fund' ? 'קרן כספית 🇮🇱' : 'TASE 🇮🇱'}
+                                                                        {stock.israeliData.type === 'fund' ? '׳§׳¨׳ ׳›׳¡׳₪׳™׳× נ‡®נ‡±' : 'TASE נ‡®נ‡±'}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -253,7 +246,7 @@ export function AddPositionDialog() {
                             </Popover>
                         </div>
 
-                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                        <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                             <Label htmlFor="date" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Date</Label>
                             <Input
                                 id="date"
@@ -265,7 +258,7 @@ export function AddPositionDialog() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                        <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                             <Label htmlFor="broker" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest text-right block">Broker</Label>
                             <Input
                                 id="broker"
@@ -276,7 +269,7 @@ export function AddPositionDialog() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                        <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                             <Label htmlFor="name" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Name</Label>
                             <Input
                                 id="name"
@@ -287,7 +280,7 @@ export function AddPositionDialog() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                        <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                             <Label htmlFor="quantity" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Quantity</Label>
                             <Input
                                 id="quantity"
@@ -301,7 +294,7 @@ export function AddPositionDialog() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                        <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                             <Label htmlFor="avgPrice" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Avg Price</Label>
                             <Input
                                 id="avgPrice"
