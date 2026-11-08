@@ -6,6 +6,8 @@ import app, { corsOptions } from './app.js';
 import { socketAuthMiddleware } from './middleware/socketAuth.js';
 import { startNewsPollingService } from './services/newsPollingService.js';
 import { startLiveAlertsService } from './services/liveAlertsService.js';
+import connectDB from './config/database.js';
+import { startWhenDatabaseReady } from './services/startup.js';
 
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
@@ -17,6 +19,9 @@ const io = new Server(httpServer, {
 
 // Socket.io authentication middleware
 io.use(socketAuthMiddleware);
+let stopStartup = () => {};
+let shuttingDown = false;
+let reconnectTimer;
 
 // Start HTTP server with Socket.io
 httpServer.listen(PORT, () => {
@@ -24,11 +29,15 @@ httpServer.listen(PORT, () => {
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🔌 Socket.io enabled`);
 
-    // Start the news polling service
-    startNewsPollingService(io);
-
-    // Start the live alerts service
-    startLiveAlertsService(io);
+    stopStartup = startWhenDatabaseReady({
+        connect: connectDB,
+        start: () => {
+            startNewsPollingService(io);
+            startLiveAlertsService(io);
+            connectFinnhubWs();
+        },
+        onError: () => console.warn('Database unavailable; background services will retry in 10s.'),
+    });
 
     // Keep-alive: ping own health endpoint every 10 minutes to prevent idle shutdown
     const KEEP_ALIVE_INTERVAL = 10 * 60 * 1000; // 10 minutes
@@ -41,8 +50,6 @@ httpServer.listen(PORT, () => {
         }
     }, KEEP_ALIVE_INTERVAL);
     
-    // Connect to Finnhub WS
-    connectFinnhubWs();
 });
 
 // Finnhub WebSocket setup
@@ -50,6 +57,8 @@ let finnhubWs = null;
 const activeSymbols = new Map(); // symbol -> Set of socket IDs
 
 const connectFinnhubWs = () => {
+    if (shuttingDown || activeSymbols.size === 0) return;
+    if (finnhubWs && finnhubWs.readyState <= WebSocket.OPEN) return;
     const token = process.env.FINNHUB_API_KEY;
     if (!token) return;
 
@@ -93,8 +102,9 @@ const connectFinnhubWs = () => {
     });
 
     finnhubWs.on('close', () => {
+        if (shuttingDown || activeSymbols.size === 0) return;
         console.log('❌ Finnhub WebSocket closed. Reconnecting in 5s...');
-        setTimeout(connectFinnhubWs, 5000);
+        reconnectTimer = setTimeout(connectFinnhubWs, 5000);
     });
     
     finnhubWs.on('error', (error) => {
@@ -116,6 +126,7 @@ io.on('connection', (socket) => {
             }
             activeSymbols.get(symbol).add(socket.id);
         });
+        connectFinnhubWs();
     });
 
     socket.on('unsubscribe-prices', (data) => {
@@ -134,6 +145,10 @@ io.on('connection', (socket) => {
                 }
             }
         });
+        if (activeSymbols.size === 0) {
+            clearTimeout(reconnectTimer);
+            finnhubWs?.close();
+        }
     });
 
     socket.on('disconnect', () => {
@@ -148,11 +163,19 @@ io.on('connection', (socket) => {
                 }
             }
         }
+        if (activeSymbols.size === 0) {
+            clearTimeout(reconnectTimer);
+            finnhubWs?.close();
+        }
     });
 });
 
 // Graceful Shutdown
 const shutdown = async () => {
+    shuttingDown = true;
+    stopStartup();
+    clearTimeout(reconnectTimer);
+    finnhubWs?.close();
     console.log('🛑 Shutting down server...');
     io.close();
     httpServer.close(async () => {

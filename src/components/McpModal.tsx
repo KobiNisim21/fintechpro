@@ -1,9 +1,9 @@
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
-    Bot, Copy, Check, RefreshCw, Trash2, Key, Eye, EyeOff, Sparkles, 
-    ShieldCheck, X, Undo2, AlertTriangle, Plus, Clock, ExternalLink, 
-    ShieldAlert, Lock, CheckCircle2, ChevronRight, Layers, History, Wrench
+    Bot, Copy, Check, RefreshCw, Trash2, Key, Sparkles,
+    X, Undo2, AlertTriangle, Plus,
+    ShieldAlert, Lock, Layers, History, Wrench
 } from 'lucide-react';
 import { mcpAPI, ApiKeyItem, CreateKeyResponse, AuditLogItem } from '../api/mcp';
 
@@ -24,17 +24,11 @@ export function McpModal() {
     const [createScope, setCreateScope] = useState<'read' | 'write'>('read');
     const [createExpires, setCreateExpires] = useState<string>('never');
     
-    // Test connection state
-    const [testingKeyId, setTestingKeyId] = useState<string | null>(null);
-    const [testResult, setTestResult] = useState<{ id: string; success: boolean; message: string } | null>(null);
-
     // Copying state
     const [copiedField, setCopiedField] = useState<string | null>(null);
 
     // Undo action loading
     const [undoingId, setUndoingId] = useState<string | null>(null);
-
-    const [, startTransition] = useTransition();
 
     useEffect(() => {
         setMounted(true);
@@ -101,7 +95,17 @@ export function McpModal() {
             });
 
             // Add to list and open one-time reveal modal
-            setKeys(prev => [created, ...prev]);
+            const keyItem: ApiKeyItem = {
+                _id: created._id,
+                name: created.name,
+                keyPrefix: created.keyPrefix,
+                scopes: created.scopes,
+                expiresAt: created.expiresAt,
+                createdAt: created.createdAt,
+                lastUsedAt: null,
+                revoked: false,
+            };
+            setKeys(prev => [keyItem, ...prev]);
             setNewKeyData(created);
             setShowCreateDialog(false);
             setCreateName('Claude');

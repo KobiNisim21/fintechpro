@@ -7,7 +7,8 @@
  * Fetches all user positions with FUND: prefix, 
  * then tries both proxy and a direct TASE API call per fund.
  */
-import { dbConnection } from '../../server/app.js';
+import '../../server/app.js';
+import connectDB from '../../server/config/database.js';
 import Position from '../../server/models/Position.js';
 import CachedPrice from '../../server/models/CachedPrice.js';
 import { refreshFundPriceViaProxy, setCachedPrice } from '../../server/services/israeliSecuritiesService.js';
@@ -24,9 +25,7 @@ export default async function handler(req, res) {
 
     try {
         // Ensure DB is connected
-        if (dbConnection) {
-            await dbConnection;
-        }
+        await connectDB();
 
         console.log('[Cron] Daily Israeli price refresh starting...');
 

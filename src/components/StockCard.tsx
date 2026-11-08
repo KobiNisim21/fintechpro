@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Trash2, Edit2, Plus, X } from 'lucide-react';
+import { TrendingDown, Trash2, Edit2, Plus, X } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 import { usePortfolio, Position, Lot } from '@/context/PortfolioContext';
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
@@ -6,6 +6,7 @@ import { SimpleDialog } from './SimpleDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { PriceFreshness } from './PriceFreshness';
 
 interface StockCardProps {
   stock: Position;
@@ -48,11 +49,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
   const chartData = useMemo(() => stock.sparklineData.map((value) => ({ value })), [stock.sparklineData]);
 
   const quantity = stock.quantity || 0;
-  const avgPrice = stock.averagePrice || 0;
   const totalValue = quantity * stock.price;
-  const totalReturn = (stock.price - avgPrice) * quantity;
-  const totalReturnPercent = avgPrice > 0 ? ((stock.price - avgPrice) / avgPrice) * 100 : 0;
-  const istotalReturnPositive = totalReturn >= 0;
 
   // Visual Alert Logic
   const isNear52wLow = stock.fiftyTwoWeekLow && (stock.price <= stock.fiftyTwoWeekLow * 1.05);
@@ -204,6 +201,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                     onClick={handleEdit}
                     className="p-1.5 ml-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all z-20"
                     title="Edit position"
+                    aria-label={`Edit ${stock.symbol} position`}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
@@ -211,6 +209,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                     onClick={handleDelete}
                     className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-all z-20"
                     title="Remove position"
+                    aria-label={`Remove ${stock.symbol} position`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -222,7 +221,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
           {/* Price */}
           <div className="mb-2">
             <div className="text-sm font-semibold text-slate-700 flex items-baseline gap-2">
-              <span>${stock.price.toFixed(2)}</span>
+              <span>${stock.price.toFixed(2)}{stock.priceStatus === 'estimated' ? ' (estimated)' : ''}</span>
               {/* Extended hours price */}
               {stock.marketStatus && stock.marketStatus !== 'regular' && stock.extendedPrice && (
                 <span className="text-[11px] font-medium text-slate-400">
@@ -266,6 +265,8 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
               </div>
             )}
           </div>
+
+          <PriceFreshness source={stock.priceSource} updatedAt={stock.priceUpdatedAt} status={stock.priceStatus} />
 
           {/* Sparkline Chart */}
           <div className="h-[30px] w-full mb-3">
@@ -328,7 +329,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
       </div>
 
       {/* Edit Dialog - Multi-Lot Support */}
-      <SimpleDialog open={editOpen} onClose={() => setEditOpen(false)}>
+      <SimpleDialog open={editOpen} onClose={() => setEditOpen(false)} title={`Edit ${stock.symbol} holdings`}>
         <div className="max-h-[80vh] overflow-y-auto px-1 pb-2">
           <h2 className="text-2xl font-bold mb-6 text-slate-800">Edit {stock.symbol} Holdings</h2>
 

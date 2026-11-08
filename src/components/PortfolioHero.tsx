@@ -1,24 +1,14 @@
-import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { usePortfolio } from '@/context/PortfolioContext';
 import { stocksAPI } from '@/api/stocks';
 
-// Extracted pulse animation into its own component to prevent
-// 1-second re-renders of the entire PortfolioHero
-function PulseDot() {
-  const [pulse, setPulse] = useState(true);
-  useEffect(() => {
-    const id = setInterval(() => setPulse(p => !p), 1000);
-    return () => clearInterval(id);
-  }, []);
-  return (
-    <div className={`w-2 h-2 rounded-full bg-emerald-500 transition-opacity duration-300 ${pulse ? 'opacity-100' : 'opacity-30'}`} />
-  );
-}
-
 export function PortfolioHero() {
   const [usdToIls, setUsdToIls] = useState(3.6); // Default fallback
+  const [forexSource, setForexSource] = useState('Estimated exchange rate');
   const { positions, portfolioAnalytics } = usePortfolio();
+  const hasEstimates = positions.some(p => p.priceStatus === 'estimated');
+  const hasPreviousQuotes = positions.some(p => p.priceStatus === 'stale');
 
   // Fetch USD/ILS exchange rate
   useEffect(() => {
@@ -27,6 +17,7 @@ export function PortfolioHero() {
         const forexData = await stocksAPI.getForexRate();
         if (forexData.rate) {
           setUsdToIls(forexData.rate);
+          setForexSource(forexData.source === 'last-known' ? 'Last known exchange rate' : forexData.source);
         }
       } catch (error) {
         console.error('Failed to fetch forex rate, using fallback:', error);
@@ -89,8 +80,7 @@ export function PortfolioHero() {
             <div className="flex items-center gap-3 mb-2">
               <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Portfolio Overview</h3>
               <div className="flex items-center gap-2">
-                <PulseDot />
-                <span className="text-[13px] text-emerald-500 font-bold tracking-widest uppercase">LIVE</span>
+                <span className="price-freshness">{hasEstimates ? 'Includes estimates' : hasPreviousQuotes ? 'Previous quotes' : 'Market data'}</span>
               </div>
             </div>
 
@@ -143,6 +133,7 @@ export function PortfolioHero() {
               <div className="glass-card-solid rounded-2xl flex flex-col items-center justify-center p-4 min-w-[90px] hover-lift hero-exchange-card">
                 <div className="text-[11px] text-slate-500 font-medium uppercase tracking-wider mb-1">USD/ILS</div>
                 <div className="text-lg font-bold text-slate-800 tracking-tight">{ usdToIls.toFixed(4)}</div>
+                <div className="price-freshness" title={forexSource}>{forexSource}</div>
               </div>
             </div>
 

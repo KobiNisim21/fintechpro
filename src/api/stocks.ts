@@ -1,4 +1,12 @@
 import apiClient from './client';
+import { RequestCache } from '../lib/requestCache';
+
+const historyRequests = new RequestCache<Record<string, CandleData>>();
+const forexRequests = new RequestCache<ForexRate>();
+export function clearMarketDataCache() {
+    historyRequests.clear();
+    forexRequests.clear();
+}
 
 export const stocksAPI = {
     getQuote: async (symbol: string) => {
@@ -17,8 +25,10 @@ export const stocksAPI = {
     },
 
     getForexRate: async () => {
-        const response = await apiClient.get('/stocks/forex/usd-ils');
-        return response.data;
+        return forexRequests.get('usd-ils', async () => {
+            const response = await apiClient.get('/stocks/forex/usd-ils');
+            return response.data;
+        }, 60000);
     },
 
     getStockHistory: async (symbol: string, from: number, to: number, resolution: string = 'D') => {
@@ -29,10 +39,14 @@ export const stocksAPI = {
     },
 
     getBatchHistory: async (symbols: string[], from: number, to: number): Promise<Record<string, CandleData>> => {
-        const response = await apiClient.get('/stocks/batch-history', {
-            params: { symbols: symbols.join(','), from, to }
-        });
-        return response.data;
+        const uniqueSymbols = [...new Set(symbols)].sort().join(',');
+        if (!uniqueSymbols) return {};
+        return historyRequests.get(`${uniqueSymbols}:${from}:${to}`, async () => {
+            const response = await apiClient.get('/stocks/batch-history', {
+                params: { symbols: uniqueSymbols, from, to }
+            });
+            return response.data;
+        }, 60000);
     },
 
     getPortfolioSnapshot: async (): Promise<any> => {
@@ -115,6 +129,10 @@ export interface StockQuote {
 }
 
 export interface ExtendedQuote {
+    source?: string;
+    regularMarketTime?: string | number;
+    fromCache?: boolean;
+    stale?: boolean;
     symbol: string;
     regularMarketPrice: number;
     regularMarketPreviousClose: number;
@@ -131,6 +149,7 @@ export interface ExtendedQuote {
 }
 
 export interface CandleData {
+    currency?: string;
     c: number[]; // Close prices
     t: number[]; // Timestamps
     s: string; // Status

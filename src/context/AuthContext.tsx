@@ -1,5 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { authAPI, AuthResponse } from '../api/auth';
+import { disconnectSocket } from '../services/socket';
+import { getFinnhubWebSocket } from '../services/websocket';
+import { clearMarketDataCache } from '../api/stocks';
 
 interface User {
     _id: string;
@@ -26,12 +29,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Load user from localStorage on mount
     useEffect(() => {
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-
-        if (storedToken && storedUser) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
+        try {
+            const storedToken = localStorage.getItem('token');
+            const storedUser = localStorage.getItem('user');
+            if (storedToken && storedUser) {
+                const parsed = JSON.parse(storedUser);
+                if (!parsed?._id || !parsed?.email) throw new Error('Invalid saved session');
+                setToken(storedToken);
+                setUser(parsed);
+            }
+        } catch {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
         }
         setLoading(false);
     }, []);
@@ -53,6 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const logout = useCallback(() => {
+        clearMarketDataCache();
+        getFinnhubWebSocket().disconnect();
+        disconnectSocket();
         setUser(null);
         setToken(null);
         localStorage.removeItem('token');

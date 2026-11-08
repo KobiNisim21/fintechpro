@@ -51,16 +51,18 @@ export function LiveAlertsProvider({ children }: { children: ReactNode }) {
             setLoading(false);
         }
 
-        socket.on('connect', () => {
+        const onConnect = () => {
             console.log('🔔 [ALERTS-FE] Socket connected!');
             setConnected(true);
             setLoading(false);
-        });
+        };
 
-        socket.on('disconnect', () => {
+        const onDisconnect = () => {
             console.log('🔔 [ALERTS-FE] Socket disconnected');
             setConnected(false);
-        });
+        };
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
 
         // Initial alerts on connect
         socket.on('live-alerts-init', (data: { alerts: LiveAlert[] }) => {
@@ -100,6 +102,8 @@ export function LiveAlertsProvider({ children }: { children: ReactNode }) {
 
         return () => {
             clearTimeout(timeout);
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
             socket.off('live-alerts-init');
             socket.off('live-alert');
         };

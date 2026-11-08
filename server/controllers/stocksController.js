@@ -429,7 +429,7 @@ export const getStockCandles = async (req, res) => {
             return acc;
         }, { t: [], c: [] });
 
-        const result = { ...validData, s: 'ok' };
+        const result = { ...validData, s: 'ok', currency: chart.meta?.currency || 'USD' };
 
         candleCache.set(cacheKey, { data: result, timestamp: Date.now() });
         res.json(result);
@@ -450,10 +450,16 @@ export const getBatchHistory = async (req, res) => {
             return res.status(400).json({ message: 'Missing parameters' });
         }
 
-        const symbolList = symbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+        if (typeof symbols !== 'string' || !Number.isFinite(Number(from)) || !Number.isFinite(Number(to)) || Number(from) < 0 || Number(from) >= Number(to)) {
+            return res.status(400).json({ message: 'Invalid symbols or date range' });
+        }
+        const symbolList = [...new Set(symbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean))];
+        if (symbolList.length === 0 || symbolList.length > 50) {
+            return res.status(400).json({ message: 'Request between 1 and 50 unique symbols' });
+        }
 
         const results = {};
-        const fetchPromises = symbolList.map(async (symbol) => {
+        const fetchHistoryForSymbol = async (symbol) => {
             let cleanSymbol = symbol ? symbol.trim().toUpperCase() : '';
             if (cleanSymbol === 'TA125' || cleanSymbol === 'TA-125' || cleanSymbol === '^TA125') {
                 cleanSymbol = '^TA125.TA';
@@ -474,6 +480,7 @@ export const getBatchHistory = async (req, res) => {
             const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(cleanSymbol)}?period1=${from}&period2=${to}&interval=1d&includePrePost=false`;
             
             const response = await fetch(yahooUrl, {
+                signal: AbortSignal.timeout(10000),
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                 }
@@ -495,19 +502,26 @@ export const getBatchHistory = async (req, res) => {
             const closes = chart.indicators.quote[0].close;
 
             const validData = timestamps.reduce((acc, ts, i) => {
-                if (closes[i] !== null) {
+                if (Number.isFinite(closes[i]) && Number.isFinite(ts)) {
                     acc.t.push(ts);
                     acc.c.push(closes[i]);
                 }
                 return acc;
             }, { t: [], c: [] });
 
-            const result = { ...validData, s: 'ok' };
+            const result = { ...validData, s: 'ok', currency: chart.meta?.currency || 'USD' };
             candleCache.set(cacheKey, { data: result, timestamp: Date.now() });
             results[symbol] = result;
-        });
+        };
 
-        await Promise.allSettled(fetchPromises);
+        // Bound provider concurrency instead of fanning out an entire portfolio at once.
+        for (let i = 0; i < symbolList.length; i += 5) {
+            const batch = symbolList.slice(i, i + 5);
+            await Promise.all(batch.map(async symbol => {
+                try { await fetchHistoryForSymbol(symbol); }
+                catch { results[symbol] = { c: [], t: [], s: 'no_data' }; }
+            }));
+        }
         res.json(results);
     } catch (error) {
         console.error(`❌ Error in getBatchHistory:`, error.message);

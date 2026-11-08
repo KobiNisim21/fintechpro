@@ -40,6 +40,20 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Keep diagnostics available even when MongoDB is unavailable.
+app.get('/api/live', (req, res) => res.json({ status: 'ok' }));
+app.get('/api/health', async (req, res) => {
+    const mongoose = (await import('mongoose')).default;
+    const connected = mongoose.connection.readyState === 1;
+    res.status(connected ? 200 : 503).json({
+        status: connected ? 'ok' : 'degraded',
+        message: 'TraderAI Backend is running',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        db: connected ? 'connected' : 'disconnected',
+    });
+});
+
 // Database Connection Middleware
 // Ensures the DB is connected before any route logic executes, 
 // crucial since we disabled bufferCommands in database.js
@@ -48,8 +62,8 @@ app.use(async (req, res, next) => {
         await connectDB();
         next();
     } catch (err) {
-        console.error('MongoDB Connection Error in middleware:', err);
-        res.status(500).json({ message: 'Database connection failed' });
+        console.error('MongoDB connection unavailable');
+        res.status(503).json({ message: 'Database temporarily unavailable. Please retry.' });
     }
 });
 
@@ -66,30 +80,13 @@ app.use('/api/stocks', stocksRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/mcp', mcpRoutes);
 
-// Health check
-app.get('/api/health', async (req, res) => {
-    const mongoose = (await import('mongoose')).default;
-    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-    res.json({
-        status: 'ok',
-        message: 'TraderAI Backend is running',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString(),
-        db: dbStatus,
-        memory: process.memoryUsage().rss
-    });
-});
-
 // Root API route for testing
 app.get('/api', (req, res) => {
     res.json({ message: 'TraderAI API Root' });
 });
 
-// Export connection promise for Vercel Serverless/Cron functions
-const dbConnection = connectDB().catch(err => console.error('Initial MongoDB connection error:', err));
-
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
 export default app;
-export { corsOptions, dbConnection };
+export { corsOptions };

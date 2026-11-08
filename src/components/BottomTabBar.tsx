@@ -20,7 +20,7 @@ export function BottomTabBar({ viewMode, onViewChange, alertCount = 0 }: BottomT
   ] as const;
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
+    <nav aria-label="Main navigation" className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around h-16 px-2">
         {tabs.map((tab) => {
           const isActive = viewMode === tab.id;
@@ -29,6 +29,8 @@ export function BottomTabBar({ viewMode, onViewChange, alertCount = 0 }: BottomT
           return (
             <button
               key={tab.id}
+              type="button"
+              aria-current={isActive ? 'page' : undefined}
               onClick={() => onViewChange(tab.id as ViewMode)}
               className={`flex flex-col items-center justify-center w-16 h-full gap-1 transition-all active:scale-[0.92] ${
                 isActive ? 'text-slate-900' : 'text-slate-500'
@@ -68,6 +70,6 @@ export function BottomTabBar({ viewMode, onViewChange, alertCount = 0 }: BottomT
           </SheetContent>
         </Sheet>
       </div>
-    </div>
+    </nav>
   );
 }

@@ -8,9 +8,13 @@ if (!cached) {
 }
 
 const connectDB = async () => {
-    if (cached.conn) {
+    if (cached.conn && mongoose.connection.readyState === 1) {
         // console.log('Using cached MongoDB connection');
         return cached.conn;
+    }
+    if (cached.conn && mongoose.connection.readyState === 0) {
+        cached.conn = null;
+        cached.promise = null;
     }
 
     if (!cached.promise) {
@@ -26,10 +30,10 @@ const connectDB = async () => {
 
         console.log('Creating new MongoDB connection...');
         cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
-            console.log(`✅ MongoDB Connected: ${mongoose.connection.host}`);
+            console.log('✅ MongoDB Connected');
             return mongoose;
         }).catch(err => {
-            console.error('❌ MongoDB Connection Error:', err);
+            console.error('❌ MongoDB connection failed');
             throw err;
         });
     }
@@ -47,7 +51,7 @@ const connectDB = async () => {
 // Handle connection events (only once)
 if (!global.mongooseEventsAdded) {
     mongoose.connection.on('error', (err) => {
-        console.error('❌ MongoDB connection error:', err);
+        console.error('❌ MongoDB connection error');
     });
 
     mongoose.connection.on('disconnected', () => {

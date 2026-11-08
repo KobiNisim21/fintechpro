@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import connectDB from '../config/database.js';
 
 /**
  * Socket.io authentication middleware
@@ -18,6 +19,7 @@ export const socketAuthMiddleware = async (socket, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Get user from database
+        await connectDB();
         const user = await User.findById(decoded.id).select('-password');
         if (!user) {
             return next(new Error('User not found'));

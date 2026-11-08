@@ -50,14 +50,17 @@ export function MarketNewsProvider({ children }: { children: ReactNode }) {
 
         const socket = initSocket(token);
 
-        socket.on('connect', () => {
+        setConnected(socket.connected);
+        const onConnect = () => {
             setConnected(true);
             setLoading(false);
-        });
+        };
 
-        socket.on('disconnect', () => {
+        const onDisconnect = () => {
             setConnected(false);
-        });
+        };
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
 
         socket.on('market-news-update', (data: { items: NewsItem[]; newCount: number }) => {
             console.log('📰 Received market news update:', data.items.length, 'items, new:', data.newCount);
@@ -74,6 +77,8 @@ export function MarketNewsProvider({ children }: { children: ReactNode }) {
 
         return () => {
             clearTimeout(timeout);
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
             socket.off('market-news-update');
         };
     }, [isAuthenticated, token]);

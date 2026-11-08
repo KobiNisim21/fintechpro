@@ -7,7 +7,7 @@ let socket: Socket | null = null;
 let currentState: ConnectionState = 'disconnected';
 const stateListeners: Set<StateChangeCallback> = new Set();
 
-const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
+const SOCKET_URL = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || (import.meta.env.PROD ? window.location.origin : 'http://localhost:5000')).replace(/\/api\/?$/, '');
 
 function setState(state: ConnectionState) {
   currentState = state;
@@ -28,7 +28,8 @@ export function getSocket(): Socket | null {
 }
 
 export function initSocket(token: string): Socket {
-  if (socket?.connected) return socket;
+  if (socket && (socket.auth as { token?: string }).token === token) return socket;
+  socket?.disconnect();
 
   setState('connecting');
 
@@ -45,6 +46,7 @@ export function initSocket(token: string): Socket {
   socket.on('disconnect', () => setState('disconnected'));
   socket.io.on('reconnect_attempt', () => setState('reconnecting'));
   socket.on('connect_error', (error) => {
+    setState('disconnected');
     console.error('Socket.io connection error:', error.message);
   });
 

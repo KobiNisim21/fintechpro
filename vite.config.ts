@@ -16,20 +16,13 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-charts': ['recharts'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-ui': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-scroll-area',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-separator',
-            '@radix-ui/react-progress',
-            '@radix-ui/react-slot',
-          ],
+        manualChunks(id) {
+          const moduleId = id.replace(/\\/g, '/');
+          // Keep shared runtime helpers out of lazy UI and animation bundles.
+          if (moduleId.includes('commonjsHelpers') || /\/node_modules\/(react|react-dom|scheduler)\//.test(moduleId)) return 'vendor-react';
+          if (/\/node_modules\/(recharts|recharts-scale|d3-[^/]+)\//.test(moduleId)) return 'vendor-charts';
+          if (/\/node_modules\/(framer-motion|motion-dom|motion-utils)\//.test(moduleId)) return 'vendor-motion';
+          if (moduleId.includes('/node_modules/@radix-ui/')) return 'vendor-ui';
         },
       },
     },

@@ -6,6 +6,7 @@ const API_URL = baseUrl ? (baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`
 
 // Create axios instance
 const api = axios.create({
+    timeout: 30000,
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',

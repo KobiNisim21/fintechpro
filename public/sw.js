@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fintechpro-v2';
+const CACHE_NAME = 'fintechpro-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -45,6 +45,18 @@ self.addEventListener('fetch', (event) => {
 
   // NEVER intercept API or WebSocket calls
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/socket.io/')) {
+    return;
+  }
+
+  // Fetch current HTML so deployments don't retain references to old bundles.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request).then(async response => {
+      if (response.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put('/index.html', response.clone());
+      }
+      return response;
+    }).catch(async () => (await caches.match('/index.html')) || Response.error()));
     return;
   }
 

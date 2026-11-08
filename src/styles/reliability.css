@@ -1,0 +1,32 @@
+.dashboard-shell { height: 100dvh; }
+.holding-dialog { width: min(500px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; inset-block-start: 50%; inset-inline-start: 50%; transform: translate(-50%, -50%); padding-top: 64px; }
+.data-panel {
+  font-family: 'DM Sans', sans-serif;
+  padding: 24px;
+  border-radius: 32px;
+  background: rgba(255,255,255,0.7);
+  color: #332F3A;
+  box-shadow: 16px 16px 32px rgba(160,150,180,0.20), -10px -10px 24px rgba(255,255,255,0.90), inset 6px 6px 12px rgba(139,92,246,0.03), inset -6px -6px 12px #FFFFFF;
+}
+.data-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-block: 16px; color: #635F69; font-size: 13px; }
+.data-toolbar p { flex: 1 1 220px; }
+.data-action {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 8px 20px; border-radius: 20px;
+  background: #FFFFFF; color: #332F3A; font-weight: 700;
+  box-shadow: 12px 12px 24px rgba(160,150,180,0.20), -8px -8px 16px rgba(255,255,255,0.40), inset 4px 4px 8px rgba(255,255,255,0.40), inset -4px -4px 8px rgba(0,0,0,0.10);
+  transition: transform 200ms ease-in-out;
+}
+.data-action:hover:not(:disabled) { transform: translateY(-4px); }
+.data-action:active:not(:disabled) { transform: scale(0.92); box-shadow: inset 10px 10px 20px #D9D4E3, inset -10px -10px 20px #FFFFFF; }
+.data-action:disabled { cursor: wait; opacity: 0.65; }
+.price-freshness { margin-block: 8px; color: #635F69; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.price-freshness-details { display: block; }
+:where(button, a, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid #7C3AED; outline-offset: 3px; }
+.skip-to-content { position: fixed; inset-block-start: 8px; inset-inline-start: 8px; z-index: 11000; padding: 12px 24px; border-radius: 20px; background: #F4F1FA; color: #332F3A; transform: translateY(-200%); }
+.skip-to-content:focus { transform: translateY(0); }
+@media (max-width: 767px) {
+  #main-content { padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px)); }
+  .hero-balance-ils { font-size: clamp(1.75rem, 8vw, 3rem); overflow-wrap: anywhere; }
+  .hero-exchange-card { max-width: 100%; }
+}

@@ -68,17 +68,6 @@ const SkeletonCard = () => (
     </div>
 );
 
-const SkeletonChart = () => (
-    <Card className="glass-card rounded-[32px]">
-        <CardHeader className="pb-2">
-            <Skeleton className="h-6 w-44" />
-        </CardHeader>
-        <CardContent className="h-[340px] flex items-center justify-center">
-            <Skeleton className="h-[200px] w-[200px] rounded-[100px]" />
-        </CardContent>
-    </Card>
-);
-
 // ─── Sector Distribution Grid Component ─────────────────────────
 const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
     const totalValue = data.reduce((sum, d) => sum + d.value, 0);

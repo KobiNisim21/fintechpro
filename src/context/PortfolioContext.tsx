@@ -3,6 +3,8 @@ import { positionsAPI } from '../api/positions';
 import { stocksAPI, PortfolioAnalytics, RecommendationTrend, PriceTarget, CompanyProfile } from '../api/stocks';
 import { useAuth } from './AuthContext';
 import { getFinnhubWebSocket, PriceUpdateCallback } from '../services/websocket';
+import { initSocket } from '../services/socket';
+import { resolvePriceDetails, PriceStatus } from '../lib/priceDetails';
 
 export interface Lot {
   quantity: number;
@@ -15,6 +17,9 @@ export interface Position {
   symbol: string;
   name: string;
   price: number; // Current market price from API
+  priceSource?: string;
+  priceUpdatedAt?: string;
+  priceStatus?: PriceStatus;
   change: number; // Daily change $
   changePercent: number; // Daily change %
 
@@ -37,6 +42,7 @@ export interface Position {
 }
 
 interface PortfolioContextType {
+  refreshing: boolean;
   positions: Position[];
   loading: boolean;
   positionsLoading: boolean;
@@ -101,31 +107,31 @@ const CACHE_KEY = 'portfolio_positions_cache';
 const ANALYTICS_CACHE_KEY = 'portfolio_analytics_cache_v2'; // v2: keyed by portfolio hash
 const INSIGHTS_CACHE_KEY = 'portfolio_insights_cache'; // profiles, recommendations, priceTargets
 
-function loadCachedPositions(): Position[] {
+function loadCachedPositions(userId: string): Position[] {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(`${CACHE_KEY}:${userId}`);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].symbol) {
-      return parsed;
+      return parsed.map(p => ({ ...p, priceStatus: p.priceStatus === 'estimated' ? 'estimated' : 'stale' }));
     }
   } catch { /* corrupted cache, ignore */ }
   return [];
 }
 
-function saveCachedPositions(positions: Position[]) {
+function saveCachedPositions(positions: Position[], userId: string) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(positions));
+    localStorage.setItem(`${CACHE_KEY}:${userId}`, JSON.stringify(positions));
   } catch { /* storage full, ignore */ }
 }
 
-function clearCachedPositions() {
-  localStorage.removeItem(CACHE_KEY);
+function clearCachedPositions(userId: string) {
+  localStorage.removeItem(`${CACHE_KEY}:${userId}`);
 }
 
 /** Build a stable hash of the portfolio composition for cache keying */
 function getPortfolioHash(positions: Position[]): string {
-  return positions.map(p => p.symbol).sort().join(',');
+  return positions.map(p => `${p._id}:${p.symbol}:${p.quantity}:${p.averagePrice}`).sort().join(',');
 }
 
 /** Check if analytics data contains 50/50/50 backend defaults */
@@ -136,9 +142,9 @@ function isDefaultAnalytics(data: PortfolioAnalytics): boolean {
     data.components?.sentiment === 50;
 }
 
-function loadCachedAnalytics(positions: Position[]): PortfolioAnalytics | null {
+function loadCachedAnalytics(positions: Position[], userId: string): PortfolioAnalytics | null {
   try {
-    const raw = localStorage.getItem(ANALYTICS_CACHE_KEY);
+    const raw = localStorage.getItem(`${ANALYTICS_CACHE_KEY}:${userId}`);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     // Must have healthScore
@@ -154,10 +160,10 @@ function loadCachedAnalytics(positions: Position[]): PortfolioAnalytics | null {
   return null;
 }
 
-function saveCachedAnalytics(analytics: PortfolioAnalytics, positions: Position[]) {
+function saveCachedAnalytics(analytics: PortfolioAnalytics, positions: Position[], userId: string) {
   try {
     const data = { ...analytics, _portfolioHash: getPortfolioHash(positions) };
-    localStorage.setItem(ANALYTICS_CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem(`${ANALYTICS_CACHE_KEY}:${userId}`, JSON.stringify(data));
   } catch { /* storage full, ignore */ }
 }
 
@@ -168,9 +174,9 @@ type InsightsData = {
   profiles: Record<string, CompanyProfile>;
 };
 
-function loadCachedInsights(positions: Position[]): InsightsData | null {
+function loadCachedInsights(positions: Position[], userId: string): InsightsData | null {
   try {
-    const raw = localStorage.getItem(INSIGHTS_CACHE_KEY);
+    const raw = localStorage.getItem(`${INSIGHTS_CACHE_KEY}:${userId}`);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || !parsed.profiles) return null;
@@ -189,32 +195,34 @@ function loadCachedInsights(positions: Position[]): InsightsData | null {
   return null;
 }
 
-function saveCachedInsights(data: InsightsData, positions: Position[]) {
+function saveCachedInsights(data: InsightsData, positions: Position[], userId: string) {
   try {
     const toSave = { ...data, _portfolioHash: getPortfolioHash(positions) };
-    localStorage.setItem(INSIGHTS_CACHE_KEY, JSON.stringify(toSave));
+    localStorage.setItem(`${INSIGHTS_CACHE_KEY}:${userId}`, JSON.stringify(toSave));
   } catch { /* storage full, ignore */ }
 }
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, token } = useAuth();
+  const userId = user?._id || 'signed-out';
 
   // Initialize from cache for instant render on refresh
   const [positions, setPositions] = useState<Position[]>(() => {
     if (!isAuthenticated) return [];
-    return loadCachedPositions();
+    return loadCachedPositions(userId);
   });
   // Only show loading if we DON'T have cached data
   const [loading, setLoading] = useState(false);
   // Tracks whether fresh positions have been loaded from API (not just stale cache)
   const [positionsReady, setPositionsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Analytics State — initialize from localStorage cache ONLY if it matches current positions
   const [portfolioAnalytics, setPortfolioAnalytics] = useState<PortfolioAnalytics | null>(() => {
     if (!isAuthenticated) return null;
-    const cachedPositions = loadCachedPositions();
-    return loadCachedAnalytics(cachedPositions);
+    const cachedPositions = loadCachedPositions(userId);
+    return loadCachedAnalytics(cachedPositions, userId);
   });
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [lastAnalyticsFetch, setLastAnalyticsFetch] = useState<number>(0);
@@ -222,22 +230,31 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   // Insights State — initialize from localStorage cache for instant display
   const [insightsData, setInsightsDataRaw] = useState<InsightsData | null>(() => {
     if (!isAuthenticated) return null;
-    const cachedPositions = loadCachedPositions();
-    return loadCachedInsights(cachedPositions);
+    const cachedPositions = loadCachedPositions(userId);
+    return loadCachedInsights(cachedPositions, userId);
   });
 
   // Wrapper that also persists to localStorage
   const setInsightsData = useCallback((data: InsightsData | null) => {
     setInsightsDataRaw(data);
     if (data && positions.length > 0) {
-      saveCachedInsights(data, positions);
+      saveCachedInsights(data, positions, userId);
     }
-  }, [positions]);
+  }, [positions, userId]);
 
   const isFetchingPositionsRef = useRef(false);
+  const positionsRef = useRef(positions);
+  positionsRef.current = positions;
+  const activeRef = useRef(true);
+  useEffect(() => {
+    activeRef.current = true;
+    return () => { activeRef.current = false; };
+  }, []);
+  const symbolsKey = [...new Set(positions.map(p => p.symbol))].sort().join(',');
+  const compositionKey = getPortfolioHash(positions);
 
   // Fetch positions from backend — FAST: uses batch extended quotes for prices
-  const fetchPositions = async () => {
+  const fetchPositions = useCallback(async () => {
     if (isFetchingPositionsRef.current) {
       console.log('fetchPositions already in-flight, skipping to prevent duplicate API hits.');
       return;
@@ -245,12 +262,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
     if (!isAuthenticated) {
       setPositions([]);
-      clearCachedPositions();
+      clearCachedPositions(userId);
       return;
     }
 
     isFetchingPositionsRef.current = true;
-    const hasCachedData = positions.length > 0;
+    setRefreshing(true);
+    const hasCachedData = positionsRef.current.length > 0;
 
     try {
       // Only show loading spinner if we DON'T have cached data
@@ -268,20 +286,22 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           batchExtendedQuotes = await stocksAPI.getBatchExtendedQuotes(allSymbols);
         }
       } catch (batchErr) {
-        console.warn('Batch extended quotes unavailable, falling back to individual quotes');
+        console.warn('Market quotes unavailable; retaining previous quotes or labeled estimates');
       }
 
       // Map positions with prices from batch result — NO individual API calls
       const positionsWithPrices = apiPositions.map((pos: any) => {
-        const extendedQuote = batchExtendedQuotes[pos.symbol];
+        const rawQuote = batchExtendedQuotes[pos.symbol];
+        const extendedQuote = Number.isFinite(rawQuote?.regularMarketPrice) && rawQuote.regularMarketPrice > 0 ? rawQuote : undefined;
 
         // Extract price from batch extended quote (Yahoo Finance data)
-        let currentPrice = pos.averagePrice; // fallback
-        let change = 0;
-        let changePercent = 0;
+        const previous = positionsRef.current.find(p => p._id === pos._id);
+        const priceDetails = resolvePriceDetails(extendedQuote, previous, pos.averagePrice);
+        const currentPrice = priceDetails.price;
+        let change = previous?.change || 0;
+        let changePercent = previous?.changePercent || 0;
 
-        if (extendedQuote) {
-          currentPrice = extendedQuote.regularMarketPrice || pos.averagePrice;
+        if (extendedQuote && priceDetails.priceStatus !== 'estimated') {
           const prevClose = extendedQuote.regularMarketPreviousClose || currentPrice;
           change = extendedQuote.regularMarketChange ?? (currentPrice - prevClose);
           changePercent = extendedQuote.regularMarketChangePercent ?? (prevClose > 0 ? (change / prevClose) * 100 : 0);
@@ -334,7 +354,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           averagePrice: pos.averagePrice,
           broker: pos.broker || 'Default',
           lots: pos.lots,
-          price: currentPrice,
+          ...priceDetails,
           change,
           changePercent,
           extendedPrice,
@@ -343,24 +363,27 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           marketStatus,
           fiftyTwoWeekLow: extendedQuote?.fiftyTwoWeekLow,
           nextEarningsDate: extendedQuote?.earningsTimestamp,
-          sparklineData: Array(10).fill(currentPrice), // placeholder until background fetch
+          sparklineData: previous?.sparklineData || Array(10).fill(currentPrice),
           color: change >= 0 ? '#10B981' : '#EF4444',
         };
       });
 
+      if (!activeRef.current) return;
       setPositions(positionsWithPrices);
       // Save fresh data to localStorage for next refresh
-      saveCachedPositions(positionsWithPrices);
+      saveCachedPositions(positionsWithPrices, userId);
       // Mark positions as ready (fresh from API, not stale cache)
       setPositionsReady(true);
     } catch (err: any) {
+      if (!activeRef.current) return;
       setError(err.message || 'Failed to load positions');
       console.error('Error fetching positions:', err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
       isFetchingPositionsRef.current = false;
     }
-  };
+  }, [isAuthenticated, userId]);
 
   // Fetch Analytics (Health Score, TWR, etc.)
   const fetchAnalytics = useCallback(async (force = false) => {
@@ -391,7 +414,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       } else {
         setPortfolioAnalytics(data);
         setLastAnalyticsFetch(Date.now());
-        saveCachedAnalytics(data, positions);
+        saveCachedAnalytics(data, positions, userId);
         return 'success';
       }
     } catch (err: any) {
@@ -400,18 +423,18 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     } finally {
       setAnalyticsLoading(false);
     }
-  }, [positions, analyticsLoading, portfolioAnalytics, lastAnalyticsFetch]);
+  }, [positions, analyticsLoading, portfolioAnalytics, lastAnalyticsFetch, userId]);
 
   // Load positions on mount
   useEffect(() => {
     fetchPositions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [fetchPositions]);
 
   // Invalidate analytics timestamp when positions change (add/remove)
   useEffect(() => {
     setLastAnalyticsFetch(0);
-  }, [positions.length]);
+  }, [compositionKey]);
 
   // Eagerly fetch analytics after fresh positions load
   // If backend returns defaults (cold start), retry up to 3 times with 5s delay
@@ -435,7 +458,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   // Background sparkline enrichment — runs AFTER positions are rendered
   useEffect(() => {
-    if (positions.length === 0 || !isAuthenticated) return;
+    if (!symbolsKey || !isAuthenticated) return;
+    let cancelled = false;
 
     // Only enrich if sparklines are still placeholders (all values identical)
     const needsEnrichment = positions.some(p =>
@@ -444,83 +468,67 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     if (!needsEnrichment) return;
 
     const enrichSparklines = async () => {
-      const to = Math.floor(Date.now() / 1000);
+      const to = Math.floor(Date.now() / 60000) * 60;
       const from = to - (30 * 24 * 60 * 60); // 30 days ago
 
-      // Fetch all sparklines in parallel (non-blocking, dashboard already visible)
-      const results = await Promise.all(
-        positions.map(async (pos) => {
-          try {
-            const history = await stocksAPI.getStockHistory(pos.symbol, from, to, 'D');
-            if (history && history.c && Array.isArray(history.c) && history.c.length > 0) {
-              return { symbol: pos.symbol, sparklineData: history.c };
-            }
-          } catch (err) {
-            console.warn(`Sparkline fetch failed for ${pos.symbol}`);
-          }
-          return { symbol: pos.symbol, sparklineData: Array(10).fill(pos.price) };
-        })
-      );
+      const results = await stocksAPI.getBatchHistory(symbolsKey.split(','), from, to);
+      if (cancelled) return;
 
       // Batch update all sparklines at once
       setPositions(prev => {
         const enriched = prev.map(pos => {
-          const result = results.find(r => r.symbol === pos.symbol);
-          return result ? { ...pos, sparklineData: result.sparklineData } : pos;
+          const history = results[pos.symbol];
+          return history?.c?.length ? { ...pos, sparklineData: history.c } : pos;
         });
 
         // Save the enriched positions (with sparklines) to localStorage
         // This allows them to render instantly on next page load (Stale-While-Revalidate)
-        saveCachedPositions(enriched);
+        saveCachedPositions(enriched, userId);
         return enriched;
       });
     };
 
-    enrichSparklines();
+    void enrichSparklines().catch(() => console.warn('Price history temporarily unavailable'));
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positions.length, isAuthenticated]);
+  }, [symbolsKey, isAuthenticated, userId]);
 
   // WebSocket integration for real-time updates
   useEffect(() => {
-    if (!isAuthenticated || positions.length === 0) return;
+    if (!isAuthenticated || !token || !symbolsKey) return;
 
     console.log('🚀 Initializing WebSocket for real-time updates...');
     const ws = getFinnhubWebSocket();
+    initSocket(token);
 
     // Connect to WebSocket
     ws.connect();
 
     // Subscribe to all position symbols
-    positions.forEach(pos => {
-      ws.subscribeToSymbol(pos.symbol);
-    });
-
-    // Store previous close prices for each stock (from initial fetch)
-    const previousCloseMap = new Map<string, number>();
-    positions.forEach(pos => {
-      // Calculate previous close from current data
-      const previousClose = pos.price - pos.change;
-      previousCloseMap.set(pos.symbol, previousClose);
-    });
+    const symbols = symbolsKey.split(',').filter(s => !s.startsWith('FUND:') && !/^\d+$/.test(s));
+    symbols.forEach(symbol => ws.subscribeToSymbol(symbol));
 
     // Handle price updates
-    const handlePriceUpdate: PriceUpdateCallback = (symbol, price) => {
+    const handlePriceUpdate: PriceUpdateCallback = (symbol, price, timestamp) => {
       setPositions(prev => prev.map(pos => {
         if (pos.symbol === symbol) {
-          // Calculate change against previous close (not last price!)
-          const previousClose = previousCloseMap.get(symbol) || pos.price; // Fallback to current price if previousClose not found
-          const change = price - previousClose;
-          const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
-
+          if (pos.priceUpdatedAt && timestamp * 1000 < new Date(pos.priceUpdatedAt).getTime()) return pos;
           // Check market status
           const marketStatus = getMarketStatus();
           const inExtendedHours = marketStatus !== 'regular';
+          // Extended-hours change is relative to regular close.
+          const baseline = inExtendedHours ? pos.price : pos.price - pos.change;
+          const change = price - baseline;
+          const changePercent = baseline > 0 ? (change / baseline) * 100 : 0;
 
           return {
             ...pos,
-            price,
-            change,
-            changePercent,
+            price: inExtendedHours ? pos.price : price,
+            change: inExtendedHours ? pos.change : change,
+            changePercent: inExtendedHours ? pos.changePercent : changePercent,
+            priceSource: inExtendedHours ? pos.priceSource : 'Finnhub',
+            priceUpdatedAt: inExtendedHours ? pos.priceUpdatedAt : new Date(timestamp * 1000).toISOString(),
+            priceStatus: inExtendedHours ? pos.priceStatus : 'available',
 
             // Update extended hours data when market is not in regular session
             extendedPrice: inExtendedHours ? price : undefined,
@@ -544,12 +552,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     return () => {
       console.log('🧹 Cleaning up WebSocket subscriptions...');
       unsubscribe();
-      positions.forEach(pos => {
-        ws.unsubscribeFromSymbol(pos.symbol);
-      });
+      symbols.forEach(symbol => ws.unsubscribeFromSymbol(symbol));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, positions.length]);
+  }, [isAuthenticated, token, symbolsKey]);
 
   const addPosition = async (symbol: string, name: string, quantity: number, averagePrice: number, date?: string | Date, broker?: string) => {
     try {
@@ -568,12 +574,17 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       let currentPrice = averagePrice; // Default to average price
       let change = 0;
       let changePercent = 0;
+      let priceDetails = resolvePriceDetails(undefined, undefined, averagePrice);
 
       try {
         const quote = await stocksAPI.getQuote(symbol);
-        currentPrice = quote.c;
-        change = currentPrice - quote.pc;
-        changePercent = (change / quote.pc) * 100;
+        priceDetails = resolvePriceDetails({ regularMarketPrice: quote.c, regularMarketTime: quote.t, source: quote.source || 'Market data' }, undefined, averagePrice);
+        currentPrice = priceDetails.price;
+        if (priceDetails.priceStatus !== 'estimated') {
+          const previousClose = Number.isFinite(quote.pc) && quote.pc > 0 ? quote.pc : currentPrice;
+          change = currentPrice - previousClose;
+          changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
+        }
       } catch (priceError) {
         console.warn(`Could not fetch price for ${symbol}, using defaults: `, priceError);
         // Price will stay as averagePrice, which is a reasonable default
@@ -591,7 +602,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         quantity: newPosition.quantity,
         averagePrice: newPosition.averagePrice,
         lots: newPosition.lots,
-        price: currentPrice,
+        ...priceDetails,
         change,
         changePercent,
 
@@ -622,12 +633,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         } else {
           updated = [...prev, positionWithPrice];
         }
-        saveCachedPositions(updated);
+        saveCachedPositions(updated, userId);
         return updated;
       });
       // Invalidate analytics
       setLastAnalyticsFetch(0);
-      fetchAnalytics(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to add position');
       throw err;
@@ -666,12 +676,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
             }
             : pos
         );
-        saveCachedPositions(updated);
+        saveCachedPositions(updated, userId);
         return updated;
       });
       // Invalidate analytics
       setLastAnalyticsFetch(0);
-      fetchAnalytics(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update position');
       throw err;
@@ -684,12 +693,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       await positionsAPI.delete(id);
       setPositions((prev) => {
         const updated = prev.filter((pos) => pos._id !== id);
-        saveCachedPositions(updated);
+        saveCachedPositions(updated, userId);
         return updated;
       });
       // Invalidate analytics
       setLastAnalyticsFetch(0);
-      fetchAnalytics(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to remove position');
       throw err;
@@ -700,6 +708,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     <PortfolioContext.Provider
       value={{
         positions,
+        refreshing,
         loading,
         positionsLoading: loading,
         positionsReady,

@@ -78,7 +78,7 @@ function GoogleLoginInner() {
                             size="large"
                             shape="pill"
                             text="continue_with"
-                            width="320"
+                            width="240"
                             use_fedcm_for_button={true}
                         />
                     </div>

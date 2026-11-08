@@ -18,7 +18,8 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     // Only allow pull-to-refresh if we are at the top of the container
-    const isAtTop = !contentRef.current || contentRef.current.scrollTop <= 0;
+    const scrollContainer = contentRef.current?.closest('main');
+    const isAtTop = !scrollContainer || scrollContainer.scrollTop <= 0;
     if (!isAtTop || refreshing) return;
 
     setStartY(e.touches[0].clientY);
@@ -34,10 +35,6 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
     // Only handle downward pulling
     if (distance > 0) {
       // Prevent default scrolling behavior when pulling down at the top
-      if (document.body.style.overscrollBehaviorY !== 'none') {
-        document.body.style.overscrollBehaviorY = 'none';
-      }
-      
       // Add resistance to the pull
       const resistance = 0.5;
       const pullAmount = Math.min(distance * resistance, MAX_PULL_DISTANCE);
@@ -46,8 +43,6 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
   };
 
   const handleTouchEnd = async () => {
-    document.body.style.overscrollBehaviorY = 'auto';
-    
     if (!pulling || refreshing) return;
     
     setPulling(false);
@@ -70,10 +65,11 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
 
   return (
     <div 
-      className="w-full h-full relative overflow-hidden"
+      className="w-full relative"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={() => { setPulling(false); setPullDistance(0); }}
     >
       <div 
         className="absolute top-0 left-0 right-0 flex items-center justify-center z-10 transition-transform duration-200"
@@ -96,7 +92,7 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
       
       <div
         ref={contentRef}
-        className="w-full h-full overflow-y-auto"
+        className="w-full space-y-6"
         style={{
           transform: `translateY(${pullDistance}px)`,
           transition: pulling ? 'none' : 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'

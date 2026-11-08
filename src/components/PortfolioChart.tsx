@@ -7,6 +7,7 @@ export function PortfolioChart() {
   const { positions, loading: positionsLoading } = usePortfolio();
   const [historyData, setHistoryData] = useState<{ date: string; value: number }[]>([]);
   const [loading, setLoading] = useState(false);
+  const compositionKey = positions.map(p => `${p._id}:${p.symbol}:${p.quantity}:${p.averagePrice}`).sort().join(',');
   const [stats, setStats] = useState({
     totalGain: 0,
     monthlyReturn: 0,
@@ -23,6 +24,7 @@ export function PortfolioChart() {
   }, [positions]);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchHistory = async () => {
       if (positions.length === 0) {
         setHistoryData([]);
@@ -31,25 +33,20 @@ export function PortfolioChart() {
 
       setLoading(true);
       try {
-        // 1. Fetch Exchange Rate
-        const forexData = await stocksAPI.getForexRate();
-        const exchangeRate = forexData.rate || 3.6; // Fallback to 3.6 if API fails
-
         // 2. Setup Date Range
-        const to = Math.floor(Date.now() / 1000);
+        const to = Math.floor(Date.now() / 60000) * 60;
         const from = to - (30 * 24 * 60 * 60); // 30 days ago
 
-        // 3. Fetch history for all positions
-        const historyPromises = positions.map(pos =>
-          stocksAPI.getStockHistory(pos.symbol, from, to, 'D')
-            .then(data => ({ symbol: pos.symbol, data }))
-            .catch(err => {
-              console.error(`Failed to fetch history for ${pos.symbol}`, err);
-              return { symbol: pos.symbol, data: { c: [], t: [] } }; // Return empty on fail
-            })
-        );
-
-        const results = await Promise.all(historyPromises);
+        const quantities = new Map<string, number>();
+        positions.forEach(p => quantities.set(p.symbol, (quantities.get(p.symbol) || 0) + p.quantity));
+        const [forexData, histories] = await Promise.all([
+          stocksAPI.getForexRate(),
+          stocksAPI.getBatchHistory([...quantities.keys()], from, to),
+        ]);
+        if (cancelled) return;
+        const exchangeRate = forexData.rate;
+        if (!Number.isFinite(exchangeRate) || exchangeRate <= 0) throw new Error('Exchange rate unavailable');
+        const results = Object.entries(histories).map(([symbol, data]) => ({ symbol, data }));
 
         // 4. Aggregate data by date
         // Fix for 2x Spike Bug: If Yahoo returns multiple ticks for the same calendar day (e.g., due to timezone crossing),
@@ -57,8 +54,8 @@ export function PortfolioChart() {
         const symbolValuesByDate = new Map<number, Map<string, number>>();
         
         results.forEach(({ symbol, data }) => {
-          const position = positions.find(p => p.symbol === symbol);
-          if (!position || !data.c || !data.t) return;
+          const quantity = quantities.get(symbol);
+          if (!quantity || !data.c || !data.t) return;
 
           data.t.forEach((timestamp: number, index: number) => {
             // Normalize timestamp to midnight to group same days
@@ -67,7 +64,9 @@ export function PortfolioChart() {
             const normalizedTs = dateObj.getTime();
 
             // Calculate value in USD
-            const valueUsd = data.c[index] * position.quantity;
+            const divisor = data.currency === 'ILA' ? 100 * exchangeRate : data.currency === 'ILS' ? exchangeRate : 1;
+            const valueUsd = (data.c[index] * quantity) / divisor;
+            if (!Number.isFinite(valueUsd)) return;
             
             if (!symbolValuesByDate.has(normalizedTs)) {
                symbolValuesByDate.set(normalizedTs, new Map());
@@ -79,7 +78,9 @@ export function PortfolioChart() {
 
         // Sum up the deduplicated latest value of each symbol per calendar day
         const timestampMap = new Map<number, number>();
+        const coveredSymbols = results.filter(r => r.data.c?.length > 0).length;
         for (const [ts, symbolMap] of symbolValuesByDate.entries()) {
+           if (symbolMap.size !== coveredSymbols) continue;
            let totalDayValue = 0;
            for (const val of symbolMap.values()) {
               totalDayValue += val;
@@ -126,7 +127,7 @@ export function PortfolioChart() {
       } catch (err) {
         console.error('Error calculating portfolio history:', err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
@@ -147,10 +148,10 @@ export function PortfolioChart() {
       }
     }, 60 * 1000); // Check every minute
 
-    return () => clearInterval(checkMarketClose);
+    return () => { cancelled = true; clearInterval(checkMarketClose); };
     // Only refetch when positions are added/removed, not on price updates
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positions.length]);
+  }, [compositionKey]);
 
   if (loading || positionsLoading) {
     return (
@@ -166,6 +167,7 @@ export function PortfolioChart() {
         <div className="mb-8">
           <h3 className="text-2xl font-bold  text-[var(--color-ios-fg)] mb-1">Portfolio Growth</h3>
           <p className="text-[13px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest ">Last 30 Days Performance</p>
+          <p className="price-freshness">Historical value of today's holdings at the current exchange rate. Assets without history are excluded.</p>
         </div>
 
         <div className="h-80">
@@ -218,7 +220,7 @@ export function PortfolioChart() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-6 mt-8 pt-6 border-t border-[var(--color-ios-secondary)]/20">
           <div>
-            <p className="text-[11px] font-bold text-[var(--color-ios-secondary)] mb-1 uppercase tracking-widest ">Monthly Return</p>
+            <p className="text-[11px] font-bold text-[var(--color-ios-secondary)] mb-1 uppercase tracking-widest ">30-day price change</p>
             <p className={`text-2xl font-bold  tracking-tight ${stats.monthlyReturn >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
               {stats.monthlyReturn >= 0 ? '+' : ''}{stats.monthlyReturn.toFixed(2)}%
             </p>

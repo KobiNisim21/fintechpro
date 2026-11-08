@@ -401,6 +401,10 @@ export async function getExtendedQuote(symbol) {
                 const result = {
                     symbol: cleanSymbol,
                     regularMarketPrice: priceInUSD,
+                    source: navData.source || 'Israeli fund NAV',
+                    regularMarketTime: navData.timestamp,
+                    fromCache: Boolean(navData.fromCache),
+                    stale: (navData.ageHours || 0) >= 6,
                     regularMarketPreviousClose: priceInUSD - changeInUSD,
                     regularMarketChange: changeInUSD,
                     regularMarketChangePercent: navData.changePercent || 0,
@@ -433,6 +437,8 @@ export async function getExtendedQuote(symbol) {
         const result = {
             symbol: quote.symbol,
             regularMarketPrice: quote.regularMarketPrice,
+            source: 'Yahoo Finance',
+            regularMarketTime: quote.regularMarketTime,
             regularMarketPreviousClose: quote.regularMarketPreviousClose,
             regularMarketChange: quote.regularMarketChange,
             regularMarketChangePercent: quote.regularMarketChangePercent,
@@ -565,6 +571,10 @@ export async function getBatchExtendedQuotes(symbols) {
                 const result = {
                     symbol: symbol,
                     regularMarketPrice: priceInUSD,
+                    source: navData.source || 'Israeli fund NAV',
+                    regularMarketTime: navData.timestamp,
+                    fromCache: Boolean(navData.fromCache),
+                    stale: (navData.ageHours || 0) >= 6,
                     regularMarketPreviousClose: priceInUSD - changeInUSD,
                     regularMarketChange: changeInUSD,
                     regularMarketChangePercent: navData.changePercent || 0,
@@ -624,6 +634,8 @@ export async function getBatchExtendedQuotes(symbols) {
                 const result = {
                     symbol: quote.symbol,
                     regularMarketPrice: quote.regularMarketPrice,
+                    source: 'Yahoo Finance',
+                    regularMarketTime: quote.regularMarketTime,
                     regularMarketPreviousClose: quote.regularMarketPreviousClose,
                     regularMarketChange: quote.regularMarketChange,
                     regularMarketChangePercent: quote.regularMarketChangePercent,
