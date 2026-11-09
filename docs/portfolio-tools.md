@@ -1,5 +1,8 @@
 # Portfolio activity, personal alerts and transparent analysis
 
+The current analysis copy is English. The newer [broad ETF look-through guide](fund-lookthrough.md)
+supersedes the original v2 fund exclusions and concentration method described below.
+
 ## Using the features
 
 The toolbar below Portfolio Overview opens **Activity**, **Personal alerts**,

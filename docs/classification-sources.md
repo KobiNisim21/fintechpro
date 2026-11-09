@@ -50,8 +50,9 @@ US ticker just because the issuer name looks similar.
   remain available for up to 30 days on provider failure, explicitly marked stale.
 - Industry/sector aliases collapse equivalent names; they do not infer sectors
   from arbitrary company names. ETFs, mutual funds, indices and Israeli fund
-  identifiers are not assigned a single company sector. Fund look-through is
-  separate work. No source can guarantee classification of every security.
+  identifiers are not assigned a single company sector. Supported broad equity
+  funds now use [underlying holdings or disclosed proxies](fund-lookthrough.md).
+  No source can guarantee classification of every security.
 - Provider metadata includes sector, source, URL, as-of/retrieval time and status.
   The UI lists classified and missing tickers, sources and dates. Reference dates
   are holdings-as-of dates; Yahoo/Finnhub dates are retrieval dates, not a promise

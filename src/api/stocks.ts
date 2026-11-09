@@ -223,9 +223,10 @@ export interface PortfolioAnalytics {
     stale?: boolean;
     quoteCoverage?: boolean;
     coverage?: { sectors: number; beta: number };
-    classifications?: Array<{ symbol: string; sector: string | null; percent: number; source: string | null; sourceUrl: string | null; asOf: string | null; status: string }>;
+    broadFundPercent?: number;
+    classifications?: Array<{ symbol: string; sector: string | null; label?: string | null; benchmark?: string | null; holdingCount?: number | null; proxy?: boolean; percent: number; source: string | null; sourceUrl: string | null; asOf: string | null; status: string }>;
     missingClassifications?: string[];
-    exposures?: Record<'holdings' | 'sectors' | 'countries' | 'currencies', Array<{ name: string; value: number; percent: number }>>;
+    exposures?: Record<'holdings' | 'issuers' | 'sectors' | 'countries' | 'currencies', Array<{ name: string; value: number; percent: number }>>;
     components: {
         diversification: number | null;
         volatility: number | null;

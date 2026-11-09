@@ -1,3 +1,4 @@
+import { createFundResolver, FUND_SOURCES } from './fundExposure.js';
 import { createProfileResolver, createHoldingsReference, HOLDINGS_URL } from './sectorClassification.js';
 import { combinePositions, calculatePortfolioRisk, alignedCorrelation, buildDividendEstimate } from './portfolioRisk.js';
 import { createHash } from 'node:crypto';
@@ -1003,7 +1004,16 @@ const sectorReference = createHoldingsReference({
         return response.text();
     }, 5000),
 });
+const resolveFundExposure = createFundResolver({
+    snapshots: JSON.parse(readFileSync(new URL('../data/fund-exposure-reference.json', import.meta.url), 'utf8')),
+    download: fund => profileDeadline(async signal => {
+        const response = await fetch(FUND_SOURCES[fund], { signal, size: 5 * 1024 * 1024 });
+        if (!response.ok) throw new Error('Fund holdings provider unavailable');
+        return response.text();
+    }, 5000),
+});
 const resolveCompanyProfile = createProfileResolver({
+    fund: resolveFundExposure,
     reference: sectorReference,
     finnhub: symbol => profileDeadline(async signal => {
         const key = process.env.FINNHUB_API_KEY;
@@ -1045,7 +1055,7 @@ export async function getBatchInsights(symbols) {
 
             if (recs && recs.length > 0) recommendations[symbol] = recs;
             if (target) priceTargets[symbol] = target;
-            if (profile) profiles[symbol] = profile;
+            if (profile) profiles[symbol] = profile.fundExposure ? { ...profile, fundExposure: { ...profile.fundExposure, holdingCount: profile.fundExposure.holdings.length, holdings: undefined } } : profile;
 
             // Artificial delay to respect rate limits (3 requests just fired)
             await new Promise(resolve => setTimeout(resolve, 150));
@@ -1263,7 +1273,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
     const sortedKey = createHash('sha256').update(JSON.stringify(positions.map(p => ({ id: String(p._id), symbol: p.symbol, quantity: p.quantity, price: p.averagePrice, lots: p.lots, updatedAt: p.updatedAt })))).digest('hex');
     positions = combinePositions(positions);
     const symbols = positions.map(p => p.symbol);
-    const cacheKey = 'analytics_v14_' + sortedKey;
+    const cacheKey = 'analytics_v15_' + sortedKey;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached && (!cached.missingClassifications?.length || getCached(cacheKey, 2 * 60 * 1000))) {
         console.log('[Health] Returning fully cached analytics');
@@ -1410,6 +1420,7 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 symbol, value: quantities[i] * (quoteResults[i]?.c || 0),
                 sector: profilesResults[i]?.sector,
                 classification: profilesResults[i]?.classification,
+                fundExposure: profilesResults[i]?.fundExposure,
                 country: profilesResults[i]?.country, currency: profilesResults[i]?.currency,
                 beta: metricsResults[i]?.metric?.beta,
             })));

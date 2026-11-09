@@ -91,6 +91,7 @@
             "test:integration": "node --test tests/integration/*.test.js",
             "qa:server": "node scripts/qa-server.js",
             "refresh:classifications": "node scripts/refresh-sector-reference.js",
+            "refresh:funds": "node scripts/refresh-fund-exposure.js",
             "build": "npm run typecheck && vite build"
       }
 }

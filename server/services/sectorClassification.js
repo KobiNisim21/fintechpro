@@ -73,15 +73,21 @@ export function createHoldingsReference({ snapshot, download, now = Date.now }) 
     };
 }
 
-export function createProfileResolver({ finnhub, yahoo, reference, now = Date.now }) {
+export function createProfileResolver({ finnhub, yahoo, reference, fund = async () => null, now = Date.now }) {
     const cache = new Map(), pending = new Map();
     return async function resolve(input) {
         const symbol = normalizeEquitySymbol(input);
         if (!/^[A-Z0-9^][A-Z0-9.^:=-]{0,29}$/.test(symbol)) throw new Error('Invalid profile symbol');
         const cached = cache.get(symbol);
-        if (cached && now() - cached.time < (cached.data.sector ? DAY : 2 * 60000)) return cached.data;
+        if (cached && now() - cached.time < (cached.data.sector || cached.data.fundExposure ? DAY : 2 * 60000)) return cached.data;
         if (pending.has(symbol)) return pending.get(symbol);
         const task = (async () => {
+            const exposure = await fund(symbol).catch(() => null);
+            if (exposure) {
+                const data = { ticker: symbol, name: exposure.name, sector: null, country: 'US', currency: 'USD', assetType: 'ETF', fundExposure: exposure, classification: { sector: null, label: exposure.label, source: exposure.source, sourceUrl: exposure.sourceUrl, asOf: exposure.asOf, status: exposure.proxy ? 'proxy' : 'reference' } };
+                cache.set(symbol, { time: now(), data });
+                return data;
+            }
             const referenceTask = Promise.resolve().then(() => reference(symbol));
             const yahooTask = referenceTask.then(ref => ref?.sector || symbol.startsWith('FUND:') ? null : yahoo(symbol));
             const [rawResult, refResult, yahooResult] = await Promise.allSettled([finnhub(symbol), referenceTask, yahooTask]);
@@ -100,7 +106,8 @@ export function createProfileResolver({ finnhub, yahoo, reference, now = Date.no
                 else if (!fund && normalizeSector(raw.finnhubIndustry)) classification = { sector: normalizeSector(raw.finnhubIndustry), source: 'Finnhub industry mapping', sourceUrl: 'https://finnhub.io/docs/api/company-profile2', asOf: new Date(now()).toISOString(), status: 'mapped' };
             }
             if (!classification && cached?.data.sector && now() - cached.time < 30 * DAY) return { ...cached.data, classification: { ...cached.data.classification, status: 'stale' } };
-            data = { ...data, name: data.name || ref?.name || symbol, country: data.country || ref?.country || '', currency: data.currency || ref?.currency || '', exchange: data.exchange || ref?.exchange || '', sector: classification?.sector || null, classification: classification || { sector: null, source: null, asOf: null, status: 'unavailable' } };
+            const isFundMetadata = ['ETF', 'MUTUALFUND'].includes(data.assetType);
+            data = { ...data, name: data.name || ref?.name || symbol, country: data.country || ref?.country || '', currency: data.currency || ref?.currency || '', exchange: data.exchange || ref?.exchange || '', sector: classification?.sector || null, classification: classification || { sector: null, label: isFundMetadata ? 'Fund — underlying exposure unavailable' : null, source: isFundMetadata ? 'Yahoo Finance fund metadata' : null, asOf: isFundMetadata ? new Date(now()).toISOString() : null, status: 'unavailable' } };
             data.country = ({ 'United States': 'US', 'United Kingdom': 'GB', Israel: 'IL', Canada: 'CA', China: 'CN', Denmark: 'DK', Switzerland: 'CH', Germany: 'DE', France: 'FR', Japan: 'JP', Netherlands: 'NL', Ireland: 'IE', Australia: 'AU', Taiwan: 'TW', 'South Korea': 'KR' })[data.country] || data.country;
             cache.set(symbol, { time: now(), data });
             if (cache.size > 5000) cache.delete(cache.keys().next().value);

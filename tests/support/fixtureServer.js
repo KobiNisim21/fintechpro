@@ -15,8 +15,10 @@ import { createAlertRoutes } from '../../server/routes/alerts.js';
 import { calculatePortfolioRisk, combinePositions, buildDividendEstimate } from '../../server/services/portfolioRisk.js';
 import { readFileSync } from 'node:fs';
 import { createProfileResolver, createHoldingsReference } from '../../server/services/sectorClassification.js';
+import { createFundResolver } from '../../server/services/fundExposure.js';
 
 const fixtureProfile = createProfileResolver({
+  fund: createFundResolver({ snapshots: JSON.parse(readFileSync(new URL('../../server/data/fund-exposure-reference.json', import.meta.url))), download: async () => { throw new Error('No network in fixture'); } }),
   finnhub: async () => ({}), yahoo: async () => ({}),
   reference: createHoldingsReference({ snapshot: JSON.parse(readFileSync(new URL('../../server/data/equity-sector-reference.json', import.meta.url))), download: async () => { throw new Error('No network in fixture'); } }),
 });
@@ -94,7 +96,7 @@ export async function createFixtureServer({ port = 0, frontend = false } = {}) {
     }));
     app.get('/api/stocks/portfolio-analytics', protect, async (req, res) => {
       const positions = combinePositions(await Position.find({ user: req.user._id, isDeleted: { $ne: true } }).lean());
-      const rows = await Promise.all(positions.map(async p => { const profile = await fixtureProfile(p.symbol); return { symbol: p.symbol, value: p.quantity * 150, sector: profile.sector, classification: profile.classification, country: profile.country, currency: profile.currency, beta: 1 }; }));
+      const rows = await Promise.all(positions.map(async p => { const profile = await fixtureProfile(p.symbol); return { symbol: p.symbol, value: p.quantity * 150, sector: profile.sector, classification: profile.classification, fundExposure: profile.fundExposure, country: profile.country, currency: profile.currency, beta: 1 }; }));
       const risk = calculatePortfolioRisk(rows);
       const exDate = new Date(Date.now() + 10 * 86400000).toISOString(), paymentDate = new Date(Date.now() + 20 * 86400000).toISOString();
       res.json({ ...risk, quoteCoverage: true, benchmarkData: [], dividends: positions.map(p => ({ ...buildDividendEstimate(p.symbol, positions, { exDate, paymentDate, amount: 0.5 }), source: 'QA fixture' })), correlationMatrix: { symbols: [], matrix: [] }, lastUpdated: new Date().toISOString() });

@@ -12,6 +12,9 @@ if (process.argv.includes('--seed-partial')) {
     { user: fixture.users[0]._id, symbol: 'QAUNKNOWN', name: 'QA missing classification', quantity: 1, averagePrice: 100, lots: [{ quantity: 1, price: 100, date: new Date('2026-01-02') }] },
   ]);
 }
+if (process.argv.includes('--seed-fund')) {
+  await Position.create(['GOOG', 'MA', 'IVV'].map((symbol, index) => ({ user: fixture.users[0]._id, symbol, name: 'QA mixed fund portfolio', quantity: index === 2 ? 2 : 4, averagePrice: 100, lots: [{ quantity: index === 2 ? 2 : 4, price: 100, date: new Date('2026-01-02') }] })));
+}
 console.log(`Disposable local QA: ${fixture.baseUrl}/__qa/login/one`);
 console.log('Second fixture user: /__qa/login/two. No production data or external providers are used.');
 let stopping = false;

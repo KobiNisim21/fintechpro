@@ -52,8 +52,10 @@ holdings without lots can still accept quantity/average-price updates.
 ## Portfolio tools
 
 Activity history, FIFO sale recording, dividend/fee receipts, personal in-app
-alert rules, Excel backup, transparent health/exposure analysis and Hebrew
+alert rules, Excel backup, transparent health/exposure analysis and portfolio
 explanations are described in [the portfolio tools guide](docs/portfolio-tools.md).
+The latest analysis is English and supports [broad ETF look-through](docs/fund-lookthrough.md),
+including IVV, ITOT and clearly identified proxies for SPY, VOO and VTI.
 Use `npm run qa:server -- --seed` for a disposable seeded browser test.
 
 ## Data availability

@@ -18,25 +18,47 @@ export function combinePositions(positions) {
 
 export function calculatePortfolioRisk(rows) {
     const total = rows.reduce((sum, row) => sum + Math.max(0, Number(row.value) || 0), 0);
-    const bySymbol = {}, sectors = {}, countries = {}, currencies = {};
+    const bySymbol = {}, byIssuer = {}, sectors = {}, countries = {}, currencies = {};
     let sectorValue = 0, betaValue = 0, weightedBeta = 0;
     const classifications = [];
+    let broadFundValue = 0;
+    const issuer = symbol => symbol === 'GOOGL' ? 'GOOG' : symbol;
     const add = (map, key, value) => { map[key || 'Unknown'] = (map[key || 'Unknown'] || 0) + value; };
     for (const row of rows) {
         const value = Math.max(0, Number(row.value) || 0);
         add(bySymbol, row.symbol, value);
-        add(sectors, row.sector, value);
+        let classifiedFraction = row.sector ? 1 : 0;
+        const fund = row.fundExposure;
+        if (fund?.holdings?.length) {
+            classifiedFraction = 0;
+            for (const holding of fund.holdings) {
+                if (!(holding.weight > 0) || !Number.isFinite(holding.weight)) continue;
+                const slice = value * holding.weight;
+                add(sectors, holding.sector, slice);
+                add(byIssuer, issuer(holding.symbol), slice);
+                if (holding.sector) classifiedFraction += holding.weight;
+            }
+            classifiedFraction = Math.min(1, classifiedFraction);
+            add(sectors, 'Unknown', value * (1 - classifiedFraction));
+            // Unresolved/cash remainder is retained as a conservative concentration bucket.
+            add(byIssuer, `${row.symbol} unresolved`, value * (1 - classifiedFraction));
+            broadFundValue += value;
+        } else {
+            add(sectors, row.sector, value);
+            add(byIssuer, issuer(row.symbol), value);
+        }
         add(countries, row.country, value);
         add(currencies, row.currency, value);
-        if (row.sector) sectorValue += value;
-        classifications.push({ symbol: row.symbol, sector: row.sector || null, percent: total ? value / total * 100 : 0, source: row.classification?.source || null, sourceUrl: row.classification?.sourceUrl || null, asOf: row.classification?.asOf || null, status: row.classification?.status || (row.sector ? 'available' : 'unavailable') });
+        sectorValue += value * classifiedFraction;
+        classifications.push({ symbol: row.symbol, sector: row.sector || null, label: fund?.label || row.classification?.label || row.sector || null, benchmark: fund?.benchmark || null, holdingCount: fund?.holdings?.length || null, proxy: Boolean(fund?.proxy), sectorCoverage: classifiedFraction * 100, percent: total ? value / total * 100 : 0, source: row.classification?.source || null, sourceUrl: row.classification?.sourceUrl || null, asOf: row.classification?.asOf || null, status: row.classification?.status || (row.sector ? 'available' : 'unavailable') });
         if (Number.isFinite(row.beta)) { betaValue += value; weightedBeta += row.beta * value; }
     }
     const exposure = map => Object.entries(map).map(([name, value]) => ({ name, value, percent: total ? value / total * 100 : 0 })).sort((a, b) => b.value - a.value);
     const holdings = exposure(bySymbol);
+    const issuers = exposure(byIssuer);
     const sectorCoverage = total ? sectorValue / total : 0;
     const betaCoverage = total ? betaValue / total : 0;
-    const maxHoldingPct = holdings[0]?.percent || 0;
+    const maxHoldingPct = issuers[0]?.percent || 0;
     const maxSectorPct = Math.max(0, ...exposure(sectors).filter(row => row.name !== 'Unknown').map(row => row.percent));
     const beta = betaValue ? weightedBeta / betaValue : null;
     const concentration = Math.max(0, 100 - Math.max(0, maxHoldingPct - 10) * 1.5);
@@ -46,12 +68,13 @@ export function calculatePortfolioRisk(rows) {
     return {
         healthScore: available ? Math.round(concentration * 0.4 + diversity * 0.4 + sensitivity * 0.2) : null,
         available, portfolioBeta: beta, maxSectorPct, maxHoldingPct,
+        broadFundPercent: total ? broadFundValue / total * 100 : 0,
         components: { concentration: Math.round(concentration), diversification: diversity === null ? null : Math.round(diversity), volatility: sensitivity === null ? null : Math.round(sensitivity), sentiment: null },
         coverage: { sectors: Math.floor(sectorCoverage * 10000) / 100, beta: Math.floor(betaCoverage * 10000) / 100 },
         classifications,
-        missingClassifications: classifications.filter(row => !row.sector).map(row => row.symbol),
-        exposures: { holdings, sectors: exposure(sectors), countries: exposure(countries), currencies: exposure(currencies) },
-        methodology: 'v2: 40% holding concentration, 40% sector concentration, 20% absolute beta sensitivity. Requires 80% sector and beta coverage. Current USD market values; excludes cash. No fund look-through or analyst sentiment. Listing currency/country are not underlying economic exposure.',
+        missingClassifications: classifications.filter(row => row.sectorCoverage < 80).map(row => row.symbol),
+        exposures: { holdings, issuers, sectors: exposure(sectors), countries: exposure(countries), currencies: exposure(currencies) },
+        methodology: 'v3: 40% underlying issuer concentration, 40% sector concentration, 20% absolute beta sensitivity. Supported broad ETFs use dated holdings or explicit benchmark proxies, merging direct/fund overlap. Unknown fund exposure receives no diversification credit. Requires 80% sector and beta coverage. Cash excluded; country/currency describe listed instruments.',
     };
 }
 
