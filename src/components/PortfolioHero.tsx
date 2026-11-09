@@ -117,7 +117,7 @@ export function PortfolioHero() {
                 <span className="text-slate-400 font-normal ml-1">TODAY</span>
               </p>
               <p className={`text-sm font-medium ${isTotalPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {isTotalPositive ? '+' : ''}₪{Math.abs(totalGainILS).toLocaleString(undefined, { maximumFractionDigits: 2 })} /
+                {isTotalPositive ? '+' : '-'}₪{Math.abs(totalGainILS).toLocaleString(undefined, { maximumFractionDigits: 2 })} /
                 {isTotalPositive ? ' +$' : ' -$'}{Math.abs(totalGainUSD).toLocaleString(undefined, { maximumFractionDigits: 2 })} ({isTotalPositive ? '+' : ''}{totalGainPercent.toFixed(2)}%)
               </p>
             </div>

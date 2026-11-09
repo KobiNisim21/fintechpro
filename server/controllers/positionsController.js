@@ -20,12 +20,25 @@ export const getPositions = async (req, res) => {
 // @desc    Add new position
 // @route   POST /api/positions
 // @access  Private
-export const addPosition = async (req, res) => {
+// Tests can supply deterministic quotes while exercising the real persistence path.
+export const createAddPosition = (getQuote = stockData.getQuote) => async (req, res) => {
     try {
         let { symbol, name, quantity, averagePrice, date, broker } = req.body;
 
-        if (!symbol || typeof symbol !== 'string') {
+        if (!symbol || typeof symbol !== 'string' || !symbol.trim()) {
             return res.status(400).json({ message: 'Symbol is required' });
+        }
+        const purchaseQuantity = Number(quantity);
+        const purchasePrice = Number(averagePrice);
+        const purchaseDate = date ? new Date(date) : new Date();
+        if (quantity == null || quantity === '' || !Number.isFinite(purchaseQuantity) || purchaseQuantity <= 0) {
+            return res.status(400).json({ message: 'Quantity must be a finite number greater than zero' });
+        }
+        if (averagePrice == null || averagePrice === '' || !Number.isFinite(purchasePrice) || purchasePrice < 0) {
+            return res.status(400).json({ message: 'Price must be a finite non-negative number' });
+        }
+        if (!Number.isFinite(purchaseDate.getTime())) {
+            return res.status(400).json({ message: 'Purchase date is invalid' });
         }
 
         let cleanSymbol = symbol.trim().toUpperCase();
@@ -38,7 +51,7 @@ export const addPosition = async (req, res) => {
 
         // 1. Validate symbol existence
         try {
-            const quote = await stockData.getQuote(cleanSymbol);
+            const quote = await getQuote(cleanSymbol);
             if (!name && quote && quote.name) {
                 name = quote.name;
             }
@@ -61,9 +74,9 @@ export const addPosition = async (req, res) => {
 
         if (existingPosition) {
             existingPosition.lots.push({
-                quantity: Number(quantity),
-                price: Number(averagePrice),
-                date: date ? new Date(date) : new Date()
+                quantity: purchaseQuantity,
+                price: purchasePrice,
+                date: purchaseDate
             });
             existingPosition.markModified('lots');
             const saved = await existingPosition.save();
@@ -75,12 +88,12 @@ export const addPosition = async (req, res) => {
             symbol: cleanSymbol,
             name: name || cleanSymbol,
             broker: assignedBroker,
-            quantity: Number(quantity),
-            averagePrice: Number(averagePrice),
+            quantity: purchaseQuantity,
+            averagePrice: purchasePrice,
             lots: [{
-                quantity: Number(quantity),
-                price: Number(averagePrice),
-                date: date ? new Date(date) : new Date()
+                quantity: purchaseQuantity,
+                price: purchasePrice,
+                date: purchaseDate
             }]
         });
 
@@ -89,6 +102,8 @@ export const addPosition = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
+export const addPosition = createAddPosition();
 
 // @desc    Update position
 // @route   PUT /api/positions/:id
@@ -116,7 +131,10 @@ export const updatePosition = async (req, res) => {
         }
 
         // If 'lots' are provided, they take precedence and will trigger auto-calc
-        if (lots && Array.isArray(lots)) {
+        if (lots !== undefined) {
+            if (!Array.isArray(lots) || lots.length === 0) {
+                return res.status(400).json({ message: 'At least one valid purchase lot is required; delete the position to remove all lots' });
+            }
             // FIX: Explicitly map to new objects to force Mongoose to replace the array content
             // instead of trying to update/merge existing subdocuments by ID.
             position.lots = lots.map(lot => ({
@@ -129,6 +147,9 @@ export const updatePosition = async (req, res) => {
             position.markModified('lots');
         } else {
             // Fallback for legacy updates (though UI should send lots)
+            if (position.lots.length > 0 && (quantity !== undefined || averagePrice !== undefined)) {
+                return res.status(400).json({ message: 'Provide purchase lots when updating a position with purchase history' });
+            }
             if (quantity !== undefined) position.quantity = quantity;
             if (averagePrice !== undefined) position.averagePrice = averagePrice;
         }
@@ -138,7 +159,7 @@ export const updatePosition = async (req, res) => {
 
         res.json(updatedPosition);
     } catch (error) {
-        console.error('[UPDATE] Error saving position:', error);
+        console.error('[UPDATE] Error saving position:', error.message);
         res.status(400).json({ message: error.message });
     }
 };

@@ -74,6 +74,7 @@
             "@types/react-dom": "^19.2.3",
             "@vitejs/plugin-react-swc": "^3.10.2",
             "concurrently": "^9.1.2",
+            "mongodb-memory-server-core": "^11.3.0",
             "nodemon": "^3.1.9",
             "tailwindcss": "^4.1.18",
             "tailwindcss-animate": "^1.0.7",
@@ -87,6 +88,8 @@
             "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
             "typecheck": "tsc --noEmit",
             "test": "node --test tests/*.test.js",
+            "test:integration": "node --test tests/integration/*.test.js",
+            "qa:server": "node scripts/qa-server.js",
             "build": "npm run typecheck && vite build"
       }
 }

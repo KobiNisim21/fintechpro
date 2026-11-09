@@ -18,18 +18,26 @@ const positionSchema = new mongoose.Schema({
         trim: true
     },
     lots: [{
-        quantity: { type: Number, required: true },
-        price: { type: Number, required: true },
+        quantity: {
+            type: Number, required: true,
+            validate: { validator: value => Number.isFinite(value) && value > 0, message: 'Lot quantity must be a finite number greater than zero' }
+        },
+        price: {
+            type: Number, required: true, min: 0,
+            validate: { validator: Number.isFinite, message: 'Lot price must be finite' }
+        },
         date: { type: Date, default: Date.now }
     }],
     quantity: {
         type: Number,
         required: [true, 'Quantity is required'],
+        validate: { validator: Number.isFinite, message: 'Quantity must be finite' },
         min: [0, 'Quantity must be positive']
     },
     averagePrice: {
         type: Number,
         required: [true, 'Average price is required'],
+        validate: { validator: Number.isFinite, message: 'Average price must be finite' },
         min: [0, 'Price must be positive']
     },
     broker: {
@@ -60,11 +68,8 @@ const positionSchema = new mongoose.Schema({
 // Compound index for broker-based position splitting
 positionSchema.index({ user: 1, symbol: 1, broker: 1 });
 
-// Update timestamp & aggregates on save
-positionSchema.pre('save', function (next) {
-    this.updatedAt = Date.now();
-
-    // Auto-calculate aggregates if lots exist
+// Derive totals before validation so required/min validators check the new totals.
+positionSchema.pre('validate', function (next) {
     if (this.lots && this.lots.length > 0) {
         let totalQty = 0;
         let totalCost = 0;
@@ -78,6 +83,11 @@ positionSchema.pre('save', function (next) {
         this.averagePrice = totalQty > 0 ? totalCost / totalQty : 0;
     }
 
+    next();
+});
+
+positionSchema.pre('save', function (next) {
+    this.updatedAt = Date.now();
     next();
 });
 
