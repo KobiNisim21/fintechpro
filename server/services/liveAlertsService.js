@@ -4,6 +4,7 @@
  */
 
 import Position from '../models/Position.js';
+import { pollPersonalAlerts } from './personalAlerts.js';
 import { getQuote as fetchQuoteFromService, getBasicFinancials, getEarningsCalendar } from './stockDataService.js';
 
 // Configuration
@@ -137,12 +138,9 @@ export function getAlertsForUser(userId) {
  */
 async function getAllUserPortfolios() {
     try {
-        const positions = await Position.find({}).lean();
+        const positions = await Position.find({ isDeleted: { $ne: true }, quantity: { $gt: 0 } }).select('user symbol').lean();
         console.log(`🔔 [ALERTS] Found ${positions.length} positions in database`);
 
-        if (positions.length > 0) {
-            console.log(`🔔 [ALERTS] Sample position:`, JSON.stringify(positions[0], null, 2));
-        }
 
         const userPortfolios = new Map();
 
@@ -491,6 +489,9 @@ function emitSpecialAlert(io, userPortfolios, ticker, alertData) {
  * Start the live alerts service
  */
 export function startLiveAlertsService(io) {
+    const checkRules = () => pollPersonalAlerts(io).catch(error => console.warn('Personal alert check unavailable:', error.message));
+    checkRules();
+    setInterval(checkRules, 60_000);
     console.log('');
     console.log('========================================');
     console.log('🔔 LIVE ALERTS SERVICE STARTED');

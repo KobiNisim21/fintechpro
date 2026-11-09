@@ -10,6 +10,7 @@ import { usePortfolio } from '../context/PortfolioContext';
 import { ErrorBoundary } from './ErrorBoundary';
 import { ConnectionStatus } from './ConnectionStatus';
 import { AddPositionDialog } from './AddPositionDialog';
+import PortfolioTools from './PortfolioTools';
 
 const InsightsView = lazy(() => import('./InsightsView').then(m => ({ default: m.InsightsView })));
 const WatchlistView = lazy(() => import('./WatchlistView').then(m => ({ default: m.WatchlistView })));
@@ -60,6 +61,7 @@ export default function Dashboard() {
           <PullToRefresh onRefresh={handleRefresh}>
             {/* Hero Card */}
             <PortfolioHero />
+            <PortfolioTools />
 
             {/* Portfolio Content */}
             <section>

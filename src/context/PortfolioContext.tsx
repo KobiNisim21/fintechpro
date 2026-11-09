@@ -104,7 +104,7 @@ function getMarketStatus(): MarketStatus {
 // LOCAL STORAGE CACHE (stale-while-revalidate)
 // ============================================
 const CACHE_KEY = 'portfolio_positions_cache';
-const ANALYTICS_CACHE_KEY = 'portfolio_analytics_cache_v2'; // v2: keyed by portfolio hash
+const ANALYTICS_CACHE_KEY = 'portfolio_analytics_cache_v3'; // v2: keyed by portfolio hash
 const INSIGHTS_CACHE_KEY = 'portfolio_insights_cache'; // profiles, recommendations, priceTargets
 
 function loadCachedPositions(userId: string): Position[] {
@@ -131,7 +131,7 @@ function clearCachedPositions(userId: string) {
 
 /** Build a stable hash of the portfolio composition for cache keying */
 function getPortfolioHash(positions: Position[]): string {
-  return positions.map(p => `${p._id}:${p.symbol}:${p.quantity}:${p.averagePrice}`).sort().join(',');
+  return positions.map(p => `${p._id}:${p.symbol}:${p.quantity}:${p.averagePrice}:${JSON.stringify(p.lots || [])}`).sort().join(',');
 }
 
 /** Check if analytics data contains 50/50/50 backend defaults */
@@ -148,7 +148,7 @@ function loadCachedAnalytics(positions: Position[], userId: string): PortfolioAn
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     // Must have healthScore
-    if (!parsed || typeof parsed.healthScore !== 'number') return null;
+    if (!parsed || (parsed.healthScore !== null && typeof parsed.healthScore !== 'number')) return null;
     // NEVER load 50/50/50 defaults from cache
     if (isDefaultAnalytics(parsed)) return null;
     // Must match the current portfolio composition
@@ -252,6 +252,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   }, []);
   const symbolsKey = [...new Set(positions.map(p => p.symbol))].sort().join(',');
   const compositionKey = getPortfolioHash(positions);
+  const analyticsCompositionRef = useRef(compositionKey);
+  analyticsCompositionRef.current = compositionKey;
+  const previousCompositionRef = useRef(compositionKey);
 
   // Fetch positions from backend — FAST: uses batch extended quotes for prices
   const fetchPositions = useCallback(async () => {
@@ -404,7 +407,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       const quantities = positions.map(p => p.quantity);
       const prices = positions.map(p => p.price);
 
+      const requestedComposition = getPortfolioHash(positions);
       const data = await stocksAPI.getPortfolioAnalytics(symbols, quantities, prices);
+      if (!activeRef.current || requestedComposition !== analyticsCompositionRef.current) return 'outdated';
 
       // Detect if the backend returned default/placeholder values (cold-start fallback)
       if (isDefaultAnalytics(data)) {
@@ -433,6 +438,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   // Invalidate analytics timestamp when positions change (add/remove)
   useEffect(() => {
+    if (previousCompositionRef.current !== compositionKey) {
+      setPortfolioAnalytics(null);
+      previousCompositionRef.current = compositionKey;
+    }
     setLastAnalyticsFetch(0);
   }, [compositionKey]);
 

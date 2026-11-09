@@ -216,13 +216,18 @@ export interface BatchInsightsResponse {
 }
 
 export interface PortfolioAnalytics {
-    healthScore: number;
+    healthScore: number | null;
+    available?: boolean;
+    stale?: boolean;
+    quoteCoverage?: boolean;
+    coverage?: { sectors: number; beta: number };
+    exposures?: Record<'holdings' | 'sectors' | 'countries' | 'currencies', Array<{ name: string; value: number; percent: number }>>;
     components: {
-        diversification: number;
-        volatility: number;
-        sentiment: number;
+        diversification: number | null;
+        volatility: number | null;
+        sentiment: number | null;
     };
-    portfolioBeta: number;
+    portfolioBeta: number | null;
     maxSectorPct: number;
     benchmarkData: Array<{
         date: string;
@@ -233,15 +238,21 @@ export interface PortfolioAnalytics {
         symbol: string;
         exDate: string;
         paymentDate: string | null;
-        amount: number;
-        estimatedPayout: number;
+        amount: number | null;
+        estimatedPayout: number | null;
+        currency?: string;
+        source?: string;
+        eligibility?: string;
     }>;
     pendingPayouts?: Array<{
         symbol: string;
         exDate: string;
         paymentDate: string | null;
-        amount: number;
-        estimatedPayout: number;
+        amount: number | null;
+        estimatedPayout: number | null;
+        currency?: string;
+        source?: string;
+        eligibility?: string;
     }>;
     correlationMatrix: {
         symbols: string[];

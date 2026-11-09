@@ -1,3 +1,5 @@
+import PortfolioRiskPanel from './PortfolioRiskPanel';
+import DividendCalendar from './DividendCalendar';
 import { usePortfolio } from '@/context/PortfolioContext';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/components/ui/use-mobile';
@@ -7,7 +9,7 @@ import {
 import { stocksAPI } from '@/api/stocks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown, ShieldCheck, DollarSign, CalendarDays } from 'lucide-react';
+import { Target, Activity, PieChart as PieChartIcon, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CorrelationMatrix from './Analytics/CorrelationMatrix';
 import PortfolioBenchmarkChart from './Analytics/PortfolioBenchmarkChart';
@@ -267,7 +269,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
         positions.forEach(pos => {
             const value = pos.price * pos.quantity;
             const profile = profiles[pos.symbol];
-            const sector = profile?.finnhubIndustry || 'Other';
+            const sector = profile?.finnhubIndustry || 'Unknown';
             sectors[sector] = (sectors[sector] || 0) + value;
         });
         return Object.entries(sectors)
@@ -314,80 +316,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
             {/* ══ Analytics Row: Health Score + Benchmark ══ */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* ── Health Score Gauge ── */}
-                <Card className="bg-[var(--color-ios-card)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)] lg:col-span-1">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
-                            <ShieldCheck className="w-5 h-5 text-cyan-400" />
-                            Portfolio Health
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center justify-center py-4">
-                        {analyticsLoading || !analytics ? (
-                            <div className="w-48 h-48 rounded-[100px] bg-[var(--color-ios-input)] animate-pulse" />
-                        ) : (() => {
-                            const score = analytics.healthScore;
-                            const radius = 80;
-                            const stroke = 12;
-                            const circumference = Math.PI * radius; // half circle
-                            const progress = (score / 100) * circumference;
-                            const riskLabel = score > 80 ? 'Low Risk' : score > 50 ? 'Moderate' : 'High Risk';
-                            const riskColor = score > 80 ? 'text-[var(--color-ios-success)]' : score > 50 ? 'text-amber-500' : 'text-[var(--color-ios-danger)]';
-                            return (
-                                <div className="relative">
-                                    <svg width={2 * (radius + stroke)} height={radius + stroke + 24} className="overflow-visible">
-                                        <defs>
-                                            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                <stop offset="0%" stopColor="#22d3ee" />
-                                                <stop offset="100%" stopColor="#34d399" />
-                                            </linearGradient>
-                                        </defs>
-                                        {/* Track */}
-                                        <path
-                                            d={`M ${stroke / 2}, ${radius + stroke / 2} A ${radius},${radius} 0 0,1 ${2 * radius + stroke * 1.5},${radius + stroke / 2}`}
-                                            fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth={stroke} strokeLinecap="round"
-                                        />
-                                        {/* Progress */}
-                                        <path
-                                            d={`M ${stroke / 2}, ${radius + stroke / 2} A ${radius},${radius} 0 0,1 ${2 * radius + stroke * 1.5},${radius + stroke / 2}`}
-                                            fill="none" stroke="url(#gaugeGrad)" strokeWidth={stroke} strokeLinecap="round"
-                                            strokeDasharray={`${progress} ${circumference}`}
-                                            className="transition-all duration-1000"
-                                        />
-                                        {/* Score number */}
-                                        <text x={radius + stroke} y={radius - 4} textAnchor="middle" fill="var(--color-ios-fg)" fontSize="36" fontWeight="900" fontFamily="Nunito, system-ui, sans-serif">
-                                            {score}
-                                        </text>
-                                        <text x={radius + stroke} y={radius + 18} textAnchor="middle" fill="var(--color-ios-secondary)" fontSize="14" fontWeight="bold" fontFamily="Nunito, system-ui, sans-serif">
-                                            / 100
-                                        </text>
-                                    </svg>
-                                    {/* Risk label */}
-                                    <div className="text-center mt-1">
-                                        <span className={`text-sm font-bold  ${riskColor}`}>{riskLabel}</span>
-                                    </div>
-                                    {/* Component breakdown */}
-                                    <div className="grid grid-cols-3 gap-2 mt-4 text-center">
-                                        <div>
-                                            <div className="text-xs text-[var(--color-ios-secondary)] font-bold mb-0.5">Diversity</div>
-                                            <div className="text-sm font-bold  text-[var(--color-ios-fg)]">{analytics.components.diversification}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-[var(--color-ios-secondary)] font-bold mb-0.5">Volatility</div>
-                                            <div className="text-sm font-bold  text-[var(--color-ios-fg)]">{analytics.components.volatility}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-[var(--color-ios-secondary)] font-bold mb-0.5">Sentiment</div>
-                                            <div className="text-sm font-bold  text-[var(--color-ios-fg)]">{analytics.components.sentiment}</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-center mt-3">
-                                        <span className="text-xs font-bold text-[var(--color-ios-secondary)]">β = {analytics.portfolioBeta}</span>
-                                    </div>
-                                </div>
-                            );
-                        })()}
-                    </CardContent>
-                </Card>
+                <PortfolioRiskPanel />
 
                 {/* ── Benchmark Comparison Chart ── */}
                 <PortfolioBenchmarkChart
@@ -404,91 +333,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
             >
                 {/* ── Dividend Calendar ── */}
-                <Card className="bg-[var(--color-ios-card)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)]">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
-                            <CalendarDays className="w-5 h-5 text-emerald-400" />
-                            Upcoming Dividends
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {analyticsLoading || !analytics ? (
-                            <div className="space-y-3">
-                                {[1, 2, 3].map(i => (
-                                    <div key={i} className="h-10 bg-[var(--color-ios-input)] rounded-[16px] animate-pulse" />
-                                ))}
-                            </div>
-                        ) : analytics.dividends?.length > 0 ? (
-                            <div className="overflow-hidden">
-                                {/* Header Row */}
-                                <div className="grid grid-cols-4 gap-2 text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider pb-2 border-b border-[var(--color-ios-input)]">
-                                    <span>Symbol</span>
-                                    <span>Ex-Date</span>
-                                    <span className="text-right">Amount</span>
-                                    <span className="text-right">Est. Payout</span>
-                                </div>
-                                {/* Data rows */}
-                                {analytics.dividends.map((div, i) => (
-                                    <div key={i} className="grid grid-cols-4 gap-2 items-center py-2.5 border-b border-[var(--color-ios-input)] last:border-0">
-                                        <span className="text-sm font-bold text-[var(--color-ios-fg)] ">{div.symbol}</span>
-                                        <span className="text-xs text-[var(--color-ios-secondary)] font-bold">
-                                            {new Date(div.exDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                        </span>
-                                        <span className="text-sm text-[var(--color-ios-secondary)] text-right font-bold font-mono">${div.amount.toFixed(2)}</span>
-                                        <span className="text-sm text-cyan-600 text-right font-bold font-mono">${div.estimatedPayout.toFixed(2)}</span>
-                                    </div>
-                                ))}
-                                {/* Total row */}
-                                <div className="grid grid-cols-4 gap-2 items-center pt-3 mt-1 border-t border-[var(--color-ios-input)]">
-                                    <span className="text-xs text-[var(--color-ios-secondary)] font-bold col-span-3">Total Estimated Payout</span>
-                                    <span className="text-sm text-cyan-600 text-right font-bold font-mono">
-                                        ${analytics.dividends.reduce((s, d) => s + d.estimatedPayout, 0).toFixed(2)}
-                                    </span>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center py-8 text-zinc-500">
-                                <DollarSign className="w-8 h-8 mb-2 opacity-30" />
-                                <p className="text-sm">No upcoming dividends</p>
-                            </div>
-                        )}
-                        {analytics?.pendingPayouts && analytics.pendingPayouts.length > 0 && (
-                            <div className="mt-6 border-t border-[var(--color-ios-input)] pt-4">
-                                <h4 className="text-xs text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider mb-3">Pending Payouts (Passed Ex-Date)</h4>
-                                <div className="grid grid-cols-4 gap-2 text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider pb-2 border-b border-[var(--color-ios-input)]">
-                                    <span>Symbol</span>
-                                    <span>Ex-Date</span>
-                                    <span className="text-right">Pay Date</span>
-                                    <span className="text-right">Payout</span>
-                                </div>
-                                <div className="overflow-hidden opacity-90">
-                                    {analytics.pendingPayouts.map((div, i) => (
-                                        <div key={`pending-${i}`} className="grid grid-cols-4 gap-2 items-center py-2 border-b border-[var(--color-ios-input)] last:border-0 relative">
-                                            {/* Subtle processing indicator */}
-                                            <div className="absolute left-[-10px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--color-ios-success)] animate-pulse" />
-                                            <span className="text-sm font-bold text-[var(--color-ios-fg)] pl-2 ">{div.symbol}</span>
-                                            <span className="text-xs text-[var(--color-ios-secondary)] font-bold">
-                                                {new Date(div.exDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                            </span>
-                                            <span className="text-[10px] text-[var(--color-ios-secondary)] font-bold text-right leading-tight flex flex-col items-end">
-                                                {div.paymentDate ? new Date(div.paymentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD'}
-                                            </span>
-                                            <span className="text-sm text-[var(--color-ios-success)] text-right font-bold font-mono">
-                                                ${div.estimatedPayout.toFixed(2)}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        {analytics?.lastUpdated && (
-                            <div className="mt-3 text-[10px] text-[var(--color-ios-secondary)] font-bold text-right flex items-center justify-end gap-1">
-                                <Activity className="w-3 h-3" />
-                                Updated: {new Date(analytics.lastUpdated).toLocaleTimeString()}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                <DividendCalendar analytics={analytics} loading={analyticsLoading} />
 
                 {/* ── Sector Distribution (Grid) ── */}
                 {!insightsLoaded ? (

@@ -23,6 +23,7 @@
 .data-action:hover:not(:disabled) { transform: translateY(-4px); }
 .data-action:active:not(:disabled) { transform: scale(0.92); box-shadow: inset 10px 10px 20px #D9D4E3, inset -10px -10px 20px #FFFFFF; }
 .data-action:disabled { cursor: wait; opacity: 0.65; }
+.data-input { min-width: 0; max-width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #D9D4E3; border-radius: 12px; background: rgba(255,255,255,0.8); color: #332F3A; font: inherit; }
 .price-freshness { margin-block: 8px; color: #635F69; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 .price-freshness-details { display: block; }
 :where(button, a, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid #7C3AED; outline-offset: 3px; }

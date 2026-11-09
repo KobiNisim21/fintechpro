@@ -1,3 +1,5 @@
+import { combinePositions, calculatePortfolioRisk, alignedCorrelation, buildDividendEstimate } from './portfolioRisk.js';
+import { createHash } from 'node:crypto';
 /**
  * Centralized Stock Data Service
  * Single source of truth for all stock data with:
@@ -1205,7 +1207,7 @@ async function fetchDividendInfo(symbol) {
     try {
         console.log(`[DIVIDEND] Fetching for ${symbol}...`);
         const result = await yahooFinance.quoteSummary(symbol, {
-            modules: ['calendarEvents', 'summaryDetail', 'defaultKeyStatistics']
+            modules: ['calendarEvents', 'summaryDetail', 'defaultKeyStatistics', 'price']
         });
 
         const calendar = result.calendarEvents || {};
@@ -1233,7 +1235,10 @@ async function fetchDividendInfo(symbol) {
         return {
             exDate,
             paymentDate,
-            dividendRate: rate
+            dividendRate: rate,
+            amount: result.defaultKeyStatistics?.lastDividendDate && new Date(result.defaultKeyStatistics.lastDividendDate).toISOString().slice(0, 10) === new Date(exDate).toISOString().slice(0, 10)
+                ? result.defaultKeyStatistics.lastDividendValue ?? null : null,
+            currency: result.price?.currency || summary.currency || 'USD'
         };
     } catch (error) {
         console.error(`[DIVIDEND] Error fetching ${symbol}:`, error.message);
@@ -1249,10 +1254,10 @@ async function fetchDividendInfo(symbol) {
  * @param {Array} positions - Array of position objects with lots
  */
 export async function getPortfolioHealthAndBenchmark(positions) {
+    const sortedKey = createHash('sha256').update(JSON.stringify(positions.map(p => ({ id: String(p._id), symbol: p.symbol, quantity: p.quantity, price: p.averagePrice, lots: p.lots, updatedAt: p.updatedAt })))).digest('hex');
+    positions = combinePositions(positions);
     const symbols = positions.map(p => p.symbol);
-    console.log(`--- STOCK DATA SERVICE v12.1 LOADED (${positions.length} positions) ---`);
-    const sortedKey = symbols.slice().sort().join(',');
-    const cacheKey = `analytics_v12_${sortedKey}_${positions.length}`;
+    const cacheKey = 'analytics_v13_' + sortedKey;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
     if (cached) {
         console.log('[Health] Returning fully cached analytics');
@@ -1375,17 +1380,12 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 symbols.map(s => fetchWithTimeout(getCompanyProfile(s), 5000, {}))
             );
 
-            // 4. Fetch Analyst Recommendations (Finnhub)
-            const recsResults = await Promise.all(
-                symbols.map(s => fetchWithTimeout(getAnalystRecommendations(s), 5000, []))
-            );
-
             // 5. Fetch Dividends
             const dividendResults = await Promise.all(
                 symbols.map(s => fetchWithTimeout(fetchDividendInfo(s), 5000, null))
             );
 
-            // VALIDATION: STRICT "All or Nothing" for Score Stability
+            // Benchmark coverage is independent from risk/dividend availability.
             // Exclude FUNDS from this strict check since they don't have Yahoo Finance charts
             const expectedChartsCount = symbols.filter(s => !s.startsWith('FUND:')).length;
             const validChartsCount = symbolCharts.filter((c, i) => !symbols[i].startsWith('FUND:') && c && c.closes && c.closes.length > 0).length;
@@ -1393,83 +1393,21 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             if (validChartsCount < expectedChartsCount && expectedChartsCount > 0) {
                 const missingNames = symbols.filter((s, i) => !s.startsWith('FUND:') && (!symbolCharts[i] || !symbolCharts[i].closes || symbolCharts[i].closes.length === 0));
                 console.warn(`[Health] Critical data missing: only ${validChartsCount}/${expectedChartsCount} charts loaded. Missing: ${missingNames.join(', ')}`);
-                // THROW to prevent partial score update
-                throw new Error(`Incomplete data for: ${missingNames.join(', ')}`);
+                // Keep independent risk and dividend data available; suppress incomplete benchmark below.
             }
 
             console.log('[Health] Fetch complete. Building result...');
 
-            // --- C. Health Score Calculation ---
-            const totalValue = quantities.reduce((acc, q, i) => acc + (q * prices[i]), 0);
-
-            // 1. Diversification
-            const sectorExposure = {};
-            let maxSectorPct = 0;
-            let sectorsFound = 0;
-
-            symbols.forEach((_, i) => {
-                const profile = profilesResults[i];
-                // Fallback for sector if missing
-                const sector = profile?.finnhubIndustry || 'Unknown';
-                if (profile?.finnhubIndustry) sectorsFound++;
-
-                const val = quantities[i] * prices[i];
-                sectorExposure[sector] = (sectorExposure[sector] || 0) + val;
-            });
-            Object.values(sectorExposure).forEach(val => {
-                const pct = totalValue > 0 ? (val / totalValue) * 100 : 0;
-                if (pct > maxSectorPct) maxSectorPct = pct;
-            });
-            // If we have literally 0 profile data, don't penalize too hard? Or default score?
-            // Existing logic is fine: Unknown sector will group them and likely penalize, which is correct (risk).
-            const diversificationScore = Math.max(0, 100 - Math.max(0, maxSectorPct - 30) * 2.5);
-
-            // FIX: Guard against "Diversity 0" glitch when data is missing but multiple stocks exist.
-            if (symbols.length > 0 && diversificationScore === 0) {
-                const missingSectors = symbols.filter((_, i) => !profilesResults[i]?.finnhubIndustry);
-                console.warn(`[Health] Diversity 0 detected despite ${symbols.length} stocks. Missing sectors for: ${missingSectors.length}`);
-
-                // Throw error to prevent caching and updating UI with zero values
-                throw new Error(`Critical data failure: Calculated 0 diversity. Aborting tick to protect UI.`);
-            }
-
-            // 2. Volatility
-            let weightedBeta = 0;
-            let validBetaWeight = 0;
-            symbols.forEach((_, i) => {
-                // If metric failed, assume beta=1 (Neutral)
-                const beta = metricsResults[i]?.metric?.beta || 1.1;
-                const weight = totalValue > 0 ? (quantities[i] * prices[i]) / totalValue : 0;
-                weightedBeta += beta * weight;
-                validBetaWeight += weight;
-            });
-            const portfolioBeta = validBetaWeight > 0 ? weightedBeta / validBetaWeight : 1;
-            const volatilityScore = Math.max(0, 100 - Math.max(0, portfolioBeta - 1.0) * 50);
-
-            // 3. Sentiment
-            let totalBuyRatio = 0;
-            let sentimentCount = 0;
-            symbols.forEach((_, i) => {
-                const isETF = profilesResults[i]?.finnhubIndustry === 'Exchange Traded Fund';
-                // If we don't know it's an ETF (missing profile), we might accidentally count it or skip it.
-                // Safest to check Recs existence.
-                const recs = recsResults[i];
-                if (!isETF && recs && recs.length > 0) {
-                    const latest = recs[0];
-                    const total = latest.buy + latest.hold + latest.sell + latest.strongBuy + latest.strongSell;
-                    if (total > 0) {
-                        const buyRatio = (latest.buy + latest.strongBuy) / total;
-                        totalBuyRatio += buyRatio;
-                        sentimentCount++;
-                    }
-                }
-            });
-            // Default to 50 (Neutral) if no analyst coverage found
-            const sentimentScore = sentimentCount > 0 ? (totalBuyRatio / sentimentCount) * 100 : 50;
-
-            const healthScore = Math.round(
-                (diversificationScore * 0.4) + (volatilityScore * 0.3) + (sentimentScore * 0.3)
-            );
+            const quoteResults = await Promise.all(symbols.map(s => fetchWithTimeout(getQuote(s), 5000, null)));
+            const quoteCoverage = quoteResults.every(q => Number.isFinite(q?.c) && q.c > 0 && !q.stale);
+            const risk = calculatePortfolioRisk(symbols.map((symbol, i) => ({
+                symbol, value: quantities[i] * (quoteResults[i]?.c || 0),
+                sector: profilesResults[i]?.finnhubIndustry,
+                country: profilesResults[i]?.country, currency: profilesResults[i]?.currency,
+                beta: metricsResults[i]?.metric?.beta,
+            })));
+            if (!quoteCoverage) { risk.healthScore = null; risk.available = false; }
+            risk.quoteCoverage = quoteCoverage;
 
             // --- D. Benchmark (TWR) ---
             const benchmarkData = [];
@@ -1610,14 +1548,8 @@ export async function getPortfolioHealthAndBenchmark(positions) {
                 const exDate = new Date(info.exDate);
                 exDate.setHours(0, 0, 0, 0);
 
-                const quarterlyAmount = (info.dividendRate || 0) / 4;
-                const dividendObj = {
-                    symbol: sym,
-                    exDate: info.exDate,
-                    paymentDate: info.paymentDate || null,
-                    amount: quarterlyAmount,
-                    estimatedPayout: quarterlyAmount * quantities[i],
-                };
+                const dividendObj = buildDividendEstimate(sym, positions, info);
+                if (!dividendObj) return;
 
                 const payDate = info.paymentDate ? new Date(info.paymentDate) : null;
                 if (payDate) payDate.setHours(0, 0, 0, 0);
@@ -1635,52 +1567,15 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             dividends.sort((a, b) => new Date(a.exDate).getTime() - new Date(b.exDate).getTime());
             pendingPayouts.sort((a, b) => new Date(a.exDate).getTime() - new Date(b.exDate).getTime());
 
-            // --- F. Correlation ---
-            function pearson(a, b) {
-                const n = Math.min(a.length, b.length);
-                if (n < 5) return null;
-                const ax = a.slice(0, n), bx = b.slice(0, n);
-                const meanA = ax.reduce((s, v) => s + v, 0) / n;
-                const meanB = bx.reduce((s, v) => s + v, 0) / n;
-                let num = 0, denA = 0, denB = 0;
-                for (let j = 0; j < n; j++) {
-                    const da = ax[j] - meanA, db = bx[j] - meanB;
-                    num += da * db;
-                    denA += da * da;
-                    denB += db * db;
-                }
-                const den = Math.sqrt(denA * denB);
-                return den === 0 ? 0 : Math.round((num / den) * 100) / 100;
-            }
-
-            const dailyReturns = symbolCharts.map((chart) => {
-                if (!chart || !chart.closes || chart.closes.length < 2) return [];
-                const closes = chart.closes;
-                const recent = closes.slice(-30);
-                const returns = [];
-                for (let j = 1; j < recent.length; j++) {
-                    if (recent[j - 1] > 0) returns.push((recent[j] - recent[j - 1]) / recent[j - 1]);
-                }
-                return returns;
-            });
-
+            // Compare returns over identical date intervals, not array offsets.
             const correlationMatrix = {
                 symbols: symbols.slice(),
-                matrix: symbols.map((_, i) =>
-                    symbols.map((_, j) => (i === j ? 1 : pearson(dailyReturns[i], dailyReturns[j])))
-                )
+                matrix: symbols.map((_, i) => symbols.map((_, j) => alignedCorrelation(symbolCharts[i], symbolCharts[j])))
             };
 
             const finalResult = {
-                healthScore,
-                components: {
-                    diversification: Math.round(diversificationScore),
-                    volatility: Math.round(volatilityScore),
-                    sentiment: Math.round(sentimentScore)
-                },
-                portfolioBeta: Number(portfolioBeta.toFixed(2)),
-                maxSectorPct: Number(maxSectorPct.toFixed(1)),
-                benchmarkData: filteredBenchmarkData,
+                ...risk,
+                benchmarkData: validChartsCount === expectedChartsCount ? filteredBenchmarkData : [],
                 dividends,
                 pendingPayouts,
                 correlationMatrix,
@@ -1699,14 +1594,14 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             const previousGoodData = getCached(cacheKey, Infinity);
             if (previousGoodData) {
                 console.log('[Health] Falling back to stale cached data instead of sending 0s to UI.');
-                return previousGoodData;
+                return { ...previousGoodData, stale: true, error: 'Latest analytics unavailable' };
             }
 
             // Return safe fallback ONLY if we have absolutely nothing else
             return {
-                healthScore: 50,
-                components: { diversification: 50, volatility: 50, sentiment: 50 },
-                portfolioBeta: 1,
+                healthScore: null, available: false,
+                components: { diversification: null, volatility: null, sentiment: null },
+                portfolioBeta: null,
                 maxSectorPct: 100,
                 benchmarkData: [],
                 dividends: [],

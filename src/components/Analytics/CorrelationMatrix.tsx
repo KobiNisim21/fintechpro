@@ -40,7 +40,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                 <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-violet-400" />
                     Correlation Matrix
-                    <span className="text-[10px] text-slate-400 ml-auto">30-day Pearson</span>
+                    <span className="text-[10px] text-slate-400 ml-auto">Up to 30 aligned returns</span>
                 </CardTitle>
             </CardHeader>
             <CardContent>

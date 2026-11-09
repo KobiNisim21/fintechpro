@@ -1,4 +1,15 @@
 import mongoose from 'mongoose';
+import { installActivityHooks } from '../services/positionActivity.js';
+
+const activitySchema = new mongoose.Schema({
+    type: { type: String, enum: ['OPENING', 'BUY', 'SELL', 'ADJUSTMENT', 'REMOVE', 'RESTORE', 'DIVIDEND', 'FEE'], required: true },
+    occurredAt: { type: Date, required: true },
+    recordedAt: { type: Date, default: Date.now },
+    requestId: String,
+    quantity: Number, price: Number, amount: Number, fee: Number, costBasis: Number, realizedGain: Number,
+    broker: String, note: { type: String, maxlength: 500 },
+    before: mongoose.Schema.Types.Mixed, after: mongoose.Schema.Types.Mixed,
+});
 
 const positionSchema = new mongoose.Schema({
     user: {
@@ -17,6 +28,7 @@ const positionSchema = new mongoose.Schema({
         required: [true, 'Stock name is required'],
         trim: true
     },
+    activity: { type: [activitySchema], default: [] },
     lots: [{
         quantity: {
             type: Number, required: true,
@@ -63,7 +75,7 @@ const positionSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-});
+}, { optimisticConcurrency: true });
 
 // Compound index for broker-based position splitting
 positionSchema.index({ user: 1, symbol: 1, broker: 1 });
@@ -90,6 +102,8 @@ positionSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
+
+installActivityHooks(positionSchema);
 
 const Position = mongoose.model('Position', positionSchema);
 

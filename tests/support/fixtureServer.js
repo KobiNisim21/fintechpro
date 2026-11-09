@@ -10,6 +10,9 @@ import User from '../../server/models/User.js';
 import Position from '../../server/models/Position.js';
 import { protect } from '../../server/middleware/auth.js';
 import { createAddPosition, getPositions, updatePosition, deletePosition } from '../../server/controllers/positionsController.js';
+import activityRoutes from '../../server/routes/activity.js';
+import { createAlertRoutes } from '../../server/routes/alerts.js';
+import { calculatePortfolioRisk, combinePositions, buildDividendEstimate } from '../../server/services/portfolioRisk.js';
 
 const securities = [
   { symbol: 'AAPL', displaySymbol: 'AAPL', description: 'QA Apple fixture' },
@@ -51,6 +54,8 @@ export async function createFixtureServer({ port = 0, frontend = false } = {}) {
     const app = express();
     let failedPositionReads = 0;
     app.use(express.json());
+    app.use('/api/activity', activityRoutes);
+    app.use('/api/alerts', createAlertRoutes(fixtureQuote));
     app.use((req, res, next) => {
       res.setHeader('Cache-Control', 'no-store');
       next();
@@ -77,11 +82,15 @@ export async function createFixtureServer({ port = 0, frontend = false } = {}) {
     app.get('/api/stocks/batch-history', protect, (req, res) => res.json(Object.fromEntries(String(req.query.symbols || '').split(',').filter(Boolean).map(symbol => [symbol, {
       c: [148, 149, 150], t: [2, 1, 0].map(days => Math.floor(Date.now() / 1000) - days * 86400), s: 'ok', currency: 'USD',
     }]))));
-    app.get('/api/stocks/portfolio-analytics', protect, (req, res) => res.json({
-      healthScore: 75, components: { diversification: 80, volatility: 70, sentiment: 75 },
-      portfolioBeta: 1, maxSectorPct: 100, benchmarkData: [], dividends: [],
-      correlationMatrix: { symbols: [], matrix: [] },
+    app.get('/api/stocks/batch-insights', protect, (req, res) => res.json({
+      recommendations: {}, priceTargets: {}, profiles: Object.fromEntries(String(req.query.symbols || '').split(',').filter(Boolean).map(symbol => [symbol, { ticker: symbol, name: 'QA fixture', finnhubIndustry: 'Technology', country: 'US', currency: 'USD' }])),
     }));
+    app.get('/api/stocks/portfolio-analytics', protect, async (req, res) => {
+      const positions = combinePositions(await Position.find({ user: req.user._id, isDeleted: { $ne: true } }).lean());
+      const risk = calculatePortfolioRisk(positions.map(p => ({ symbol: p.symbol, value: p.quantity * 150, sector: 'Technology', country: 'US', currency: 'USD', beta: 1 })));
+      const exDate = new Date(Date.now() + 10 * 86400000).toISOString(), paymentDate = new Date(Date.now() + 20 * 86400000).toISOString();
+      res.json({ ...risk, quoteCoverage: true, benchmarkData: [], dividends: positions.map(p => ({ ...buildDividendEstimate(p.symbol, positions, { exDate, paymentDate, amount: 0.5 }), source: 'QA fixture' })), correlationMatrix: { symbols: [], matrix: [] }, lastUpdated: new Date().toISOString() });
+    });
     app.get('/api/stocks/:symbol/quote', protect, async (req, res) => {
       try { res.json(await fixtureQuote(req.params.symbol)); }
       catch { res.status(404).json({ message: 'Unknown fixture symbol' }); }

@@ -74,6 +74,7 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
                     ))}
                 </div>
             </CardHeader>
+            <p className="px-6 pb-3 text-xs text-slate-500">Estimate from remaining purchase lots. Excludes closed holdings, sale proceeds, cash, fees and dividends; not a complete account return.</p>
             <CardContent className="h-[280px]">
                 {isLoading || !data ? (
                     <div className="w-full h-full bg-slate-100 animate-pulse rounded-xl" />

@@ -6,7 +6,7 @@ import * as stockData from '../services/stockDataService.js';
 // @access  Private
 export const getPositions = async (req, res) => {
     try {
-        const positions = await Position.find({ user: req.user._id, isDeleted: { $ne: true } }).sort({ createdAt: -1 });
+        const positions = await Position.find({ user: req.user._id, isDeleted: { $ne: true } }).select('-activity').sort({ createdAt: -1 });
         res.json(positions);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -73,12 +73,14 @@ export const createAddPosition = (getQuote = stockData.getQuote) => async (req, 
         });
 
         if (existingPosition) {
+            if (!existingPosition.lots.length) existingPosition.lots.push({ quantity: existingPosition.quantity, price: existingPosition.averagePrice, date: existingPosition.createdAt });
             existingPosition.lots.push({
                 quantity: purchaseQuantity,
                 price: purchasePrice,
                 date: purchaseDate
             });
             existingPosition.markModified('lots');
+            existingPosition.$locals.activityEvent = { type: 'BUY', quantity: purchaseQuantity, price: purchasePrice, occurredAt: purchaseDate };
             const saved = await existingPosition.save();
             return res.status(200).json(saved);
         }
@@ -180,7 +182,9 @@ export const deletePosition = async (req, res) => {
             return res.status(401).json({ message: 'Not authorized' });
         }
 
-        await position.deleteOne();
+        position.isDeleted = true;
+        position.deletedAt = new Date();
+        await position.save();
         res.json({ message: 'Position deleted', id: req.params.id });
     } catch (error) {
         res.status(500).json({ message: error.message });

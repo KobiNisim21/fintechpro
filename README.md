@@ -49,6 +49,13 @@ For holdings with purchase history, `PUT /api/positions/:id` must include the
 updated `lots` array; totals are derived and validated from those lots. Legacy
 holdings without lots can still accept quantity/average-price updates.
 
+## Portfolio tools
+
+Activity history, FIFO sale recording, dividend/fee receipts, personal in-app
+alert rules, Excel backup, transparent health/exposure analysis and Hebrew
+explanations are described in [the portfolio tools guide](docs/portfolio-tools.md).
+Use `npm run qa:server -- --seed` for a disposable seeded browser test.
+
 ## Data availability
 
 `GET /api/live` reports HTTP liveness independently of MongoDB.

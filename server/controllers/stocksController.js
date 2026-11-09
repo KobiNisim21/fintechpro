@@ -293,12 +293,12 @@ export const adminFixPosition = async (req, res) => {
 export const getPortfolioAnalytics = async (req, res) => {
     try {
         // Fetch positions from DB to ensure TWR accuracy with lots
-        const positions = await Position.find({ user: req.user._id }).lean(); // .lean() for plain objects
+        const positions = await Position.find({ user: req.user._id, isDeleted: { $ne: true }, quantity: { $gt: 0 } }).select('-activity.before -activity.after').lean(); // .lean() for plain objects
 
         if (!positions || positions.length === 0) {
             // Return empty/default structure if no positions
             return res.json({
-                healthScore: 0,
+                healthScore: null, available: false,
                 components: { diversification: 0, volatility: 0, sentiment: 0 },
                 portfolioBeta: 0,
                 maxSectorPct: 0,

@@ -1,3 +1,5 @@
+import { applySale } from './positionActivity.js';
+import { readActivity } from '../controllers/activityController.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import Position from '../models/Position.js';
@@ -181,10 +183,8 @@ export async function undoAuditAction(userId, auditLogId) {
             // If beforeState has array of positions or ids
             if (Array.isArray(audit.beforeState?.createdSymbols)) {
                 for (const sym of audit.beforeState.createdSymbols) {
-                    await Position.findOneAndUpdate(
-                        { user: userId, symbol: sym, isDeleted: { $ne: true } },
-                        { isDeleted: true, deletedAt: new Date() }
-                    );
+                    const position = await Position.findOne({ user: userId, symbol: sym, isDeleted: { $ne: true } });
+                    if (position) { position.isDeleted = true; position.deletedAt = new Date(); await position.save(); }
                 }
             }
             break;
@@ -494,6 +494,7 @@ export async function addOrUpdatePosition(userId, { symbol, quantity, price, nam
             date: lotDate
         });
 
+        position.$locals.activityEvent = { type: 'BUY', quantity: qty, price: buyPrice, occurredAt: lotDate };
         position.markModified('lots');
         await position.save();
 
@@ -597,7 +598,7 @@ export async function addOrUpdatePosition(userId, { symbol, quantity, price, nam
 /**
  * Sell or reduce shares in an existing position (Sell action) with Audit Logging
  */
-export async function sellPosition(userId, { symbol, quantity, broker }, apiKeyContext = null) {
+export async function sellPosition(userId, { symbol, quantity, broker, price, fee = 0, date }, apiKeyContext = null) {
     const cleanSymbol = normalizeSymbol(symbol);
     if (!cleanSymbol) {
         throw new Error('Stock symbol is required.');
@@ -629,100 +630,14 @@ export async function sellPosition(userId, { symbol, quantity, broker }, apiKeyC
         lots: JSON.parse(JSON.stringify(position.lots || []))
     };
 
-    const sellQty = quantity !== undefined && quantity !== null ? Number(quantity) : null;
-
-    // Full position liquidation
-    if (!sellQty || isNaN(sellQty) || sellQty >= position.quantity) {
-        const removedShares = position.quantity;
-        // Soft delete position so it can be completely undone if desired
-        position.isDeleted = true;
-        position.deletedAt = new Date();
-        await position.save();
-
-        const details = `Liquidated entire position: ${removedShares} shares of ${cleanSymbol}.`;
-
-        await logAuditAction({
-            userId,
-            apiKeyContext,
-            action: 'sell_position',
-            symbol: cleanSymbol,
-            details,
-            beforeState,
-            afterState: null
-        });
-
-        return {
-            success: true,
-            action: 'CLOSED_POSITION',
-            symbol: cleanSymbol,
-            sharesSold: removedShares,
-            remainingShares: 0,
-            message: `Successfully closed position for ${cleanSymbol}. All ${removedShares} shares removed from active portfolio.`
-        };
-    }
-
-    if (sellQty <= 0) {
-        throw new Error('Sell quantity must be a positive number.');
-    }
-
-    // Partial sale (FIFO lot reduction)
-    let remainingToSell = sellQty;
-    const updatedLots = [];
-
-    for (const lot of (position.lots || [])) {
-        if (remainingToSell <= 0) {
-            updatedLots.push(lot);
-        } else if (lot.quantity <= remainingToSell) {
-            remainingToSell -= lot.quantity;
-        } else {
-            updatedLots.push({
-                quantity: lot.quantity - remainingToSell,
-                price: lot.price,
-                date: lot.date
-            });
-            remainingToSell = 0;
-        }
-    }
-
-    if (updatedLots.length === 0) {
-        position.quantity = Math.max(0, position.quantity - sellQty);
-    } else {
-        position.lots = updatedLots;
-        position.markModified('lots');
-    }
-
+    const sale = applySale(position, { quantity: quantity ?? position.quantity, price: price ?? null, fee, date }, { allowUnknownPrice: true });
     await position.save();
-
-    const afterState = {
-        symbol: position.symbol,
-        name: position.name,
-        quantity: position.quantity,
-        averagePrice: position.averagePrice,
-        broker: position.broker,
-        lots: JSON.parse(JSON.stringify(position.lots || []))
-    };
-
-    const details = `Sold ${sellQty} shares of ${cleanSymbol}. Remaining: ${position.quantity} shares.`;
-
-    await logAuditAction({
-        userId,
-        apiKeyContext,
-        action: 'sell_position',
-        symbol: cleanSymbol,
-        details,
-        beforeState,
-        afterState
-    });
-
-    return {
-        success: true,
-        action: 'REDUCED_POSITION',
-        symbol: cleanSymbol,
-        sharesSold: sellQty,
-        remainingShares: position.quantity,
-        averagePriceUSD: Number(position.averagePrice.toFixed(2)),
-        message: `Successfully recorded sale of ${sellQty} shares of ${cleanSymbol}. Remaining: ${position.quantity} shares at average price $${position.averagePrice.toFixed(2)}.`
-    };
+    await logAuditAction({ userId, apiKeyContext, action: 'sell_position', symbol: cleanSymbol,
+        details: 'Recorded FIFO sale; missing execution price remains unknown.', beforeState,
+        afterState: { ...position.toObject(), activity: undefined } });
+    return { success: true, action: position.isDeleted ? 'CLOSED_POSITION' : 'REDUCED_POSITION',
+        symbol: cleanSymbol, sharesSold: sale.quantity, remainingShares: position.quantity,
+        realizedGainUSD: sale.realizedGain, message: 'Sale recorded. Realized result requires an execution price.' };
 }
 
 /**
@@ -983,6 +898,8 @@ export async function updateCashBalance(userId, { amount, currency = 'USD', brok
  * Get transaction and lot history across all positions and audit logs
  */
 export async function getTransactions(userId, limit = 50) {
+    limit = Math.min(100, Math.max(1, Math.floor(Number(limit) || 50)));
+    const { events } = await readActivity(userId);
     const [positions, auditLogs] = await Promise.all([
         Position.find({ user: userId }).lean(),
         AuditLog.find({ user: userId }).sort({ createdAt: -1 }).limit(limit).lean()
@@ -1006,6 +923,8 @@ export async function getTransactions(userId, limit = 50) {
 
     return {
         lots: lotsTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, limit),
+        activity: events.slice(0, Math.min(100, Math.max(1, Number(limit) || 50))),
+        historyNotice: 'Opening entries reconstruct remaining lots. Unknown execution prices remain unknown.',
         recentAuditLogs: auditLogs.map(a => ({
             id: a._id,
             action: a.action,
@@ -1269,7 +1188,10 @@ export function createMcpServer(user, apiKeyContext = null) {
         "Record a sale of shares or close an entire position in the user's portfolio. If quantity is omitted or equals/exceeds current shares, closes the position.",
         {
             symbol: z.string().describe("Stock ticker symbol to sell, e.g. 'NVDA'"),
-            quantity: z.number().positive().optional().describe("Number of shares sold. If omitted or >= total shares, the position is completely closed."),
+            quantity: z.number().positive().optional().describe("Shares sold; omit for all. Cannot exceed holding."),
+            price: z.number().nonnegative().optional().describe("Actual execution price in normalized USD; omit only if unknown."),
+            fee: z.number().nonnegative().optional().describe("Sale fee in USD."),
+            date: z.string().optional().describe("Execution date, after recorded purchases."),
             broker: z.string().optional().describe("Broker or account name if position is held in a specific account")
         },
         async (args) => {
