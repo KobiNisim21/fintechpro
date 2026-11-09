@@ -329,8 +329,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
       {/* Edit Dialog - Multi-Lot Support */}
       <SimpleDialog open={editOpen} onClose={() => setEditOpen(false)} title={`Edit ${stock.symbol} holdings`}>
-        <div className="max-h-[80vh] overflow-y-auto px-1 pb-2">
-          <h2 className="text-2xl font-bold mb-6 text-slate-800">Edit {stock.symbol} Holdings</h2>
+        <div className="px-1 pb-2">
 
           <div className="space-y-6">
             {/* Lots List */}

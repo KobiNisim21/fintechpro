@@ -27,7 +27,7 @@ export default function ActivityView() {
         } catch (err: unknown) { setError(portfolioToolError(err, 'Recording failed. Please retry.')); } finally { setSaving(false); }
     };
     return <div className="data-panel p-4 sm:p-6 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-bold text-lg">Activity history</h2><button className="data-action min-h-11" onClick={() => { activityRequestId.current = crypto.randomUUID(); setError(''); setOpen(true); }} disabled={!page?.accounts.length}>Record activity</button></div>
+        <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-bold text-lg">Activity history</h2><button className="data-action min-h-11" onClick={() => { activityRequestId.current = crypto.randomUUID(); setError(''); setOpen(true); }} disabled={saving || !page?.accounts.length}>Record activity</button></div>
         <p className="text-xs text-slate-600">Legacy Opening entries reconstruct remaining lots; earlier sales and payments may be missing. Corrections/removals are not sales. Costs use USD. Income and fees do not change cash balances.</p>
         <div className="flex flex-wrap gap-3 items-center"><label className="text-sm">Activity type <select className="data-input ml-2" value={type} onChange={event => setType(event.target.value)}><option value="">All</option>{types.map(value => <option key={value}>{value}</option>)}</select></label><button className="data-action min-h-11" disabled={loading} onClick={() => void load()}>Refresh activity</button></div>
         {error && !open && <p role="alert" className="text-red-700 text-sm">{error}</p>}{loading && !page && <p role="status">Loading activity…</p>}
@@ -45,8 +45,8 @@ export default function ActivityView() {
             </article>)}</div>
             {page.events.length < page.total && <button className="data-action min-h-11" disabled={loading} onClick={() => void load(page.events.length)}>{loading ? 'Loading…' : 'Load more'}</button>}
         </>}
-        <SimpleDialog open={open} onClose={() => { if (!saving) setOpen(false); }} title="Record portfolio activity">
-            <form onSubmit={submit} className="space-y-4 p-1"><h3 className="text-lg font-bold pr-10">Record activity</h3>
+        <SimpleDialog open={open} onClose={() => setOpen(false)} title="Record activity">
+            <form onSubmit={submit} className="space-y-4 p-1">
                 <label className="block text-sm">Type<select className="data-input w-full mt-1" value={recordType} onChange={event => setRecordType(event.target.value)}><option value="SELL">Sale (FIFO)</option><option value="DIVIDEND">Dividend received</option><option value="FEE">Fee paid</option></select></label>
                 <label className="block text-sm">Holding / account<select className="data-input w-full mt-1" name="position" required>{page?.accounts.filter(p => recordType !== 'SELL' || (!p.isDeleted && p.quantity > 0)).map(p => <option key={p._id} value={p._id}>{p.symbol} · {p.broker} · {p.isDeleted ? 'Archived' : `${p.quantity} shares`}</option>)}</select></label>
                 {recordType === 'SELL' ? <div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><label className="text-sm">Shares sold<input className="data-input w-full" name="quantity" type="number" min="0.00000001" step="any" required /></label><label className="text-sm">Price USD<input className="data-input w-full" name="price" type="number" min="0" step="any" required /></label><label className="text-sm">Sale fee USD<input className="data-input w-full" name="fee" type="number" min="0" step="any" defaultValue="0" /></label></div> : <label className="block text-sm">{recordType === 'DIVIDEND' ? 'Net amount received USD' : 'Fee paid USD'}<input className="data-input w-full" name="amount" type="number" min="0.00000001" step="any" required /></label>}
@@ -54,6 +54,7 @@ export default function ActivityView() {
                 <label className="block text-sm">Note<input className="data-input w-full" name="note" maxLength={500} /></label>
                 <p className="text-xs text-slate-500">Sale changes remaining shares. Dividend/fee entries record payments only. No cash posting or tax calculation. Leave date blank for the current time.</p>
                 {error && <p role="alert" className="text-red-700 text-sm">{error}</p>}<button className="data-action min-h-11 w-full" disabled={saving}>{saving ? 'Saving…' : 'Save activity'}</button>
+                <button type="button" className="data-action min-h-11 w-full" onClick={() => setOpen(false)}>Close</button>
             </form>
         </SimpleDialog>
     </div>;

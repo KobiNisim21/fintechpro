@@ -149,9 +149,6 @@ export function AddPositionDialog() {
 
             <SimpleDialog open={open} onClose={() => setOpen(false)} title="Add new position">
                 <div className="relative px-2">
-                    <h2 className="text-2xl font-bold  text-[var(--color-ios-fg)] mb-2">
-                        Add New Position
-                    </h2>
                     <p className="text-[14px] font-bold text-[var(--color-ios-secondary)] mb-8">
                         Enter the details of the stock you want to add to your portfolio.
                     </p>
