@@ -60,7 +60,7 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
                 <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-emerald-500" />
                     {t("Portfolio vs S&P 500")}</CardTitle>
-                <div className="flex gap-1">
+                <div className="benchmark-range flex gap-1">
                     {(['1M', '6M', '1Y'] as const).map(r => (
                         <button
                             key={t(r)}
@@ -84,8 +84,8 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
                         <AreaChart data={slicedData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="portfolioFill" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
-                                    <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                                    <stop offset="0%" stopColor="var(--app-positive)" stopOpacity={0.2} />
+                                    <stop offset="100%" stopColor="var(--app-positive)" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
@@ -108,8 +108,8 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
                                     name === 'portfolio' ? t('My Portfolio') : 'S&P 500'
                                 ]}
                             />
-                            <Area type="monotone" dataKey="portfolio" stroke="#10b981" strokeWidth={2} fill="url(#portfolioFill)" />
-                            <Area type="monotone" dataKey="spy" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="6 3" fill="none" />
+                            <Area type="monotone" dataKey="portfolio" stroke="var(--app-positive)" strokeWidth={2} fill="url(#portfolioFill)" />
+                            <Area type="monotone" dataKey="spy" stroke="var(--app-secondary)" strokeWidth={1.5} strokeDasharray="6 3" fill="none" />
                         </AreaChart>
                     </ResponsiveContainer>
                 ) : (

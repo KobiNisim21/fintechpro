@@ -7,3 +7,4 @@
   createRoot(document.getElementById("root")!).render(<App />);
 
 import "./styles/localization.css";
+import "./styles/apple-design.css";

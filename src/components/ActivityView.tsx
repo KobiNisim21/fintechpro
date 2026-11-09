@@ -55,7 +55,7 @@ export default function ActivityView() {
                 <label className="block text-sm">{t("Date")}<input className="data-input w-full" name="date" type="date" max={new Date().toISOString().slice(0, 10)} /></label>
                 <label className="block text-sm">{t("Note")}<input className="data-input w-full" name="note" maxLength={500} /></label>
                 <p className="text-xs text-slate-500">{t("Sale changes remaining shares. Dividend/fee entries record payments only. No cash posting or tax calculation. Leave date blank for the current time.")}</p>
-                {error && <p role="alert" className="text-red-700 text-sm">{errorText(error)}</p>}<button className="data-action min-h-11 w-full" disabled={saving}>{saving ? t("Saving…") : t("Save activity")}</button>
+                {error && <p role="alert" className="text-red-700 text-sm">{errorText(error)}</p>}<button className="data-action primary-action min-h-11 w-full" disabled={saving}>{saving ? t("Saving…") : t("Save activity")}</button>
                 <button type="button" className="data-action min-h-11 w-full" onClick={() => setOpen(false)}>{t("Close")}</button>
             </form>
         </SimpleDialog>

@@ -1,6 +1,6 @@
 ﻿import express from 'express';
 import { createServer } from 'node:http';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
@@ -108,7 +108,9 @@ export async function createFixtureServer({ port = 0, frontend = false, localiza
       const rows = await Promise.all(positions.map(async p => { const profile = await fixtureProfile(p.symbol); return { symbol: p.symbol, value: p.quantity * 150, sector: profile.sector, classification: profile.classification, fundExposure: profile.fundExposure, country: profile.country, currency: profile.currency, beta: 1 }; }));
       const risk = calculatePortfolioRisk(rows);
       const exDate = new Date(Date.now() + 10 * 86400000).toISOString(), paymentDate = new Date(Date.now() + 20 * 86400000).toISOString();
-      res.json({ ...risk, quoteCoverage: true, benchmarkData: localization ? [2, 1, 0].map(days => ({ date: new Date(Date.now() - days * 86400000).toISOString().slice(0, 10), portfolio: 3 - days, spy: 2 - days / 2 })) : [], dividends: positions.map(p => ({ ...buildDividendEstimate(p.symbol, positions, { exDate, paymentDate, amount: 0.5 }), source: 'QA fixture' })), correlationMatrix: { symbols: [], matrix: [] }, lastUpdated: new Date().toISOString() });
+      const correlationSymbols = localization ? positions.map(p => p.symbol) : [];
+      const correlationMatrix = { symbols: correlationSymbols, matrix: correlationSymbols.map((_, row) => correlationSymbols.map((__, column) => row === column ? 1 : (row + column) % 2 ? -0.25 : 0.5)) };
+      res.json({ ...risk, quoteCoverage: true, benchmarkData: localization ? [2, 1, 0].map(days => ({ date: new Date(Date.now() - days * 86400000).toISOString().slice(0, 10), portfolio: 3 - days, spy: 2 - days / 2 })) : [], dividends: positions.map(p => ({ ...buildDividendEstimate(p.symbol, positions, { exDate, paymentDate, amount: 0.5 }), source: 'QA fixture' })), correlationMatrix, lastUpdated: new Date().toISOString() });
     });
     app.get('/api/stocks/:symbol/quote', protect, async (req, res) => {
       try { res.json(await fixtureQuote(req.params.symbol)); }
@@ -126,6 +128,10 @@ export async function createFixtureServer({ port = 0, frontend = false, localiza
     app.get('/__qa/state', async (req, res) => res.json({
       environment: 'disposable-local-qa', database: mongoose.connection.name,
       positions: await Position.countDocuments(),
+      financialDigest: createHash('sha256').update(JSON.stringify((await Position.find().sort({ _id: 1 }).lean()).map(p => ({
+        id: String(p._id), user: String(p.user), symbol: p.symbol, broker: p.broker,
+        quantity: p.quantity, averagePrice: p.averagePrice, lots: p.lots, isDeleted: p.isDeleted,
+      })))).digest('hex'),
       connections: io.sockets.sockets.size,
       subscriptions: [...new Set([...io.sockets.sockets.values()].flatMap(socket => socket.data.symbols || []))],
     }));

@@ -177,8 +177,8 @@ export function PortfolioChart() {
             <LineChart data={historyData}>
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--app-positive)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--app-positive)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -205,16 +205,16 @@ export function PortfolioChart() {
                   padding: '16px',
                 }}
                 labelStyle={{ color: 'var(--color-ios-fg)', fontWeight: '900', fontFamily: 'var(--)' }}
-                itemStyle={{ color: '#10B981' }}
+                itemStyle={{ color: 'var(--app-positive)' }}
                 formatter={(value: number) => `₪${value.toLocaleString(locale(), { maximumFractionDigits: 0 })}`}
               />
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#10B981"
+                stroke="var(--app-positive)"
                 strokeWidth={3}
                 dot={false}
-                activeDot={{ r: 6, fill: '#10B981' }}
+                activeDot={{ r: 6, fill: 'var(--app-positive)' }}
                 fill="url(#colorValue)"
               />
             </LineChart>

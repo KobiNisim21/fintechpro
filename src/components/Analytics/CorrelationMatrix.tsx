@@ -23,14 +23,10 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
         const labelSize = corrSymbols.length <= 5 ? 36 : corrSymbols.length <= 8 ? 28 : 22;
 
         const getColor = (val: number | null) => {
-            if (val === null) return 'rgba(0,0,0,0.03)';
-            if (val >= 0) {
-                const g = Math.round(120 + val * 135);
-                return `rgba(${Math.round(34 + (1 - val) * 100)}, ${g}, ${Math.round(100 - val * 40)}, ${0.15 + val * 0.5})`;
-            } else {
-                const r = Math.round(180 + Math.abs(val) * 75);
-                return `rgba(${r}, ${Math.round(100 - Math.abs(val) * 50)}, ${Math.round(100 - Math.abs(val) * 30)}, ${0.15 + Math.abs(val) * 0.5})`;
-            }
+            if (val === null) return 'var(--app-soft)';
+            const intensity = 8 + Math.min(1, Math.abs(val)) * 22;
+            const signal = val >= 0 ? 'var(--app-positive)' : 'var(--app-negative)';
+            return `color-mix(in srgb, ${signal} ${intensity}%, var(--app-surface))`;
         };
 
         return { corrSymbols, matrix, cellSize, labelSize, getColor };
@@ -51,7 +47,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                     <div className="overflow-x-auto overflow-y-hidden w-full py-2 pb-4 max-h-[420px]">
                         <div style={{ display: 'block', width: 'fit-content', margin: '0 auto' }}>
                             {/* Header row */}
-                            <div className="flex" style={{ paddingLeft: content.labelSize }}>
+                            <div className="flex" style={{ paddingInlineStart: content.labelSize }}>
                                 {content.corrSymbols.map(sym => (
                                     <div key={sym} style={{ width: content.cellSize, minWidth: content.cellSize }}
                                         className="text-[9px] text-slate-500 text-center font-mono truncate">
@@ -69,7 +65,10 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                                     {row.map((val, j) => (
                                         <div
                                             key={j}
-                                            className="relative group cursor-pointer transition-all duration-200 hover:scale-110 hover:z-10 rounded-sm"
+                                            role="img"
+                                            tabIndex={0}
+                                            aria-label={`${content.corrSymbols[i]} ${t("vs")} ${content.corrSymbols[j]}: ${val !== null ? val.toFixed(2) : t("N/A")}`}
+                                            className="correlation-cell relative group transition-all duration-200 hover:scale-110 hover:z-10 rounded-sm"
                                             style={{
                                                 width: content.cellSize - 2, height: content.cellSize - 2, margin: 1,
                                                 background: content.getColor(val),
@@ -80,7 +79,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                                                     {val.toFixed(2)}
                                                 </span>
                                             )}
-                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
                                                 {content.corrSymbols[i]} {t(" vs ")}{content.corrSymbols[j]}: {val !== null ? val.toFixed(2) : t("N/A")}
                                             </div>
                                         </div>

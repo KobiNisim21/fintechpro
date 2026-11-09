@@ -144,7 +144,7 @@ export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
             <Button
                 aria-label={t("Add Position")}
                 onClick={() => setOpen(true)}
-                className="rounded-[20px] bg-white shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] active:shadow-none text-[var(--color-ios-fg)] font-bold px-6 h-12 transition-all duration-300"
+                className="primary-action rounded-[20px] bg-white shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] active:shadow-none text-[var(--color-ios-fg)] font-bold px-6 h-12 transition-all duration-300"
             >
                 <Plus className="w-5 h-5 me-2" strokeWidth={2.5} />
                 <span className={compact ? "mobile-header-add-label" : "tracking-wide"}>{t("Add Position")}</span>

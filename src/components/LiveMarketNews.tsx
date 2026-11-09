@@ -1,6 +1,6 @@
 import { t, useLanguage, relativeTime } from '@/i18n';
 import { Newspaper } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useMarketNews, usePaginatedNews } from '@/context/MarketNewsContext';
 import { useEffect, useState, useRef } from 'react';
 
@@ -8,6 +8,7 @@ export function LiveMarketNews() {
     useLanguage();
     const { currentPage, setCurrentPage, totalPages, loading, connected, newItemsCount, clearNewCount, news } = useMarketNews();
     const paginatedNews = usePaginatedNews();
+    const reduceMotion = useReducedMotion();
     const [direction, setDirection] = useState(0);
     const prevPageRef = useRef(currentPage);
 
@@ -19,7 +20,7 @@ export function LiveMarketNews() {
 
     // Auto-rotate pages every 10 seconds
     useEffect(() => {
-        if (totalPages <= 1) return;
+        if (totalPages <= 1 || reduceMotion) return;
 
         const interval = setInterval(() => {
             const nextPage = (currentPage + 1) % totalPages;
@@ -27,7 +28,7 @@ export function LiveMarketNews() {
         }, 10000); // 10 seconds
 
         return () => clearInterval(interval);
-    }, [totalPages, currentPage, setCurrentPage]);
+    }, [totalPages, currentPage, setCurrentPage, reduceMotion]);
 
     // Clear new items count when user interacts with pagination
     const handlePageChange = (page: number) => {

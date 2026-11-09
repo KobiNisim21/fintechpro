@@ -21,19 +21,11 @@ const COLORS = [
     '#a78bfa', '#fb923c', '#38bdf8', '#4ade80', '#e879f9',
 ];
 
-// ─── Sector Tile Gradients (soft pastel, iOS-integrated) ─────────
-const SECTOR_GRADIENTS: [string, string, string][] = [
-    // [gradient-from, gradient-to, text-color]
-    ['#0d9488', '#0f766e', '#ffffff'],   // teal
-    ['#6366f1', '#4338ca', '#ffffff'],   // indigo
-    ['#f59e0b', '#d97706', '#1e293b'],   // amber
-    ['#ec4899', '#be185d', '#ffffff'],   // pink
-    ['#3b82f6', '#2563eb', '#ffffff'],   // blue
-    ['#8b5cf6', '#6d28d9', '#ffffff'],   // violet
-    ['#10b981', '#059669', '#ffffff'],   // emerald
-    ['#f97316', '#ea580c', '#ffffff'],   // orange
-    ['#06b6d4', '#0891b2', '#ffffff'],   // cyan
-    ['#a855f7', '#7c3aed', '#ffffff'],   // purple
+// Solid sector tiles with text contrast independent of the page appearance.
+const SECTOR_COLORS: [string, string][] = [
+    ['#0f766e', '#ffffff'], ['#4338ca', '#ffffff'], ['#fef3c7', '#172b3a'],
+    ['#9d174d', '#ffffff'], ['#1d4ed8', '#ffffff'], ['#6d28d9', '#ffffff'],
+    ['#166534', '#ffffff'], ['#9a3412', '#ffffff'], ['#155e75', '#ffffff'], ['#6b21a8', '#ffffff'],
 ];
 
 // ─── Skeleton Component ─────────────────────────────────────────
@@ -80,14 +72,14 @@ const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
     const items = data.map((d, i) => ({
         ...d,
         percent: (d.value / totalValue) * 100,
-        gradient: SECTOR_GRADIENTS[i % SECTOR_GRADIENTS.length],
+        colors: SECTOR_COLORS[i % SECTOR_COLORS.length],
     }));
 
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 auto-rows-fr gap-3 w-full h-full min-h-[340px]">
             {items.map((item, i) => {
                 const isLarge = i < 2;
-                const textColor = item.gradient[2];
+                const textColor = item.colors[1];
                 return (
                     <div
                         key={item.name}
@@ -95,10 +87,10 @@ const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
                             isLarge ? 'row-span-2' : ''
                         }`}
                         style={{
-                            background: `linear-gradient(135deg, ${item.gradient[0]} 0%, ${item.gradient[1]} 100%)`,
+                            backgroundColor: item.colors[0],
                         }}
                     >
-                        <span className="text-sm font-medium leading-tight break-words" style={{ color: textColor, opacity: 0.85 }}>
+                        <span className="text-sm font-medium leading-tight break-words" style={{ color: textColor }}>
                             {t(item.name)}
                         </span>
                         <span dir="ltr" className="text-xl font-bold mt-0.5" style={{ color: textColor }}>
@@ -429,7 +421,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <h4 className="font-bold text-[var(--color-ios-fg)] text-lg  tracking-tight">{item.symbol}</h4>
-                                            <Badge className={`${item.consensusColor} text-white text-[10px] font-semibold border-none px-2 py-0.5`}>
+                                            <Badge data-rating={item.consensus} className={`analyst-consensus ${item.consensusColor} text-white text-[10px] font-semibold border-none px-2 py-0.5`}>
                                                 {t(item.consensus)}
                                             </Badge>
                                         </div>

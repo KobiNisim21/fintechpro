@@ -329,7 +329,7 @@ export function WatchlistView() {
                                     <span className="text-[var(--color-ios-secondary)] font-bold text-xs ms-2">{t(stock.type)}</span>
                                     <p className="text-[var(--color-ios-secondary)] font-bold text-xs mt-0.5 truncate max-w-[220px]">{stock.description}</p>
                                 </div>
-                                <span className="text-cyan-600 font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="text-cyan-600 font-bold text-xs opacity-100 transition-opacity">
                                     {addingSymbol === stock.symbol ? t("Adding...") : t("+ Add")}
                                 </span>
                             </button>
@@ -364,12 +364,12 @@ export function WatchlistView() {
                     : watchlist.map(stock => (
                         <div
                             key={stock._id}
-                            className="relative overflow-hidden rounded-[32px] bg-[var(--color-ios-card)] border border-white/60 backdrop-blur-xl shadow-[var(--shadow-ios-card)] p-5 pb-6 hover:-translate-y-2 hover:shadow-[var(--shadow-ios-card)]Hover transition-all duration-500 group cursor-pointer"
+                            className="relative overflow-hidden rounded-[32px] bg-[var(--color-ios-card)] border border-white/60 backdrop-blur-xl shadow-[var(--shadow-ios-card)] p-5 pb-6 hover:-translate-y-2 hover:shadow-[var(--shadow-ios-card)]Hover transition-all duration-500 group"
                         >
                             {/* Remove Button */}
                             <button
                                 onClick={() => handleRemove(stock._id)}
-                                className="absolute top-3 end-3 p-2 rounded-[16px] bg-white/60 shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] text-rose-400 hover:text-rose-600 transition-all opacity-0 group-hover:opacity-100 z-20"
+                                className="absolute top-3 end-3 p-2 rounded-[16px] bg-white/60 shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] text-rose-400 hover:text-rose-600 transition-all opacity-100 z-20"
                                 title={t("Remove from watchlist")}
                             >
                                 <Trash2 className="w-4 h-4" />
@@ -410,8 +410,8 @@ export function WatchlistView() {
                                         <LineChart data={stock.chartData}>
                                             <defs>
                                                 <linearGradient id={`grad-$<bdi dir="ltr">{stock.symbol}</bdi>`} x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor={stock.monthlyChange >= 0 ? '#10B981' : '#EF4444'} stopOpacity={0.2} />
-                                                    <stop offset="95%" stopColor={stock.monthlyChange >= 0 ? '#10B981' : '#EF4444'} stopOpacity={0} />
+                                                    <stop offset="5%" stopColor={stock.monthlyChange >= 0 ? 'var(--app-positive)' : 'var(--app-negative)'} stopOpacity={0.2} />
+                                                    <stop offset="95%" stopColor={stock.monthlyChange >= 0 ? 'var(--app-positive)' : 'var(--app-negative)'} stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
@@ -436,10 +436,10 @@ export function WatchlistView() {
                                             <Line
                                                 type="monotone"
                                                 dataKey="price"
-                                                stroke={stock.monthlyChange >= 0 ? '#10B981' : '#EF4444'}
+                                                stroke={stock.monthlyChange >= 0 ? 'var(--app-positive)' : 'var(--app-negative)'}
                                                 strokeWidth={2}
                                                 dot={false}
-                                                activeDot={{ r: 4, fill: stock.monthlyChange >= 0 ? '#10B981' : '#EF4444', stroke: '#fff', strokeWidth: 1 }}
+                                                activeDot={{ r: 4, fill: stock.monthlyChange >= 0 ? 'var(--app-positive)' : 'var(--app-negative)', stroke: '#fff', strokeWidth: 1 }}
                                                 fill={`url(#grad-$<bdi dir="ltr">{stock.symbol}</bdi>)`}
                                             />
                                         </LineChart>

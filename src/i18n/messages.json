@@ -2730,5 +2730,13 @@
   "Cursor / Desktop": {
     "en": "Cursor / Desktop",
     "he": "Cursor / יישום מחשב"
+  },
+  "Unrealized gain / loss": {
+    "en": "Unrealized gain / loss",
+    "he": "רווח / הפסד לא ממומש"
+  },
+  "Portfolio views": {
+    "en": "Portfolio views",
+    "he": "מסכי התיק"
   }
 }

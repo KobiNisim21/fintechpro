@@ -175,13 +175,13 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
     <>
       <div
         data-ticker={stock.symbol}
-        className={`glass-card-solid rounded-2xl hover-lift cursor-pointer ${className || ''} ${isNear52wLow ? 'ring-2 ring-inset ring-amber-400' : ''}`}
+        className={`stock-card glass-card-solid rounded-2xl ${className || ''} ${isNear52wLow ? 'ring-2 ring-inset ring-amber-400' : ''}`}
       >
 
         <div className="relative z-10 p-4">
           {/* Header */}
-          <div className="flex items-start justify-between mb-1">
-            <div>
+          <div className="stock-card-header flex items-start justify-between mb-1">
+            <div className="stock-card-identity">
               <div className="flex items-center gap-1.5">
                 <h3 className="font-bold text-slate-800 text-base"><bdi dir="ltr">{stock.symbol}</bdi></h3>
                 {stock.broker && stock.broker !== 'Default' && (
@@ -190,10 +190,10 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                   </span>
                 )}
               </div>
-              <p className="text-[13px] font-medium text-slate-500 truncate max-w-[120px]"><bdi>{stock.name}</bdi></p>
+              <p className="stock-card-name font-medium text-slate-500" title={stock.name}><bdi>{stock.name}</bdi></p>
             </div>
 
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="stock-card-actions flex items-center gap-1 shrink-0">
               <span dir="ltr" className={`text-[10px] font-bold ${isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
                 {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
               </span>
@@ -235,10 +235,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
               )}
               {/* Market status badge */}
               {stock.marketStatus && stock.marketStatus !== 'regular' && !stock.extendedPrice && (
-                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wider" style={{
-                  backgroundColor: stock.marketStatus === 'closed' ? '#f1f5f9' : '#FEF3C7',
-                  color: stock.marketStatus === 'closed' ? '#64748b' : '#D97706'
-                }}>
+                <span className={`market-status-badge text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${stock.marketStatus === "closed" ? "market-closed" : "market-extended"}`}>
                   {stock.marketStatus === 'pre-market' && t("Pre-market")}
                   {stock.marketStatus === 'after-hours' && t("After-hours")}
                   {stock.marketStatus === 'closed' && t("Closed")}
@@ -278,7 +275,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                 <Line
                   type="monotone"
                   dataKey="value"
-                  stroke={isPositive ? '#10b981' : '#e11d48'}
+                  stroke={isPositive ? 'var(--app-positive)' : 'var(--app-negative)'}
                   strokeWidth={2}
                   dot={false}
                   animationDuration={300}
@@ -467,7 +464,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                 type="button"
                 onClick={handleEditSubmit}
                 disabled={loading}
-                className="rounded-xl bg-slate-800 text-white font-semibold tracking-wide h-12 px-8 hover:bg-slate-900 transition-all duration-200 border-none disabled:opacity-50"
+                className="primary-action rounded-xl bg-slate-800 text-white font-semibold tracking-wide h-12 px-8 hover:bg-slate-900 transition-all duration-200 border-none disabled:opacity-50"
               >
                 {loading ? t("Saving...") : t("Save Changes")}
               </Button>

@@ -1,5 +1,4 @@
 import { t, useLanguage, locale } from '@/i18n';
-import { Activity } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { usePortfolio } from '@/context/PortfolioContext';
 import { stocksAPI } from '@/api/stocks';
@@ -75,99 +74,35 @@ export function PortfolioHero() {
   }, [portfolioAnalytics?.benchmarkData]);
 
   return (
-    <div className="glass-card rounded-[32px] md:rounded-[20px] p-8 relative overflow-hidden desktop-hero">
-      <div className="relative z-10">
-        <div className="flex flex-wrap items-start justify-between gap-6 mb-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{t("Portfolio Overview")}</h3>
-              <div className="flex items-center gap-2">
-                <span className="price-freshness">{hasEstimates ? t("Includes estimates") : hasPreviousQuotes ? t("Previous quotes") : t("Market data")}</span>
-              </div>
-            </div>
-
-            {/* ILS Primary — large balance number matching reference */}
-            <div className="mb-3">
-              <div className="flex items-baseline gap-2">
-                <span dir="ltr" className="text-5xl font-bold tracking-tight text-slate-900 hero-balance-ils">
-                  ₪{totalValueILS.toLocaleString(locale(), { maximumFractionDigits: 0 })}
-                </span>
-                <span className="text-2xl font-medium text-slate-500 hero-currency-label">ILS</span>
-              </div>
-            </div>
-
-            {/* Daily Change */}
-            <p className={`text-sm font-semibold mt-1 ${isDailyPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
-              <bdi dir="ltr">{isDailyPositive ? '+' : ''}₪{dailyChangeILS.toLocaleString(locale(), { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)</bdi>
-              <span className="text-slate-400 font-normal ms-1">{t("TODAY")}</span>
-            </p>
-
-            {/* USD Secondary */}
-            <div className="mt-4">
-              <div className="flex items-baseline gap-2">
-                <span dir="ltr" className="text-3xl font-bold text-slate-900 hero-balance-usd">
-                  ${totalValueUSD.toLocaleString(locale(), { maximumFractionDigits: 2 })}
-                </span>
-                <span className="text-lg font-medium text-slate-500 uppercase hero-currency-label">USD</span>
-              </div>
-            </div>
-
-            {/* Total Gain/Loss */}
-            <div className="mt-6 space-y-1">
-              <p className={`text-sm font-medium ${isDailyPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                <bdi dir="ltr">{isDailyPositive ? '+' : ''}${dailyChangeUSD.toLocaleString(locale(), { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)</bdi>
-                <span className="text-slate-400 font-normal ms-1">{t("TODAY")}</span>
-              </p>
-              <p dir="ltr" className={`text-sm font-medium ${isTotalPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {isTotalPositive ? '+' : '-'}₪{Math.abs(totalGainILS).toLocaleString(locale(), { maximumFractionDigits: 2 })} /
-                {isTotalPositive ? ' +$' : ' -$'}{Math.abs(totalGainUSD).toLocaleString(locale(), { maximumFractionDigits: 2 })} ({isTotalPositive ? '+' : ''}{totalGainPercent.toFixed(2)}%)
-              </p>
-            </div>
-          </div>
-
-          {/* ── Right Column: Returns + Activity/Exchange ── */}
-          <div className="hero-secondary flex flex-col items-end gap-5">
-            {/* Activity Indicator & Exchange Rate */}
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full hover:bg-white/50 transition-colors">
-                <Activity className="w-6 h-6 text-slate-600" strokeWidth={2} />
-              </div>
-              <div className="glass-card-solid rounded-2xl flex flex-col items-center justify-center p-4 min-w-[90px] hover-lift hero-exchange-card">
-                <div className="text-[11px] text-slate-500 font-medium uppercase tracking-wider mb-1">USD/ILS</div>
-                <div dir="ltr" className="text-lg font-bold text-slate-800 tracking-tight">{ usdToIls.toFixed(4)}</div>
-                <div className="price-freshness" title={forexSource}>{t(forexSource)}</div>
-              </div>
-            </div>
-
-            {/* ── Period Returns (Weekly / Monthly / Yearly) ── */}
-            {periodReturns && (
-              <div className="hero-period-row flex flex-row gap-3 mt-2">
-                {([
-                  { label: '1W', value: periodReturns.weekly },
-                  { label: '1M', value: periodReturns.monthly },
-                  { label: '1Y', value: periodReturns.yearly },
-                ] as const).map(({ label, value }) => {
-                  const isPositive = value >= 0;
-                  return (
-                    <div
-                      key={label}
-                      className={`glass-card-solid rounded-2xl flex flex-col items-center px-4 py-3.5 min-w-[85px] hover-lift hero-period-card ${isPositive
-                        ? 'bg-emerald-50/80'
-                        : 'bg-rose-50/80'
-                        }`}
-                    >
-                      <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-1.5 hero-period-label">{t(`${label} Return`)}</span>
-                      <span dir="ltr" className={`text-xl font-bold tracking-tight hero-period-value ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {isPositive ? '+' : ''}{value.toFixed(1)}%
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+    <section className="data-panel portfolio-overview" aria-label={t('Portfolio Overview')}>
+      <header className="overview-header">
+        <h2>{t('Portfolio Overview')}</h2>
+        <span className="overview-status">{hasEstimates ? t('Includes estimates') : hasPreviousQuotes ? t('Previous quotes') : t('Market data')}</span>
+      </header>
+      <div className="overview-ledger">
+        <div className="overview-balances">
+          <div className="overview-balance"><bdi dir="ltr" className="hero-balance-ils">₪{totalValueILS.toLocaleString(locale(), { maximumFractionDigits: 0 })}</bdi><span className="overview-currency">ILS</span></div>
+          <div className="overview-balance"><bdi dir="ltr" className="hero-balance-usd">${totalValueUSD.toLocaleString(locale(), { maximumFractionDigits: 2 })}</bdi><span className="overview-currency">USD</span></div>
         </div>
+        <dl className="overview-results">
+          <div><dt>{t('TODAY')}</dt><dd className={isDailyPositive ? 'is-positive' : 'is-negative'}>
+            <bdi dir="ltr">{isDailyPositive ? '+' : ''}₪{dailyChangeILS.toLocaleString(locale(), { maximumFractionDigits: 2 })}</bdi>
+            <bdi dir="ltr" className="overview-secondary-value">{isDailyPositive ? '+' : ''}${dailyChangeUSD.toLocaleString(locale(), { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)</bdi>
+          </dd></div>
+          <div><dt>{t('Unrealized gain / loss')}</dt><dd className={isTotalPositive ? 'is-positive' : 'is-negative'}>
+            <bdi dir="ltr">{isTotalPositive ? '+' : '-'}₪{Math.abs(totalGainILS).toLocaleString(locale(), { maximumFractionDigits: 2 })}</bdi>
+            <bdi dir="ltr" className="overview-secondary-value">{isTotalPositive ? '+' : '-'}${Math.abs(totalGainUSD).toLocaleString(locale(), { maximumFractionDigits: 2 })} ({isTotalPositive ? '+' : ''}{totalGainPercent.toFixed(2)}%)</bdi>
+          </dd></div>
+        </dl>
       </div>
-    </div>
+      <footer className="overview-footer">
+        <div className="overview-forex"><span>USD/ILS</span><bdi dir="ltr"><strong>{usdToIls.toFixed(4)}</strong></bdi><span className="price-freshness" title={t(forexSource)}>{t(forexSource)}</span></div>
+        {periodReturns && <dl className="overview-periods">
+          {([{ label: '1W Return', value: periodReturns.weekly }, { label: '1M Return', value: periodReturns.monthly }, { label: '1Y Return', value: periodReturns.yearly }]).map(({ label, value }) => <div key={label}>
+            <dt>{t(label)}</dt><dd className={value >= 0 ? 'is-positive' : 'is-negative'}><bdi dir="ltr">{value >= 0 ? '+' : ''}{value.toFixed(1)}%</bdi></dd>
+          </div>)}
+        </dl>}
+      </footer>
+    </section>
   );
 }

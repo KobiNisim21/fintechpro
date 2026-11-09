@@ -1,6 +1,7 @@
 import { t, useLanguage } from '@/i18n';
 ﻿import { lazy, Suspense, useState, startTransition, useCallback } from 'react';
 import { LayoutGrid, PieChart, Eye, CalendarDays } from 'lucide-react';
+import { MotionConfig } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { BottomTabBar } from './BottomTabBar';
@@ -44,6 +45,7 @@ export default function Dashboard() {
 
   return (
     <ErrorBoundary>
+    <MotionConfig reducedMotion="user">
       <ConnectionStatus />
       <a className="skip-to-content" href="#main-content">{t("Skip to content")}</a>
       <div className="dashboard-shell flex h-screen w-full overflow-hidden text-slate-800 relative z-0" style={{ background: 'var(--color-ios-bg-gradient)' }}>
@@ -77,8 +79,9 @@ export default function Dashboard() {
 
                 <div className="hidden md:flex flex-wrap items-center gap-3 min-w-0">
               {/* View Toggle */}
-              <div className="flex flex-wrap p-1 bg-slate-200/50 rounded-xl">
+              <div className="desktop-view-switch flex flex-wrap p-1 bg-slate-200/50 rounded-xl" role="group" aria-label={t("Portfolio views")}>
                 <button
+                  aria-pressed={viewMode === 'holdings'}
                   onClick={() => startTransition(() => setViewMode('holdings'))}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'holdings'
                     ? 'bg-white text-slate-800 font-semibold shadow-sm'
@@ -89,6 +92,7 @@ export default function Dashboard() {
                   <span className="hidden sm:inline">{t("Holdings")}</span>
                 </button>
                 <button
+                  aria-pressed={viewMode === 'insights'}
                   onClick={() => startTransition(() => setViewMode('insights'))}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'insights'
                     ? 'bg-white text-slate-800 font-semibold shadow-sm'
@@ -99,6 +103,7 @@ export default function Dashboard() {
                   <span className="hidden sm:inline">{t("Insights")}</span>
                 </button>
                 <button
+                  aria-pressed={viewMode === 'watchlist'}
                   onClick={() => startTransition(() => setViewMode('watchlist'))}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'watchlist'
                     ? 'bg-white text-slate-800 font-semibold shadow-sm'
@@ -109,6 +114,7 @@ export default function Dashboard() {
                   <span className="hidden sm:inline">{t("Watchlist")}</span>
                 </button>
                 <button
+                  aria-pressed={viewMode === 'calendar'}
                   onClick={() => startTransition(() => setViewMode('calendar'))}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'calendar'
                     ? 'bg-white text-slate-800 font-semibold shadow-sm'
@@ -156,6 +162,7 @@ export default function Dashboard() {
       {/* Bottom Tab Bar - mobile only */}
       <BottomTabBar viewMode={viewMode} onViewChange={(mode) => startTransition(() => setViewMode(mode))} />
     </div>
+    </MotionConfig>
     </ErrorBoundary>
   );
 }

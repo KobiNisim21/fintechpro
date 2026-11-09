@@ -22,7 +22,7 @@ export default function PersonalAlertsView() {
             <label className="text-sm">{t("Holding")}<select name="symbol" className="data-input w-full" required>{[...new Set(positions.map(p => p.symbol))].map(symbol => <option key={symbol}>{symbol}</option>)}</select></label>
             <label className="text-sm">{t("Condition")}<select name="kind" className="data-input w-full" required>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{t(label)}</option>)}</select></label>
             <label className="text-sm">{t("Threshold")}<input name="threshold" className="data-input w-full" type="number" min="0.00000001" step="any" required /></label>
-            <button className="data-action min-h-11" disabled={busy || !positions.length}>{t("Create alert")}</button>
+            <button className="data-action primary-action min-h-11" disabled={busy || !positions.length}>{t("Create alert")}</button>
         </form>
         <div className="flex flex-wrap gap-2"><button className="data-action min-h-11" disabled={busy} onClick={() => void run(async () => { const result = await portfolioToolsAPI.checkAlerts(); setTriggeredCount(result.triggered.length); })}>{t("Check now")}</button><button className="data-action min-h-11" disabled={busy} onClick={() => void load()}>{t("Refresh alerts")}</button></div>
         {error && <p role="alert" className="text-red-700 text-sm">{errorText(error)}</p>}{triggeredCount !== null && <p role="status" className="text-sm">{t("{0} alert(s) triggered. Missing data does not trigger an alert.", [triggeredCount])}</p>}

@@ -11,25 +11,14 @@ export function SidebarContent() {
     const { logout } = useAuth();
 
     return (
-        <div className="flex flex-col h-full w-full">
-            <div className="p-6 flex-1 overflow-y-auto min-h-0">
+        <div className="sidebar-content flex flex-col h-full w-full">
+            <div className="sidebar-scroll flex-1 overflow-y-auto min-h-0">
                 {/* Logo/Header */}
 
-                <div className="mb-10 text-center">
-                    <a href="/" className="inline-flex flex-col items-center group">
-                        <div className="relative w-40 h-40 transition-transform duration-500 group-hover:scale-110">
-                            {/* Soft dark blur localized only behind the text area (bottom 30%) */}
-                            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] h-10 bg-slate-400/40 blur-[12px] rounded-full" />
-                            <img
-                                src="/logo.png"
-                                alt="FinTechPro"
-                                className="relative w-full h-full object-contain"
-                            />
-                        </div>
-                        <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-[0.2em] -mt-6">
-                            {t("Wealth Management")}</p>
-                    </a>
-                </div>
+                <a href="/" className="sidebar-brand">
+                    <img src="/icon.png" alt="" />
+                    <div><strong>FinTechPro</strong><p>{t('Wealth Management')}</p></div>
+                </a>
 
                 {/* Live Alerts - Real-time from Socket.io */}
                 <LiveAlerts />
@@ -37,7 +26,7 @@ export function SidebarContent() {
                 {/* Live Market News from Socket.io */}
                 <LiveMarketNews />
             </div>
-            <div className="mt-auto px-6 py-6 border-t border-slate-200/50 bg-white/40 backdrop-blur-md shrink-0 space-y-3">
+            <div className="sidebar-footer mt-auto px-6 py-6 border-t border-slate-200/50 bg-white/40 backdrop-blur-md shrink-0 space-y-3">
                 <LanguageSwitch />
                 <McpModal />
                 <button

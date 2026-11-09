@@ -22,7 +22,7 @@ export function BottomTabBar({ viewMode, onViewChange, alertCount = 0 }: BottomT
   ] as const;
 
   return (
-    <nav aria-label={t("Main navigation")} className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
+    <nav aria-label={t("Main navigation")} className="portfolio-tab-bar md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around h-16 px-2">
         {tabs.map((tab) => {
           const isActive = viewMode === tab.id;
