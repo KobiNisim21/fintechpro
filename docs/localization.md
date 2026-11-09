@@ -12,7 +12,10 @@ memoized ones. Changing language updates the existing component tree, not its
 keys, so draft fields and view selections remain intact. Store message data,
 not already-translated strings, in state. Format dates at render time with
 `locale()`; retain ISO dates in chart data. Google sign-in is the exception:
-its isolated provider/widget remounts with its supported locale property.
+changing language on `/login` refreshes that page using the saved choice, so its
+provider initializes only once with the selected locale. Portfolio screens
+switch in place. Google Identity Services warned about duplicate initialization
+when the provider was initially remounted; the page refresh removes that cause.
 
 The document's `lang`, `dir`, and title follow the selection. Layout uses logical
 spacing/alignment; the desktop sidebar and mobile menu change sides. Charts,

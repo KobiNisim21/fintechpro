@@ -21,8 +21,16 @@ applyDocumentLanguage();
 export function setLanguage(next: Language) {
   if (language === next) return;
   language = next;
-  try { localStorage.setItem(STORAGE_KEY, next); } catch { /* Session choice still works. */ }
+  let stored = false;
+  try { localStorage.setItem(STORAGE_KEY, next); stored = true; } catch { /* Session choice still works. */ }
   applyDocumentLanguage();
+  // Google Identity Services permits one initialization per page. A sign-in
+  // locale change starts a fresh page instead of replacing the SDK instance.
+  // Portfolio screens and their draft forms continue to switch in place.
+  if (stored && window.location?.pathname === '/login') {
+    window.location.reload();
+    return;
+  }
   listeners.forEach(listener => listener());
 }
 window.addEventListener('storage', event => {

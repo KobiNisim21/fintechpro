@@ -112,7 +112,7 @@ export function LoginForm() {
     }
 
     return (
-        <GoogleOAuthProvider key={language} locale={language} clientId={GOOGLE_CLIENT_ID}>
+        <GoogleOAuthProvider locale={language} clientId={GOOGLE_CLIENT_ID}>
             <GoogleLoginInner />
         </GoogleOAuthProvider>
     );

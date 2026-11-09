@@ -69,6 +69,13 @@ test('language changes persist, notify mounted screens and work with blocked sto
     runtime.setLanguage('en');
     assert.equal(runtime.useLanguage(), 'en');
     assert.equal(document.documentElement.lang, 'en');
+    localStorage.setItem = (key, value) => saved.set(key, value);
+    let reloads = 0;
+    window.location = { pathname: '/login', reload: () => reloads++ };
+    const beforeLoginChange = notifications;
+    runtime.setLanguage('he');
+    assert.equal(reloads, 1, 'sign-in changes reload before Google can initialize twice');
+    assert.equal(notifications, beforeLoginChange);
     unsubscribe();
   } finally {
     Object.assign(globalThis, previous);
