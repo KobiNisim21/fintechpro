@@ -20,6 +20,7 @@ export function calculatePortfolioRisk(rows) {
     const total = rows.reduce((sum, row) => sum + Math.max(0, Number(row.value) || 0), 0);
     const bySymbol = {}, sectors = {}, countries = {}, currencies = {};
     let sectorValue = 0, betaValue = 0, weightedBeta = 0;
+    const classifications = [];
     const add = (map, key, value) => { map[key || 'Unknown'] = (map[key || 'Unknown'] || 0) + value; };
     for (const row of rows) {
         const value = Math.max(0, Number(row.value) || 0);
@@ -28,6 +29,7 @@ export function calculatePortfolioRisk(rows) {
         add(countries, row.country, value);
         add(currencies, row.currency, value);
         if (row.sector) sectorValue += value;
+        classifications.push({ symbol: row.symbol, sector: row.sector || null, percent: total ? value / total * 100 : 0, source: row.classification?.source || null, sourceUrl: row.classification?.sourceUrl || null, asOf: row.classification?.asOf || null, status: row.classification?.status || (row.sector ? 'available' : 'unavailable') });
         if (Number.isFinite(row.beta)) { betaValue += value; weightedBeta += row.beta * value; }
     }
     const exposure = map => Object.entries(map).map(([name, value]) => ({ name, value, percent: total ? value / total * 100 : 0 })).sort((a, b) => b.value - a.value);
@@ -45,7 +47,9 @@ export function calculatePortfolioRisk(rows) {
         healthScore: available ? Math.round(concentration * 0.4 + diversity * 0.4 + sensitivity * 0.2) : null,
         available, portfolioBeta: beta, maxSectorPct, maxHoldingPct,
         components: { concentration: Math.round(concentration), diversification: diversity === null ? null : Math.round(diversity), volatility: sensitivity === null ? null : Math.round(sensitivity), sentiment: null },
-        coverage: { sectors: Math.round(sectorCoverage * 100), beta: Math.round(betaCoverage * 100) },
+        coverage: { sectors: Math.floor(sectorCoverage * 10000) / 100, beta: Math.floor(betaCoverage * 10000) / 100 },
+        classifications,
+        missingClassifications: classifications.filter(row => !row.sector).map(row => row.symbol),
         exposures: { holdings, sectors: exposure(sectors), countries: exposure(countries), currencies: exposure(currencies) },
         methodology: 'v2: 40% holding concentration, 40% sector concentration, 20% absolute beta sensitivity. Requires 80% sector and beta coverage. Current USD market values; excludes cash. No fund look-through or analyst sentiment. Listing currency/country are not underlying economic exposure.',
     };

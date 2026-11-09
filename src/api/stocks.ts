@@ -195,6 +195,8 @@ export interface PriceTarget {
 }
 
 export interface CompanyProfile {
+    sector?: string | null;
+    classification?: { source: string | null; sourceUrl?: string | null; asOf: string | null; status: string };
     country: string;
     currency: string;
     exchange: string;
@@ -221,6 +223,8 @@ export interface PortfolioAnalytics {
     stale?: boolean;
     quoteCoverage?: boolean;
     coverage?: { sectors: number; beta: number };
+    classifications?: Array<{ symbol: string; sector: string | null; percent: number; source: string | null; sourceUrl: string | null; asOf: string | null; status: string }>;
+    missingClassifications?: string[];
     exposures?: Record<'holdings' | 'sectors' | 'countries' | 'currencies', Array<{ name: string; value: number; percent: number }>>;
     components: {
         diversification: number | null;

@@ -265,17 +265,18 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
     // ── Sector Data (Treemap) ──
     const sectorData = useMemo(() => {
+        if (analytics?.exposures?.sectors?.length) return analytics.exposures.sectors.map(row => ({ name: row.name, value: row.value }));
         const sectors: Record<string, number> = {};
         positions.forEach(pos => {
             const value = pos.price * pos.quantity;
             const profile = profiles[pos.symbol];
-            const sector = profile?.finnhubIndustry || 'Unknown';
+            const sector = profile?.sector || 'Unknown';
             sectors[sector] = (sectors[sector] || 0) + value;
         });
         return Object.entries(sectors)
             .map(([name, value]) => ({ name, value }))
             .sort((a, b) => b.value - a.value);
-    }, [positions, profiles]);
+    }, [positions, profiles, analytics]);
 
     // ── Analyst Cards (filter out zero-rated ETFs) ──
     const analystCards = useMemo(() => {
@@ -336,7 +337,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                 <DividendCalendar analytics={analytics} loading={analyticsLoading} />
 
                 {/* ── Sector Distribution (Grid) ── */}
-                {!insightsLoaded ? (
+                {!insightsLoaded && !analytics?.exposures ? (
                     <Card className="glass-card rounded-[32px] h-full flex flex-col">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2 tracking-tight">

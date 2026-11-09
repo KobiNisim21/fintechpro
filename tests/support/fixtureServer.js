@@ -13,6 +13,13 @@ import { createAddPosition, getPositions, updatePosition, deletePosition } from 
 import activityRoutes from '../../server/routes/activity.js';
 import { createAlertRoutes } from '../../server/routes/alerts.js';
 import { calculatePortfolioRisk, combinePositions, buildDividendEstimate } from '../../server/services/portfolioRisk.js';
+import { readFileSync } from 'node:fs';
+import { createProfileResolver, createHoldingsReference } from '../../server/services/sectorClassification.js';
+
+const fixtureProfile = createProfileResolver({
+  finnhub: async () => ({}), yahoo: async () => ({}),
+  reference: createHoldingsReference({ snapshot: JSON.parse(readFileSync(new URL('../../server/data/equity-sector-reference.json', import.meta.url))), download: async () => { throw new Error('No network in fixture'); } }),
+});
 
 const securities = [
   { symbol: 'AAPL', displaySymbol: 'AAPL', description: 'QA Apple fixture' },
@@ -82,12 +89,13 @@ export async function createFixtureServer({ port = 0, frontend = false } = {}) {
     app.get('/api/stocks/batch-history', protect, (req, res) => res.json(Object.fromEntries(String(req.query.symbols || '').split(',').filter(Boolean).map(symbol => [symbol, {
       c: [148, 149, 150], t: [2, 1, 0].map(days => Math.floor(Date.now() / 1000) - days * 86400), s: 'ok', currency: 'USD',
     }]))));
-    app.get('/api/stocks/batch-insights', protect, (req, res) => res.json({
-      recommendations: {}, priceTargets: {}, profiles: Object.fromEntries(String(req.query.symbols || '').split(',').filter(Boolean).map(symbol => [symbol, { ticker: symbol, name: 'QA fixture', finnhubIndustry: 'Technology', country: 'US', currency: 'USD' }])),
+    app.get('/api/stocks/batch-insights', protect, async (req, res) => res.json({
+      recommendations: {}, priceTargets: {}, profiles: Object.fromEntries(await Promise.all(String(req.query.symbols || '').split(',').filter(Boolean).map(async symbol => [symbol, await fixtureProfile(symbol)]))),
     }));
     app.get('/api/stocks/portfolio-analytics', protect, async (req, res) => {
       const positions = combinePositions(await Position.find({ user: req.user._id, isDeleted: { $ne: true } }).lean());
-      const risk = calculatePortfolioRisk(positions.map(p => ({ symbol: p.symbol, value: p.quantity * 150, sector: 'Technology', country: 'US', currency: 'USD', beta: 1 })));
+      const rows = await Promise.all(positions.map(async p => { const profile = await fixtureProfile(p.symbol); return { symbol: p.symbol, value: p.quantity * 150, sector: profile.sector, classification: profile.classification, country: profile.country, currency: profile.currency, beta: 1 }; }));
+      const risk = calculatePortfolioRisk(rows);
       const exDate = new Date(Date.now() + 10 * 86400000).toISOString(), paymentDate = new Date(Date.now() + 20 * 86400000).toISOString();
       res.json({ ...risk, quoteCoverage: true, benchmarkData: [], dividends: positions.map(p => ({ ...buildDividendEstimate(p.symbol, positions, { exDate, paymentDate, amount: 0.5 }), source: 'QA fixture' })), correlationMatrix: { symbols: [], matrix: [] }, lastUpdated: new Date().toISOString() });
     });

@@ -104,8 +104,8 @@ function getMarketStatus(): MarketStatus {
 // LOCAL STORAGE CACHE (stale-while-revalidate)
 // ============================================
 const CACHE_KEY = 'portfolio_positions_cache';
-const ANALYTICS_CACHE_KEY = 'portfolio_analytics_cache_v3'; // v2: keyed by portfolio hash
-const INSIGHTS_CACHE_KEY = 'portfolio_insights_cache'; // profiles, recommendations, priceTargets
+const ANALYTICS_CACHE_KEY = 'portfolio_analytics_cache_v4'; // v2: keyed by portfolio hash
+const INSIGHTS_CACHE_KEY = 'portfolio_insights_cache_v2'; // profiles, recommendations, priceTargets
 
 function loadCachedPositions(userId: string): Position[] {
   try {

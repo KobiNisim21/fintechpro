@@ -6,6 +6,12 @@ if (process.argv.includes('--seed')) {
   await Position.create({ user: fixture.users[0]._id, symbol: 'AAPL', name: 'QA seeded holding', broker: 'QA', quantity: 3, averagePrice: 100, lots: [{ quantity: 3, price: 100, date: new Date('2026-01-02') }] });
   console.log('Seeded one synthetic holding for browser QA.');
 }
+if (process.argv.includes('--seed-partial')) {
+  await Position.create([
+    { user: fixture.users[0]._id, symbol: 'AAPL', name: 'QA known classification', quantity: 3, averagePrice: 100, lots: [{ quantity: 3, price: 100, date: new Date('2026-01-02') }] },
+    { user: fixture.users[0]._id, symbol: 'QAUNKNOWN', name: 'QA missing classification', quantity: 1, averagePrice: 100, lots: [{ quantity: 1, price: 100, date: new Date('2026-01-02') }] },
+  ]);
+}
 console.log(`Disposable local QA: ${fixture.baseUrl}/__qa/login/one`);
 console.log('Second fixture user: /__qa/login/two. No production data or external providers are used.');
 let stopping = false;

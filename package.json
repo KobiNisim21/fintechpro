@@ -90,6 +90,7 @@
             "test": "node --test tests/*.test.js",
             "test:integration": "node --test tests/integration/*.test.js",
             "qa:server": "node scripts/qa-server.js",
+            "refresh:classifications": "node scripts/refresh-sector-reference.js",
             "build": "npm run typecheck && vite build"
       }
 }

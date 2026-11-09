@@ -1,3 +1,4 @@
+import { createProfileResolver, createHoldingsReference, HOLDINGS_URL } from './sectorClassification.js';
 import { combinePositions, calculatePortfolioRisk, alignedCorrelation, buildDividendEstimate } from './portfolioRisk.js';
 import { createHash } from 'node:crypto';
 /**
@@ -989,28 +990,33 @@ export async function getPriceTarget(symbol) {
  * Get Company Profile (Sector, Industry, etc.)
  * Finnhub Endpoint: /stock/profile2?symbol=AAPL
  */
-export async function getCompanyProfile(symbol) {
-    const cacheKey = `profile_${symbol}`;
-    const cached = getCached(cacheKey, 7 * 24 * 60 * 60 * 1000); // 7 days cache (static data)
-    if (cached) return cached;
-
-    return dedupedFetch(cacheKey, async () => {
-        const apiKey = getApiKey();
-        if (!apiKey) throw new Error('FINNHUB_API_KEY not configured');
-
-        const url = `${FINNHUB_BASE_URL}/stock/profile2?symbol=${symbol}&token=${apiKey}`;
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            if (response.status === 403) return null;
-            throw new Error(`Finnhub profile failed: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setCache(cacheKey, data);
-        return data;
-    });
+async function profileDeadline(load, ms = 3500) {
+    const controller = new AbortController(); let timer;
+    try { return await Promise.race([load(controller.signal), new Promise((_, reject) => { timer = setTimeout(() => { controller.abort(); reject(new Error('Profile lookup timed out')); }, ms); })]); }
+    finally { clearTimeout(timer); controller.abort(); }
 }
+const sectorReference = createHoldingsReference({
+    snapshot: JSON.parse(readFileSync(new URL('../data/equity-sector-reference.json', import.meta.url), 'utf8')),
+    download: () => profileDeadline(async signal => {
+        const response = await fetch(HOLDINGS_URL, { signal, size: 5 * 1024 * 1024 });
+        if (!response.ok) throw new Error('Holdings provider unavailable');
+        return response.text();
+    }, 5000),
+});
+const resolveCompanyProfile = createProfileResolver({
+    reference: sectorReference,
+    finnhub: symbol => profileDeadline(async signal => {
+        const key = process.env.FINNHUB_API_KEY;
+        if (!key || symbol.startsWith('FUND:')) return {};
+        return finnhubRateLimiter.execute(async () => {
+            const response = await fetch(FINNHUB_BASE_URL + '/stock/profile2?symbol=' + encodeURIComponent(symbol) + '&token=' + encodeURIComponent(key), { signal });
+            if (!response.ok) throw new Error('Company profile provider unavailable');
+            return response.json();
+        });
+    }),
+    yahoo: symbol => profileDeadline(signal => yahooFinance.quoteSummary(symbol, { modules: ['assetProfile', 'price', 'quoteType'] }, { fetchOptions: { signal } })),
+});
+export async function getCompanyProfile(symbol) { return resolveCompanyProfile(symbol); }
 
 // ============================================
 // BATCH INSIGHTS (single call for all symbols)
@@ -1257,9 +1263,9 @@ export async function getPortfolioHealthAndBenchmark(positions) {
     const sortedKey = createHash('sha256').update(JSON.stringify(positions.map(p => ({ id: String(p._id), symbol: p.symbol, quantity: p.quantity, price: p.averagePrice, lots: p.lots, updatedAt: p.updatedAt })))).digest('hex');
     positions = combinePositions(positions);
     const symbols = positions.map(p => p.symbol);
-    const cacheKey = 'analytics_v13_' + sortedKey;
+    const cacheKey = 'analytics_v14_' + sortedKey;
     const cached = getCached(cacheKey, 60 * 60 * 1000);
-    if (cached) {
+    if (cached && (!cached.missingClassifications?.length || getCached(cacheKey, 2 * 60 * 1000))) {
         console.log('[Health] Returning fully cached analytics');
         return cached;
     }
@@ -1402,7 +1408,8 @@ export async function getPortfolioHealthAndBenchmark(positions) {
             const quoteCoverage = quoteResults.every(q => Number.isFinite(q?.c) && q.c > 0 && !q.stale);
             const risk = calculatePortfolioRisk(symbols.map((symbol, i) => ({
                 symbol, value: quantities[i] * (quoteResults[i]?.c || 0),
-                sector: profilesResults[i]?.finnhubIndustry,
+                sector: profilesResults[i]?.sector,
+                classification: profilesResults[i]?.classification,
                 country: profilesResults[i]?.country, currency: profilesResults[i]?.currency,
                 beta: metricsResults[i]?.metric?.beta,
             })));
