@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from './AuthContext';
+import { deduplicateLiveAlerts } from '../../shared/liveAlerts.js';
 import { initSocket, disconnectSocket } from '../services/socket';
 
 export interface LiveAlert {
@@ -67,30 +68,14 @@ export function LiveAlertsProvider({ children }: { children: ReactNode }) {
         // Initial alerts on connect
         socket.on('live-alerts-init', (data: { alerts: LiveAlert[] }) => {
             console.log('🔔 [ALERTS-FE] Received initial alerts:', data.alerts.length, data.alerts);
-            // Deduplicate by ticker+message — keep first occurrence (newest)
-            const seen = new Set<string>();
-            const deduped = data.alerts.filter(a => {
-                const key = `${a.ticker}-${a.message}`;
-                if (seen.has(key)) return false;
-                seen.add(key);
-                return true;
-            });
-            setAlerts(deduped);
+            setAlerts(deduplicateLiveAlerts(data.alerts));
             setLoading(false);
         });
 
         // New alert received
         socket.on('live-alert', (data: { alert: LiveAlert; allAlerts: LiveAlert[] }) => {
             console.log('🔔 [ALERTS-FE] 🚨 NEW LIVE ALERT:', data.alert.message);
-            // Deduplicate allAlerts from server
-            const seen = new Set<string>();
-            const deduped = data.allAlerts.filter(a => {
-                const key = `${a.ticker}-${a.message}`;
-                if (seen.has(key)) return false;
-                seen.add(key);
-                return true;
-            });
-            setAlerts(deduped);
+            setAlerts(deduplicateLiveAlerts(data.allAlerts));
             setHasNewAlerts(true);
         });
 

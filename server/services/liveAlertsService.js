@@ -4,6 +4,7 @@
  */
 
 import Position from '../models/Position.js';
+import { deduplicateLiveAlerts } from '../../shared/liveAlerts.js';
 import { pollPersonalAlerts } from './personalAlerts.js';
 import { getQuote as fetchQuoteFromService, getBasicFinancials, getEarningsCalendar } from './stockDataService.js';
 
@@ -95,18 +96,9 @@ function recordAlertSent(userId, ticker) {
  * Add alert to user's list
  */
 function addAlert(userId, alert) {
-    if (!userAlerts.has(userId)) {
-        userAlerts.set(userId, []);
-    }
-
-    const alerts = userAlerts.get(userId);
-    alerts.unshift(alert); // Add to beginning (newest first)
-
-    // Keep only MAX_ALERTS_PER_USER
-    if (alerts.length > MAX_ALERTS_PER_USER) {
-        alerts.pop();
-    }
-
+    // Collapse updates before the cap so they cannot evict unrelated events.
+    const alerts = deduplicateLiveAlerts([alert, ...(userAlerts.get(userId) || [])])
+        .slice(0, MAX_ALERTS_PER_USER);
     userAlerts.set(userId, alerts);
     return alerts;
 }
@@ -116,14 +108,7 @@ function addAlert(userId, alert) {
  */
 export function getAlertsForUser(userId) {
     const alerts = userAlerts.get(userId) || [];
-    // Deduplicate by ticker+message — keep only the newest occurrence of each
-    const seen = new Set();
-    const deduped = alerts.filter(alert => {
-        const key = `${alert.ticker}-${alert.message}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
+    const deduped = deduplicateLiveAlerts(alerts).slice(0, MAX_ALERTS_PER_USER);
     // Also update the stored list to avoid growing indefinitely
     userAlerts.set(userId, deduped);
     // Update relative times

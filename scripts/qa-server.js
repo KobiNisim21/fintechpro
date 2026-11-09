@@ -15,6 +15,26 @@ if (process.argv.includes('--seed-partial')) {
 if (process.argv.includes('--seed-fund')) {
   await Position.create(['GOOG', 'MA', 'IVV'].map((symbol, index) => ({ user: fixture.users[0]._id, symbol, name: 'QA mixed fund portfolio', quantity: index === 2 ? 2 : 4, averagePrice: 100, lots: [{ quantity: index === 2 ? 2 : 4, price: 100, date: new Date('2026-01-02') }] })));
 }
+if (process.argv.includes('--seed-live-alerts')) {
+  // Intentionally replay an old server's duplicate payload through real sockets.
+  const now = Date.now();
+  const feed = [2.4, 2.6, 2.3].map((value, index) => ({
+    id: `qa-price-${index}`, type: 'gain', ticker: 'IVV', companyName: 'iShares S&P 500',
+    message: `iShares S&P 500 up ${value}% today`, value,
+    timestamp: new Date(now - index * 7200000).toISOString(), relativeTime: 'just now',
+  }));
+  feed.push({ id: 'qa-news', type: 'news', ticker: 'IVV', companyName: 'iShares S&P 500',
+    message: 'QA: a separate IVV news headline', timestamp: new Date(now - 1).toISOString(), relativeTime: 'just now' });
+  fixture.io.on('connection', socket => {
+    socket.emit('live-alerts-init', { alerts: feed });
+    socket.on('__qa-next-live-alert', () => {
+      const alert = { ...feed[0], id: 'qa-price-updated', type: 'loss', value: -2.1,
+        message: 'iShares S&P 500 down 2.1% today', timestamp: new Date().toISOString() };
+      feed.unshift(alert);
+      socket.emit('live-alert', { alert, allAlerts: feed });
+    });
+  });
+}
 console.log(`Disposable local QA: ${fixture.baseUrl}/__qa/login/one`);
 console.log('Second fixture user: /__qa/login/two. No production data or external providers are used.');
 let stopping = false;
