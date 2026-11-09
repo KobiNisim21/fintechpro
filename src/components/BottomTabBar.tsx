@@ -1,3 +1,4 @@
+import { t, useLanguage } from '@/i18n';
 import { LayoutGrid, PieChart, Eye, CalendarDays, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { SidebarContent } from './SidebarContent';
@@ -12,6 +13,7 @@ interface BottomTabBarProps {
 }
 
 export function BottomTabBar({ viewMode, onViewChange, alertCount = 0 }: BottomTabBarProps) {
+    const language = useLanguage();
   const tabs = [
     { id: 'holdings', label: 'Holdings', icon: LayoutGrid },
     { id: 'insights', label: 'Insights', icon: PieChart },
@@ -20,7 +22,7 @@ export function BottomTabBar({ viewMode, onViewChange, alertCount = 0 }: BottomT
   ] as const;
 
   return (
-    <nav aria-label="Main navigation" className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
+    <nav aria-label={t("Main navigation")} className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around h-16 px-2">
         {tabs.map((tab) => {
           const isActive = viewMode === tab.id;
@@ -44,7 +46,7 @@ export function BottomTabBar({ viewMode, onViewChange, alertCount = 0 }: BottomT
                 <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} />
               </div>
               <span className={`text-[10px] ${isActive ? 'font-bold' : 'font-medium'}`}>
-                {tab.label}
+                {t(tab.label)}
               </span>
             </button>
           );
@@ -56,15 +58,15 @@ export function BottomTabBar({ viewMode, onViewChange, alertCount = 0 }: BottomT
               <div className="p-1.5 rounded-full bg-transparent">
                 <MoreHorizontal className="w-5 h-5 stroke-2" />
               </div>
-              <span className="text-[10px] font-medium">More</span>
+              <span className="text-[10px] font-medium">{t("More")}</span>
               {alertCount > 0 && (
-                <div className="absolute top-2 right-3 w-2 h-2 bg-red-500 rounded-full" />
+                <div className="absolute top-2 end-3 w-2 h-2 bg-red-500 rounded-full" />
               )}
             </button>
           </SheetTrigger>
-          <SheetContent side="right" aria-describedby={undefined} className="p-0 border-none bg-[var(--color-ios-bg)] w-80 shadow-[var(--shadow-ios-card)]">
+          <SheetContent side={language === "he" ? "left" : "right"} aria-describedby={undefined} className="p-0 border-none bg-[var(--color-ios-bg)] w-80 shadow-[var(--shadow-ios-card)]">
             <VisuallyHidden>
-              <SheetTitle>Menu</SheetTitle>
+              <SheetTitle>{t("Menu")}</SheetTitle>
             </VisuallyHidden>
             <SidebarContent />
           </SheetContent>

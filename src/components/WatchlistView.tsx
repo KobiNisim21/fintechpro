@@ -1,3 +1,4 @@
+import { t, useLanguage, locale } from '@/i18n';
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, X, Trash2, Eye, TrendingUp, TrendingDown, Search } from 'lucide-react';
 import {
@@ -21,6 +22,7 @@ interface WatchlistStock extends WatchlistItem {
 
 // ─── Skeleton ───────────────────────────────────────────────────
 function SkeletonCard() {
+    useLanguage();
     return (
         <div className="relative overflow-hidden rounded-[32px] bg-[var(--color-ios-card)] backdrop-blur-xl border border-white/60 shadow-[var(--shadow-ios-card)] p-5 pb-6 animate-pulse">
             <div className="flex justify-between items-start mb-4">
@@ -42,20 +44,22 @@ function SkeletonCard() {
 
 // ─── Custom Chart Tooltip ───────────────────────────────────────
 function ChartTooltipContent({ active, payload, label }: any) {
+    useLanguage();
     if (!active || !payload?.length) return null;
     return (
         <div className="bg-[var(--color-ios-card)] border border-white/60 rounded-[16px] px-3 py-2 backdrop-blur-xl shadow-[var(--shadow-ios-card)]">
-            <p className="text-[var(--color-ios-secondary)]  text-xs mb-0.5">{label}</p>
-            <p className="text-[var(--color-ios-fg)] font-bold  text-sm">${payload[0].value.toFixed(2)}</p>
+            <p className="text-[var(--color-ios-secondary)]  text-xs mb-0.5">{new Date(label).toLocaleDateString(locale())}</p>
+            <p dir="ltr" className="text-[var(--color-ios-fg)] font-bold  text-sm">${payload[0].value.toFixed(2)}</p>
         </div>
     );
 }
 
 // ─── Change Badge ───────────────────────────────────────────────
 function ChangeBadge({ label, value }: { label: string; value: number | null }) {
+    useLanguage();
     if (value === null) return (
         <div className="flex flex-col items-center p-2 rounded-[16px] bg-[var(--color-ios-input)] shadow-none">
-            <span className="text-[10px] text-[var(--color-ios-secondary)] uppercase tracking-wide font-bold">{label}</span>
+            <span className="text-[10px] text-[var(--color-ios-secondary)] uppercase tracking-wide font-bold">{t(label)}</span>
             <span className="text-xs text-[var(--color-ios-secondary)] font-bold mt-0.5">—</span>
         </div>
     );
@@ -63,8 +67,8 @@ function ChangeBadge({ label, value }: { label: string; value: number | null }) 
     const isPositive = value >= 0;
     return (
         <div className="flex flex-col items-center p-2 rounded-[16px] bg-[var(--color-ios-input)] shadow-[var(--shadow-ios-card)] transition-colors">
-            <span className="text-[10px] text-[var(--color-ios-secondary)] uppercase tracking-wide font-bold">{label}</span>
-            <span className={`text-xs font-bold  mt-0.5 flex items-center gap-0.5 ${isPositive ? 'text-[var(--color-ios-success)]' : 'text-[var(--color-ios-danger)]'}`}>
+            <span className="text-[10px] text-[var(--color-ios-secondary)] uppercase tracking-wide font-bold">{t(label)}</span>
+            <span dir="ltr" className={`text-xs font-bold  mt-0.5 flex items-center gap-0.5 ${isPositive ? 'text-[var(--color-ios-success)]' : 'text-[var(--color-ios-danger)]'}`}>
                 {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 {isPositive ? '+' : ''}{value.toFixed(2)}%
             </span>
@@ -76,6 +80,7 @@ function ChangeBadge({ label, value }: { label: string; value: number | null }) 
 //  WATCHLIST VIEW
 // ═════════════════════════════════════════════════════════════════
 export function WatchlistView() {
+    useLanguage();
     const [watchlist, setWatchlist] = useState<WatchlistStock[]>([]);
     const [loading, setLoading] = useState(true);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -173,7 +178,7 @@ export function WatchlistView() {
                 for (let i = 0; i < timestamps.length; i++) {
                     if (timestamps[i] >= thirtyDaysAgo) {
                         chartData.push({
-                            date: new Date(timestamps[i] * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                            date: new Date(timestamps[i] * 1000).toISOString(),
                             price: closePrices[i],
                         });
                     }
@@ -231,7 +236,7 @@ export function WatchlistView() {
             setSearchResults([]);
             fetchWatchlist(); // refresh
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Failed to add');
+            alert(t(err.response?.data?.message || 'Failed to add'));
         } finally {
             setAddingSymbol('');
         }
@@ -254,16 +259,14 @@ export function WatchlistView() {
                 <div className="w-20 h-20 rounded-[24px] bg-[var(--color-ios-input)] flex items-center justify-center mb-6 shadow-none text-cyan-500">
                     <Eye className="w-10 h-10" />
                 </div>
-                <h3 className="text-xl font-bold  text-[var(--color-ios-fg)] mb-2">No Stocks in Watchlist</h3>
+                <h3 className="text-xl font-bold  text-[var(--color-ios-fg)] mb-2">{t("No Stocks in Watchlist")}</h3>
                 <p className="text-[var(--color-ios-secondary)] font-bold text-sm mb-6 text-center max-w-sm">
-                    Add stocks to track their daily, weekly, monthly, and yearly performance — without adding them to your portfolio.
-                </p>
+                    {t("Add stocks to track their daily, weekly, monthly, and yearly performance — without adding them to your portfolio.")}</p>
                 <Button
                     onClick={() => setAddDialogOpen(true)}
                     className="bg-[var(--color-ios-input)] hover:bg-white text-[var(--color-ios-fg)] font-bold border-none shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] active:scale-[0.92] transition-all"
                 >
-                    <Plus className="w-4 h-4 mr-2" /> Add to Watchlist
-                </Button>
+                    <Plus className="w-4 h-4 me-2" /> {t(" Add to Watchlist")}</Button>
                 {renderAddDialog()}
             </div>
         );
@@ -289,21 +292,19 @@ export function WatchlistView() {
                     </button>
 
                     <h2 className="text-2xl font-bold  text-[var(--color-ios-fg)] mb-2">
-                        Add to Watchlist
-                    </h2>
+                        {t("Add to Watchlist")}</h2>
                     <p className="text-sm font-bold text-[var(--color-ios-secondary)] mb-4">
-                        Search for a stock to track its performance.
-                    </p>
+                        {t("Search for a stock to track its performance.")}</p>
 
                     {/* Search Input */}
                     <div className="relative mb-4">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-ios-secondary)]" />
+                        <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-ios-secondary)]" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search by symbol or name..."
-                            className="w-full pl-11 pr-4 py-3 bg-[var(--color-ios-input)] shadow-none rounded-[16px] text-[var(--color-ios-fg)] font-bold text-sm placeholder:text-[var(--color-ios-secondary)] focus:outline-none focus:ring-2 focus:ring-violet-400 transition-all  border-none"
+                            placeholder={t("Search by symbol or name...")}
+                            className="w-full ps-11 pe-4 py-3 bg-[var(--color-ios-input)] shadow-none rounded-[16px] text-[var(--color-ios-fg)] font-bold text-sm placeholder:text-[var(--color-ios-secondary)] focus:outline-none focus:ring-2 focus:ring-violet-400 transition-all  border-none"
                             autoFocus
                         />
                     </div>
@@ -311,25 +312,25 @@ export function WatchlistView() {
                     {/* Results */}
                     <div className="max-h-64 overflow-y-auto space-y-2 p-1">
                         {searching && (
-                            <div className="text-center py-6 text-[var(--color-ios-secondary)] font-bold text-sm">Searching...</div>
+                            <div className="text-center py-6 text-[var(--color-ios-secondary)] font-bold text-sm">{t("Searching...")}</div>
                         )}
                         {!searching && searchQuery.length > 1 && searchResults.length === 0 && (
-                            <div className="text-center py-6 text-[var(--color-ios-secondary)] font-bold text-sm">No stocks found.</div>
+                            <div className="text-center py-6 text-[var(--color-ios-secondary)] font-bold text-sm">{t("No stocks found.")}</div>
                         )}
                         {searchResults.map((stock) => (
                             <button
                                 key={stock.symbol}
                                 onClick={() => handleAdd(stock.symbol, stock.description)}
                                 disabled={addingSymbol === stock.symbol}
-                                className="w-full flex items-center justify-between p-3 rounded-[16px] hover:bg-white/80 bg-[var(--color-ios-card)] shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] active:scale-[0.98] transition-all group text-left border-white/60 border"
+                                className="w-full flex items-center justify-between p-3 rounded-[16px] hover:bg-white/80 bg-[var(--color-ios-card)] shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] active:scale-[0.98] transition-all group text-start border-white/60 border"
                             >
                                 <div>
                                     <span className="text-[var(--color-ios-fg)] font-bold  text-sm">{stock.displaySymbol}</span>
-                                    <span className="text-[var(--color-ios-secondary)] font-bold text-xs ml-2">{stock.type}</span>
+                                    <span className="text-[var(--color-ios-secondary)] font-bold text-xs ms-2">{t(stock.type)}</span>
                                     <p className="text-[var(--color-ios-secondary)] font-bold text-xs mt-0.5 truncate max-w-[220px]">{stock.description}</p>
                                 </div>
                                 <span className="text-cyan-600 font-bold text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {addingSymbol === stock.symbol ? 'Adding...' : '+ Add'}
+                                    {addingSymbol === stock.symbol ? t("Adding...") : t("+ Add")}
                                 </span>
                             </button>
                         ))}
@@ -346,15 +347,14 @@ export function WatchlistView() {
             <div className="flex items-center justify-between mb-4 px-2">
                 <div className="flex items-center gap-2 text-[var(--color-ios-secondary)] font-bold">
                     <Eye className="w-5 h-5 text-cyan-600" />
-                    <span className="text-sm">{watchlist.length} stock{watchlist.length !== 1 ? 's' : ''} tracked</span>
+                    <span className="text-sm">{t("{0} securities tracked", [watchlist.length])}</span>
                 </div>
                 <Button
                     onClick={() => setAddDialogOpen(true)}
                     size="sm"
                     className="bg-[var(--color-ios-input)] hover:bg-white text-[var(--color-ios-fg)] font-bold shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] border-none active:scale-[0.92] transition-all rounded-[16px] px-4"
                 >
-                    <Plus className="w-4 h-4 mr-1" /> Add Stock
-                </Button>
+                    <Plus className="w-4 h-4 me-1" /> {t(" Add Stock")}</Button>
             </div>
 
             {/* Cards Grid */}
@@ -369,27 +369,27 @@ export function WatchlistView() {
                             {/* Remove Button */}
                             <button
                                 onClick={() => handleRemove(stock._id)}
-                                className="absolute top-3 right-3 p-2 rounded-[16px] bg-white/60 shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] text-rose-400 hover:text-rose-600 transition-all opacity-0 group-hover:opacity-100 z-20"
-                                title="Remove from watchlist"
+                                className="absolute top-3 end-3 p-2 rounded-[16px] bg-white/60 shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] text-rose-400 hover:text-rose-600 transition-all opacity-0 group-hover:opacity-100 z-20"
+                                title={t("Remove from watchlist")}
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
 
                             {/* Header: Symbol + Price */}
-                            <div className="flex items-start justify-between mb-4 pr-8">
+                            <div className="flex items-start justify-between mb-4 pe-8">
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
                                             <span className="text-cyan-400 text-xs font-bold">{stock.symbol.slice(0, 2)}</span>
                                         </div>
                                         <div>
-                                            <h3 className="text-[var(--color-ios-fg)] font-bold text-lg  tracking-tight leading-none">{stock.symbol}</h3>
-                                            <p className="text-[13px] font-bold text-[var(--color-ios-secondary)] truncate max-w-[150px]  mt-0.5">{stock.name}</p>
+                                            <h3 className="text-[var(--color-ios-fg)] font-bold text-lg  tracking-tight leading-none"><bdi dir="ltr">{stock.symbol}</bdi></h3>
+                                            <p className="text-[13px] font-bold text-[var(--color-ios-secondary)] truncate max-w-[150px]  mt-0.5"><bdi>{stock.name}</bdi></p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="text-right mt-1">
-                                    <p className="text-xl font-bold text-[var(--color-ios-fg)]  tracking-tight">
+                                <div className="text-end mt-1">
+                                    <p dir="ltr" className="text-xl font-bold text-[var(--color-ios-fg)]  tracking-tight">
                                         {stock.loaded ? `$${stock.price.toFixed(2)}` : '...'}
                                     </p>
                                 </div>
@@ -397,10 +397,10 @@ export function WatchlistView() {
 
                             {/* Performance Badges */}
                             <div className="grid grid-cols-4 gap-2 mb-4">
-                                <ChangeBadge label="Day" value={stock.loaded ? stock.dailyChange : null} />
-                                <ChangeBadge label="Week" value={stock.loaded ? stock.weeklyChange : null} />
-                                <ChangeBadge label="Month" value={stock.loaded ? stock.monthlyChange : null} />
-                                <ChangeBadge label="Year" value={stock.loaded ? stock.yearlyChange : null} />
+                                <ChangeBadge label={t("Day")} value={stock.loaded ? stock.dailyChange : null} />
+                                <ChangeBadge label={t("Week")} value={stock.loaded ? stock.weeklyChange : null} />
+                                <ChangeBadge label={t("Month")} value={stock.loaded ? stock.monthlyChange : null} />
+                                <ChangeBadge label={t("Year")} value={stock.loaded ? stock.yearlyChange : null} />
                             </div>
 
                             {/* Interactive Chart */}
@@ -409,7 +409,7 @@ export function WatchlistView() {
                                     <ResponsiveContainer width="100%" height="100%">
                                         <LineChart data={stock.chartData}>
                                             <defs>
-                                                <linearGradient id={`grad-${stock.symbol}`} x1="0" y1="0" x2="0" y2="1">
+                                                <linearGradient id={`grad-$<bdi dir="ltr">{stock.symbol}</bdi>`} x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor={stock.monthlyChange >= 0 ? '#10B981' : '#EF4444'} stopOpacity={0.2} />
                                                     <stop offset="95%" stopColor={stock.monthlyChange >= 0 ? '#10B981' : '#EF4444'} stopOpacity={0} />
                                                 </linearGradient>
@@ -440,13 +440,13 @@ export function WatchlistView() {
                                                 strokeWidth={2}
                                                 dot={false}
                                                 activeDot={{ r: 4, fill: stock.monthlyChange >= 0 ? '#10B981' : '#EF4444', stroke: '#fff', strokeWidth: 1 }}
-                                                fill={`url(#grad-${stock.symbol})`}
+                                                fill={`url(#grad-$<bdi dir="ltr">{stock.symbol}</bdi>)`}
                                             />
                                         </LineChart>
                                     </ResponsiveContainer>
                                 ) : (
                                     <div className="h-full flex items-center justify-center">
-                                        <span className="text-white/20 text-xs">Loading chart...</span>
+                                        <span className="text-white/20 text-xs">{t("Loading chart...")}</span>
                                     </div>
                                 )}
                             </div>

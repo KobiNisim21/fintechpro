@@ -1,7 +1,9 @@
+import { t, useLanguage } from '@/i18n';
 import { useEffect, useState } from 'react';
 import { getConnectionState, onConnectionStateChange } from '../services/socket';
 
 export function ConnectionStatus() {
+    useLanguage();
   const [status, setStatus] = useState(getConnectionState());
   const [visible, setVisible] = useState(false);
 
@@ -29,7 +31,7 @@ export function ConnectionStatus() {
   }[status];
 
   return (
-    <div role="status" aria-live="polite" className="fixed bottom-20 md:bottom-4 right-4 z-[60]">
+    <div role="status" aria-live="polite" className="fixed bottom-20 md:bottom-4 end-4 z-[60]">
       <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-full px-3.5 py-1.5 flex items-center gap-2 border border-slate-200/50">
         <div className="relative flex h-2.5 w-2.5">
           {config.ping && (
@@ -37,7 +39,7 @@ export function ConnectionStatus() {
           )}
           <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${config.color}`} />
         </div>
-        <span className="text-xs font-medium text-slate-600">{config.label}</span>
+        <span className="text-xs font-medium text-slate-600">{t(config.label)}</span>
       </div>
     </div>
   );

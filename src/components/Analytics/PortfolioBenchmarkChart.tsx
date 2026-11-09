@@ -1,3 +1,4 @@
+import { t, useLanguage, locale } from '@/i18n';
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,7 @@ interface PortfolioBenchmarkChartProps {
 }
 
 const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchmarkChartProps) => {
+    useLanguage();
     const [range, setRange] = useState<'1M' | '6M' | '1Y'>('1Y');
 
     const slicedData = useMemo(() => {
@@ -57,12 +59,11 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-emerald-500" />
-                    Portfolio vs S&P 500
-                </CardTitle>
+                    {t("Portfolio vs S&P 500")}</CardTitle>
                 <div className="flex gap-1">
                     {(['1M', '6M', '1Y'] as const).map(r => (
                         <button
-                            key={r}
+                            key={t(r)}
                             onClick={() => setRange(r)}
                             className={`px-3 py-1 text-xs font-medium rounded-lg transition-all ${range === r
                                 ? 'bg-emerald-500 text-white'
@@ -74,7 +75,7 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
                     ))}
                 </div>
             </CardHeader>
-            <p className="px-6 pb-3 text-xs text-slate-500">Estimate from remaining purchase lots. Excludes closed holdings, sale proceeds, cash, fees and dividends; not a complete account return.</p>
+            <p className="px-6 pb-3 text-xs text-slate-500">{t("Estimate from remaining purchase lots. Excludes closed holdings, sale proceeds, cash, fees and dividends; not a complete account return.")}</p>
             <CardContent className="h-[280px]">
                 {isLoading || !data ? (
                     <div className="w-full h-full bg-slate-100 animate-pulse rounded-xl" />
@@ -90,7 +91,7 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
                             <XAxis
                                 dataKey="date" tick={{ fill: '#94a3b8', fontSize: 10 }}
-                                tickFormatter={(d: string) => { const m = d.split('-'); return `${m[1]}/${m[2]}`; }}
+                                tickFormatter={(d: string) => { return new Date(d + 'T00:00:00').toLocaleDateString(locale(), { month: 'short', day: 'numeric' }); }}
                                 interval={Math.max(1, Math.floor(slicedData.length / 6))}
                                 axisLine={false} tickLine={false}
                             />
@@ -104,7 +105,7 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
                                 labelStyle={{ color: '#64748b' }}
                                 formatter={(value: number, name: string) => [
                                     `${value > 0 ? '+' : ''}${value.toFixed(2)}%`,
-                                    name === 'portfolio' ? 'My Portfolio' : 'S&P 500'
+                                    name === 'portfolio' ? t('My Portfolio') : 'S&P 500'
                                 ]}
                             />
                             <Area type="monotone" dataKey="portfolio" stroke="#10b981" strokeWidth={2} fill="url(#portfolioFill)" />
@@ -112,11 +113,11 @@ const PortfolioBenchmarkChart = React.memo(({ data, isLoading }: PortfolioBenchm
                         </AreaChart>
                     </ResponsiveContainer>
                 ) : (
-                    <div className="flex items-center justify-center h-full text-slate-400 text-sm">No benchmark data</div>
+                    <div className="flex items-center justify-center h-full text-slate-400 text-sm">{t("No benchmark data")}</div>
                 )}
             </CardContent>
             {/* Watermark & Version */}
-            <div className="absolute bottom-3 right-3 flex flex-col items-end opacity-40 pointer-events-none">
+            <div className="absolute bottom-3 end-3 flex flex-col items-end opacity-40 pointer-events-none">
                 <img src="/logo.png" alt="" className="w-8 h-8 mb-1 drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]" />
                 <span className="text-[10px] text-slate-500 font-mono font-bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>v9.0</span>
             </div>

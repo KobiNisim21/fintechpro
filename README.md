@@ -60,6 +60,9 @@ Use `npm run qa:server -- --seed` for a disposable seeded browser test.
 
 ## Data availability
 
+The interface supports English and Hebrew with a persistent language button,
+RTL layouts and localized dates/messages. See [localization and validation](docs/localization.md).
+
 `GET /api/live` reports HTTP liveness independently of MongoDB.
 `GET /api/health` returns 200 when MongoDB is connected, or 503 when unavailable.
 Background news and alert services wait for the database and retry on startup

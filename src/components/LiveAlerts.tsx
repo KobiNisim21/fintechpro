@@ -1,8 +1,10 @@
+import { t, useLanguage, liveAlertText } from '@/i18n';
 import { TrendingUp, TrendingDown, Bell, Target, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLiveAlerts } from '@/context/LiveAlertsContext';
 
 export function LiveAlerts() {
+    useLanguage();
     const { alerts, loading, connected } = useLiveAlerts();
 
     return (
@@ -10,9 +12,9 @@ export function LiveAlerts() {
             {/* Header */}
             <div className="flex items-center gap-2 mb-4">
                 <Bell className="w-5 h-5 text-[var(--color-ios-success)]" />
-                <h2 className="text-sm font-bold  text-[var(--color-ios-fg)] uppercase tracking-wider">Live Alerts</h2>
+                <h2 className="text-sm font-bold  text-[var(--color-ios-fg)] uppercase tracking-wider">{t("Live Alerts")}</h2>
                 {connected && (
-                    <div className="flex items-center gap-1.5 ml-2">
+                    <div className="flex items-center gap-1.5 ms-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     </div>
                 )}
@@ -37,8 +39,8 @@ export function LiveAlerts() {
                     // Empty state
                     <div className="p-4 rounded-xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-[var(--shadow-ios-card)] text-center">
                         <Bell className="w-6 h-6 text-[var(--color-ios-secondary)]/60 mx-auto mb-2" />
-                        <p className="text-sm font-bold text-[var(--color-ios-fg)]">No alerts yet</p>
-                        <p className="text-xs font-medium text-[var(--color-ios-secondary)] mt-1">Price moves, 52-week lows &amp; earnings</p>
+                        <p className="text-sm font-bold text-[var(--color-ios-fg)]">{t("No alerts yet")}</p>
+                        <p className="text-xs font-medium text-[var(--color-ios-secondary)] mt-1">{t("Price moves, 52-week lows & earnings")}</p>
                     </div>
                 ) : (
                     // Alert cards with animation
@@ -72,7 +74,7 @@ export function LiveAlerts() {
 
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs font-bold text-[var(--color-ios-fg)] line-clamp-2 leading-snug">
-                                            {alert.message}
+                                            {liveAlertText(alert)}
                                         </p>
 
                                         {/* Ticker */}

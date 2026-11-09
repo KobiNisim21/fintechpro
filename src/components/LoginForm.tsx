@@ -1,3 +1,5 @@
+import { LanguageSwitch } from './LanguageSwitch';
+import { t, useLanguage, errorText } from '@/i18n';
 import { useState } from 'react';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
@@ -5,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 function GoogleLoginInner() {
+    useLanguage();
     const { loginWithGoogle } = useAuth();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -35,6 +38,7 @@ function GoogleLoginInner() {
 
     return (
         <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--color-ios-bg-gradient)' }}>
+            <div className="login-language-switch"><LanguageSwitch /></div>
             <div className="w-full max-w-md p-8 space-y-8 glass-card rounded-[32px]">
                 {/* Logo & Title */}
                 <div className="text-center space-y-3">
@@ -46,17 +50,16 @@ function GoogleLoginInner() {
                         </div>
                     </div>
                     <h1 className="text-3xl font-bold text-slate-800 tracking-tight">FinTechPro</h1>
-                    <p className="text-slate-500 text-sm">Real-time portfolio management & market insights</p>
+                    <p className="text-slate-500 text-sm">{t("Real-time portfolio management & market insights")}</p>
                 </div>
 
                 {/* Error message */}
                 {error && (
                     <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-sm text-center leading-relaxed">
-                        <div className="font-semibold mb-1">שים לב:</div>
-                        {error}
+                        <div className="font-semibold mb-1">{t("שים לב:")}</div>
+                        {errorText(error)}
                         <div className="mt-2 text-xs text-rose-500">
-                            (בדוק בשורת הכתובות של הדפדפן למעלה אם מופיע אייקון חסימת חלון קופץ 🚫)
-                        </div>
+                            {t("(בדוק בשורת הכתובות של הדפדפן למעלה אם מופיע אייקון חסימת חלון קופץ 🚫)")}</div>
                     </div>
                 )}
 
@@ -64,7 +67,7 @@ function GoogleLoginInner() {
                 {loading && (
                     <div className="flex items-center justify-center py-4">
                         <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                        <span className="ml-3 text-slate-500 text-sm">Signing you in...</span>
+                        <span className="ms-3 text-slate-500 text-sm">{t("Signing you in...")}</span>
                     </div>
                 )}
 
@@ -87,9 +90,7 @@ function GoogleLoginInner() {
                 {/* Footer */}
                 <div className="text-center">
                     <p className="text-xs text-slate-400">
-                        By signing in, you agree to our Terms of Service.
-                        <br />Your portfolio data is stored securely.
-                    </p>
+                        {t("By signing in, you agree to our Terms of Service.")}<br />{t("Your portfolio data is stored securely.")}</p>
                 </div>
             </div>
         </div>
@@ -97,19 +98,21 @@ function GoogleLoginInner() {
 }
 
 export function LoginForm() {
+    const language = useLanguage();
     if (!GOOGLE_CLIENT_ID) {
         return (
             <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-ios-bg-gradient)' }}>
+            <div className="login-language-switch"><LanguageSwitch /></div>
                 <div className="w-full max-w-md p-8 glass-card rounded-[32px] text-center">
-                    <h1 className="text-2xl font-bold text-slate-800 mb-4">Configuration Error</h1>
-                    <p className="text-rose-500 text-sm">VITE_GOOGLE_CLIENT_ID is not set. Please configure it in your environment variables.</p>
+                    <h1 className="text-2xl font-bold text-slate-800 mb-4">{t("Configuration Error")}</h1>
+                    <p className="text-rose-500 text-sm">{t("VITE_GOOGLE_CLIENT_ID is not set. Please configure it in your environment variables.")}</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <GoogleOAuthProvider key={language} locale={language} clientId={GOOGLE_CLIENT_ID}>
             <GoogleLoginInner />
         </GoogleOAuthProvider>
     );

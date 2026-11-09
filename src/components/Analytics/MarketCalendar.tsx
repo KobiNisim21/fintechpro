@@ -1,3 +1,4 @@
+import { t, useLanguage, locale, referenceText } from '@/i18n';
 import { useEffect, useState, useMemo } from 'react';
 import { Calendar, AlertTriangle, Scissors, Star } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -21,15 +22,16 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 function formatDate(dateStr: string) {
     const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return d.toLocaleDateString(locale(), { month: 'short', day: 'numeric' });
 }
 
 function formatWeekday(dateStr: string) {
     const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { weekday: 'short' });
+    return d.toLocaleDateString(locale(), { weekday: 'short' });
 }
 
 function ImportanceStars({ level }: { level: number }) {
+    useLanguage();
     return (
         <span className="flex gap-0.5">
             {[1, 2, 3].map(i => (
@@ -43,7 +45,9 @@ function ImportanceStars({ level }: { level: number }) {
 }
 
 export function MarketCalendar() {
+    useLanguage();
     const { positions } = usePortfolio();
+    const symbolKey = [...new Set(positions.map(p => p.symbol))].sort().join(',');
     const [data, setData] = useState<MarketCalendarData | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<Tab>('events');
@@ -52,7 +56,7 @@ export function MarketCalendar() {
         const fetchCalendar = async () => {
             try {
                 setLoading(true);
-                const symbols = positions.map(p => p.symbol);
+                const symbols = symbolKey.split(',').filter(Boolean);
                 const result = await stocksAPI.getMarketCalendar(symbols);
                 setData(result);
             } catch (err) {
@@ -62,10 +66,8 @@ export function MarketCalendar() {
             }
         };
 
-        if (positions.length > 0) {
-            fetchCalendar();
-        }
-    }, [positions.length]);
+        void fetchCalendar();
+    }, [symbolKey]);
 
     // Filter holidays to only future ones
     const futureHolidays = useMemo(() => {
@@ -88,8 +90,7 @@ export function MarketCalendar() {
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-slate-800 font-bold">
                     <Calendar className="w-5 h-5 text-cyan-500" />
-                    Market Calendar
-                </CardTitle>
+                    {t("Market Calendar")}</CardTitle>
 
                 {/* Tab Bar */}
                 <div className="flex gap-1 mt-3 p-1 bg-slate-100 rounded-lg">
@@ -102,9 +103,9 @@ export function MarketCalendar() {
                                 : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
                                 }`}
                         >
-                            {tab.label}
+                            {t(tab.label)}
                             {tab.count > 0 && (
-                                <span className="ml-1.5 text-[10px] opacity-60">({tab.count})</span>
+                                <span className="ms-1.5 text-[10px] opacity-60">({tab.count})</span>
                             )}
                         </button>
                     ))}
@@ -122,9 +123,9 @@ export function MarketCalendar() {
                     <>
                         {/* Economic Events Tab */}
                         {activeTab === 'events' && (
-                            <div className="space-y-1 max-h-[400px] overflow-y-auto pr-1">
+                            <div className="space-y-1 max-h-[400px] overflow-y-auto pe-1">
                                 {(data?.economicEvents || []).length === 0 ? (
-                                    <p className="text-center text-slate-400 text-sm py-8">No upcoming events</p>
+                                    <p className="text-center text-slate-400 text-sm py-8">{t("No upcoming events")}</p>
                                 ) : (
                                     (data?.economicEvents || []).map((event, i) => (
                                         <div
@@ -145,7 +146,7 @@ export function MarketCalendar() {
 
                                             {/* Event Name */}
                                             <span className={`text-sm font-medium flex-1 ${CATEGORY_COLORS[event.category] || 'text-slate-700'}`}>
-                                                {event.event}
+                                                {referenceText(event.event)}
                                             </span>
 
                                             {/* Time */}
@@ -158,9 +159,9 @@ export function MarketCalendar() {
 
                         {/* Market Holidays Tab */}
                         {activeTab === 'holidays' && (
-                            <div className="space-y-1 max-h-[400px] overflow-y-auto pr-1">
+                            <div className="space-y-1 max-h-[400px] overflow-y-auto pe-1">
                                 {futureHolidays.length === 0 ? (
-                                    <p className="text-center text-slate-400 text-sm py-8">No upcoming market holidays</p>
+                                    <p className="text-center text-slate-400 text-sm py-8">{t("No upcoming market holidays")}</p>
                                 ) : (
                                     futureHolidays.map((holiday, i) => (
                                         <div
@@ -175,9 +176,9 @@ export function MarketCalendar() {
                                             <AlertTriangle className="w-4 h-4 text-rose-500" />
 
                                             <div className="flex-1">
-                                                <span className="text-sm font-medium text-rose-600">{holiday.name}</span>
-                                                <span className="text-[10px] text-slate-400 ml-2">
-                                                    {holiday.tradingHour === 'closed' ? 'Exchange Closed' : holiday.tradingHour}
+                                                <span className="text-sm font-medium text-rose-600">{referenceText(holiday.name)}</span>
+                                                <span className="text-[10px] text-slate-400 ms-2">
+                                                    {holiday.tradingHour === 'closed' ? t("Exchange Closed") : holiday.tradingHour}
                                                 </span>
                                             </div>
 
@@ -190,11 +191,11 @@ export function MarketCalendar() {
 
                         {/* Stock Splits Tab */}
                         {activeTab === 'splits' && (
-                            <div className="space-y-1 max-h-[400px] overflow-y-auto pr-1">
+                            <div className="space-y-1 max-h-[400px] overflow-y-auto pe-1">
                                 {(data?.stockSplits || []).length === 0 ? (
                                     <div className="text-center py-8">
                                         <Scissors className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                                        <p className="text-slate-400 text-sm">No upcoming splits for your holdings</p>
+                                        <p className="text-slate-400 text-sm">{t("No upcoming splits for your holdings")}</p>
                                     </div>
                                 ) : (
                                     (data?.stockSplits || []).map((split, i) => (
@@ -211,7 +212,7 @@ export function MarketCalendar() {
 
                                             <div className="flex-1">
                                                 <span className="text-sm font-bold text-violet-600">{split.symbol}</span>
-                                                <span className="text-xs text-slate-400 ml-2">{split.description}</span>
+                                                <span className="text-xs text-slate-400 ms-2">{split.description}</span>
                                             </div>
                                         </div>
                                     ))

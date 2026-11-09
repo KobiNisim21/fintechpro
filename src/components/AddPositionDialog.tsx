@@ -1,3 +1,4 @@
+import { t, useLanguage, errorText } from '@/i18n';
 ﻿import { useState, useEffect } from 'react';
 import { Plus, Check, ChevronsUpDown } from 'lucide-react';
 import { SimpleDialog } from './SimpleDialog';
@@ -21,7 +22,8 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 
-export function AddPositionDialog() {
+export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
+    useLanguage();
     const { addPosition } = usePortfolio();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -140,28 +142,28 @@ export function AddPositionDialog() {
     return (
         <>
             <Button
+                aria-label={t("Add Position")}
                 onClick={() => setOpen(true)}
                 className="rounded-[20px] bg-white shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] active:shadow-none text-[var(--color-ios-fg)] font-bold px-6 h-12 transition-all duration-300"
             >
-                <Plus className="w-5 h-5 mr-2" strokeWidth={2.5} />
-                <span className=" tracking-wide">Add Position</span>
+                <Plus className="w-5 h-5 me-2" strokeWidth={2.5} />
+                <span className={compact ? "mobile-header-add-label" : "tracking-wide"}>{t("Add Position")}</span>
             </Button>
 
-            <SimpleDialog open={open} onClose={() => setOpen(false)} title="Add new position">
+            <SimpleDialog open={open} onClose={() => setOpen(false)} title={t("Add new position")}>
                 <div className="relative px-2">
                     <p className="text-[14px] font-bold text-[var(--color-ios-secondary)] mb-8">
-                        Enter the details of the stock you want to add to your portfolio.
-                    </p>
+                        {t("Enter the details of the stock you want to add to your portfolio.")}</p>
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                         {error && (
                             <div className="p-4 bg-rose-50 text-rose-600 border border-rose-200 rounded-[16px] text-sm font-bold shadow-sm">
-                                {error}
+                                {errorText(error)}
                             </div>
                         )}
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="symbol" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Symbol</Label>
+                            <Label htmlFor="symbol" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-end block">{t("Symbol")}</Label>
                             <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
                                 <PopoverTrigger asChild>
                                     <Button
@@ -172,21 +174,21 @@ export function AddPositionDialog() {
                                     >
                                         {formData.symbol
                                             ? formData.symbol
-                                            : "Search stock..."}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            : t("Search stock...")}
+                                        <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-[300px] p-2 bg-[var(--color-ios-bg)] border-none rounded-[24px] shadow-[var(--shadow-ios-card)] text-[var(--color-ios-fg)] z-[10010]">
                                     <Command className="bg-transparent" shouldFilter={false}>
                                         <CommandInput
-                                            placeholder="Search symbol..."
+                                            placeholder={t("Search symbol...")}
                                             value={searchValue}
                                             onValueChange={setSearchValue}
                                             className="text-[var(--color-ios-fg)] font-bold placeholder-[var(--color-ios-secondary)]"
                                         />
                                         <CommandList className="max-h-[300px] overflow-y-auto w-full custom-scrollbar">
                                             <CommandEmpty className="py-6 text-center text-[13px] font-bold text-[var(--color-ios-secondary)]">
-                                                {searching ? 'Searching...' : 'No stock found.'}
+                                                {searching ? t("Searching...") : t("No stock found.")}
                                             </CommandEmpty>
                                             <CommandGroup>
                                                 {searchResults.map((stock) => (
@@ -219,7 +221,7 @@ export function AddPositionDialog() {
                                                     >
                                                         <Check
                                                             className={cn(
-                                                                "mr-2 h-4 w-4",
+                                                                "me-2 h-4 w-4",
                                                                 formData.symbol === stock.symbol ? "opacity-100 text-emerald-500" : "opacity-0"
                                                             )}
                                                         />
@@ -228,7 +230,7 @@ export function AddPositionDialog() {
                                                                 <span className="font-bold ">{stock.displaySymbol}</span>
                                                                 {stock.israeliData && (
                                                                     <span className="text-[10px] px-2 py-0.5 rounded-[8px] bg-blue-100 text-blue-600 font-bold whitespace-nowrap">
-                                                                        {stock.israeliData.type === 'fund' ? '׳§׳¨׳ ׳›׳¡׳₪׳™׳× נ‡®נ‡±' : 'TASE נ‡®נ‡±'}
+                                                                        {stock.israeliData.type === 'fund' ? t("Israeli money market fund") : t("TASE")}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -244,7 +246,7 @@ export function AddPositionDialog() {
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="date" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Date</Label>
+                            <Label htmlFor="date" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-end block">{t("Date")}</Label>
                             <Input
                                 id="date"
                                 type="date"
@@ -256,29 +258,29 @@ export function AddPositionDialog() {
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="broker" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest text-right block">Broker</Label>
+                            <Label htmlFor="broker" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest text-end block">{t("Broker")}</Label>
                             <Input
                                 id="broker"
                                 className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
-                                placeholder="Default (or Blink, IBI...)"
+                                placeholder={t("Default (or Blink, IBI...)")}
                                 value={formData.broker}
                                 onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
                             />
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="name" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Name</Label>
+                            <Label htmlFor="name" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-end block">{t("Name")}</Label>
                             <Input
                                 id="name"
                                 className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
-                                placeholder="Apple Inc. (optional)"
+                                placeholder={t("Apple Inc. (optional)")}
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             />
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="quantity" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Quantity</Label>
+                            <Label htmlFor="quantity" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-end block">{t("Quantity")}</Label>
                             <Input
                                 id="quantity"
                                 type="number"
@@ -292,7 +294,7 @@ export function AddPositionDialog() {
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="avgPrice" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-right block">Avg Price</Label>
+                            <Label htmlFor="avgPrice" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-end block">{t("Avg Price")}</Label>
                             <Input
                                 id="avgPrice"
                                 type="number"
@@ -307,7 +309,7 @@ export function AddPositionDialog() {
 
                         <div className="flex justify-end mt-4">
                             <Button type="submit" disabled={loading} className="rounded-[20px] bg-gradient-to-br from-violet-400 to-violet-600 shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)]Hover active:shadow-none active:scale-[0.92] text-white font-bold  tracking-wide h-12 px-8 transition-all duration-200 border-none disabled:opacity-50 disabled:active:scale-100">
-                                {loading ? 'Adding...' : 'Add Stock'}
+                                {loading ? t("Adding...") : t("Add Stock")}
                             </Button>
                         </div>
                     </form>

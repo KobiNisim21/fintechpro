@@ -9,7 +9,7 @@ export interface PortfolioEvent {
 }
 export interface ActivityAccount { _id: string; symbol: string; broker: string; quantity: number; isDeleted: boolean }
 export interface ActivityPage { events: PortfolioEvent[]; total: number; accounts: ActivityAccount[] }
-export interface AlertRule { _id: string; symbol: string; kind: string; threshold: number; enabled: boolean; lastTriggeredAt?: string; message?: string }
+export interface AlertRule { _id: string; symbol: string; kind: string; threshold: number; enabled: boolean; lastTriggeredAt?: string; lastValue?: number; message?: string }
 export const portfolioToolsAPI = {
     activity: async (offset = 0, type = ''): Promise<ActivityPage> => (await api.get('/activity', { params: { offset, type } })).data,
     record: async (id: string, data: Record<string, unknown>) => (await api.post(`/activity/${id}`, data)).data,

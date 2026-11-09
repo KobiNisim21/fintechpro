@@ -1,3 +1,4 @@
+import { t, useLanguage } from '@/i18n';
 ﻿import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PortfolioProvider } from './context/PortfolioContext';
@@ -9,12 +10,13 @@ import { LoginForm } from './components/LoginForm';
 const Dashboard = lazy(() => import('./components/Dashboard'));
 
 function AppContent() {
+    useLanguage();
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-ios-bg-gradient)' }}>
-        <div className="text-slate-800 text-xl font-medium">Loading...</div>
+        <div className="text-slate-800 text-xl font-medium">{t("Loading...")}</div>
       </div>
     );
   }
@@ -35,6 +37,7 @@ function AppContent() {
 }
 
 function UserDashboard() {
+    useLanguage();
   const { user } = useAuth();
   return (
         <PortfolioProvider key={user?._id || 'signed-out'}>
@@ -50,6 +53,7 @@ function UserDashboard() {
 }
 
 export default function App() {
+    useLanguage();
   return (
     <BrowserRouter>
       <AuthProvider>

@@ -1,7 +1,7 @@
 import { createFixtureServer } from '../tests/support/fixtureServer.js';
 import Position from '../server/models/Position.js';
 
-const fixture = await createFixtureServer({ port: 4175, frontend: true });
+const fixture = await createFixtureServer({ port: 4175, frontend: true, localization: process.argv.includes('--localization') });
 if (process.argv.includes('--seed')) {
   await Position.create({ user: fixture.users[0]._id, symbol: 'AAPL', name: 'QA seeded holding', broker: 'QA', quantity: 3, averagePrice: 100, lots: [{ quantity: 3, price: 100, date: new Date('2026-01-02') }] });
   console.log('Seeded one synthetic holding for browser QA.');

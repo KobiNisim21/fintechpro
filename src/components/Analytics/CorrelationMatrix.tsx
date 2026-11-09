@@ -1,3 +1,4 @@
+import { t, useLanguage } from '@/i18n';
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ interface CorrelationMatrixProps {
 }
 
 const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProps) => {
+    useLanguage();
 
     const content = useMemo(() => {
         if (isLoading || !data) return null;
@@ -39,8 +41,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-violet-400" />
-                    Correlation Matrix
-                    <span className="text-[10px] text-slate-400 ml-auto">Up to 30 aligned returns</span>
+                    {t("Correlation Matrix")}<span className="text-[10px] text-slate-400 ms-auto">{t("Up to 30 aligned returns")}</span>
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -62,7 +63,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                             {content.matrix.map((row, i) => (
                                 <div key={i} className="flex items-center">
                                     <div style={{ width: content.labelSize, minWidth: content.labelSize }}
-                                        className="text-[9px] text-slate-500 font-mono truncate pr-1 text-right">
+                                        className="text-[9px] text-slate-500 font-mono truncate pe-1 text-end">
                                         {content.corrSymbols[i]}
                                     </div>
                                     {row.map((val, j) => (
@@ -75,12 +76,12 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                                             }}
                                         >
                                             {content.cellSize >= 36 && val !== null && (
-                                                <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono text-slate-700">
+                                                <span dir="ltr" className="absolute inset-0 flex items-center justify-center text-[9px] font-mono text-slate-700">
                                                     {val.toFixed(2)}
                                                 </span>
                                             )}
                                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
-                                                {content.corrSymbols[i]} vs {content.corrSymbols[j]}: {val !== null ? val.toFixed(2) : 'N/A'}
+                                                {content.corrSymbols[i]} {t(" vs ")}{content.corrSymbols[j]}: {val !== null ? val.toFixed(2) : t("N/A")}
                                             </div>
                                         </div>
                                     ))}
@@ -90,7 +91,7 @@ const CorrelationMatrix = React.memo(({ data, isLoading }: CorrelationMatrixProp
                     </div>
                 )}
             </CardContent>
-            <img src="/logo.png" alt="" className="absolute bottom-3 right-3 w-8 h-8 opacity-10 pointer-events-none" />
+            <img src="/logo.png" alt="" className="absolute bottom-3 end-3 w-8 h-8 opacity-10 pointer-events-none" />
         </Card>
     );
 });

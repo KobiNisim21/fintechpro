@@ -1,3 +1,5 @@
+import { LanguageSwitch } from './LanguageSwitch';
+import { t, useLanguage } from '@/i18n';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { LiveMarketNews } from './LiveMarketNews';
@@ -5,6 +7,7 @@ import { LiveAlerts } from './LiveAlerts';
 import { McpModal } from './McpModal';
 
 export function SidebarContent() {
+    useLanguage();
     const { logout } = useAuth();
 
     return (
@@ -24,8 +27,7 @@ export function SidebarContent() {
                             />
                         </div>
                         <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-[0.2em] -mt-6">
-                            Wealth Management
-                        </p>
+                            {t("Wealth Management")}</p>
                     </a>
                 </div>
 
@@ -36,13 +38,14 @@ export function SidebarContent() {
                 <LiveMarketNews />
             </div>
             <div className="mt-auto px-6 py-6 border-t border-slate-200/50 bg-white/40 backdrop-blur-md shrink-0 space-y-3">
+                <LanguageSwitch />
                 <McpModal />
                 <button
                     onClick={logout}
                     className="flex items-center justify-center gap-3 w-full p-4 rounded-2xl glass-card-solid text-slate-800 font-bold hover-lift transition-all duration-300"
                 >
                     <LogOut className="w-5 h-5 text-slate-700" strokeWidth={2.5} />
-                    <span className="tracking-wide uppercase text-sm">Log Out</span>
+                    <span className="tracking-wide uppercase text-sm">{t("Log Out")}</span>
                 </button>
             </div>
         </div>

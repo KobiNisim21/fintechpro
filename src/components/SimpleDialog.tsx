@@ -1,15 +1,19 @@
+import { t, useLanguage } from '@/i18n';
 import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
+import { LanguageSwitch } from './LanguageSwitch';
 
 interface SimpleDialogProps {
     open: boolean;
     onClose: () => void;
     children: ReactNode;
     title?: string;
+    wide?: boolean;
 }
 
-export function SimpleDialog({ open, onClose, children, title = 'Manage holding' }: SimpleDialogProps) {
+export function SimpleDialog({ open, onClose, children, title = 'Manage holding', wide = false }: SimpleDialogProps) {
+    useLanguage();
     const openerRef = useRef<HTMLElement | null>(null);
     const viewportRef = useRef<HTMLDivElement | null>(null);
     useLayoutEffect(() => {
@@ -54,11 +58,12 @@ export function SimpleDialog({ open, onClose, children, title = 'Manage holding'
                         event.preventDefault();
                         if (openerRef.current?.isConnected) openerRef.current.focus({ preventScroll: true });
                     }}
-                    className="data-panel holding-dialog text-[var(--color-ios-fg)]"
+                    className={`data-panel holding-dialog text-[var(--color-ios-fg)]${wide ? ' holding-dialog-wide' : ''}`}
                 >
                     <header className="holding-dialog-header">
-                        <Dialog.Title className="holding-dialog-title">{title}</Dialog.Title>
-                        <Dialog.Close className="data-action holding-dialog-close" aria-label="Close dialog">
+                        <Dialog.Title className="holding-dialog-title">{t(title)}</Dialog.Title>
+                        <LanguageSwitch />
+                        <Dialog.Close className="data-action holding-dialog-close" aria-label={t("Close dialog")}>
                             <X size={18} aria-hidden="true" />
                         </Dialog.Close>
                     </header>

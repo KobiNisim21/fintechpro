@@ -34,7 +34,7 @@ export async function fixtureQuote(symbol) {
   return { c: 150, pc: 149, d: 1, dp: 100 / 149, name: security.description, source: 'QA fixture', t: Math.floor(Date.now() / 1000) };
 }
 
-export async function createFixtureServer({ port = 0, frontend = false } = {}) {
+export async function createFixtureServer({ port = 0, frontend = false, localization = false } = {}) {
   if (process.env.NODE_ENV === 'production') throw new Error('QA fixture server cannot run in production');
   // No .env, production connection string or provider credentials are read.
   const mongod = await MongoMemoryServer.create({
@@ -81,6 +81,14 @@ export async function createFixtureServer({ port = 0, frontend = false } = {}) {
     app.delete('/api/positions/:id', protect, deletePosition);
     app.get('/api/auth/me', protect, (req, res) => res.json(req.user));
     app.get('/api/watchlist', protect, (req, res) => res.json([]));
+    // Read-only, synthetic screen data; never creates external AI access keys.
+    app.get('/api/mcp/keys', protect, (req, res) => res.json({ keys: [], serverUrl: 'http://127.0.0.1:4175/api/mcp', sseUrl: 'http://127.0.0.1:4175/api/mcp/sse' }));
+    app.get('/api/mcp/audit', protect, (req, res) => res.json([]));
+    app.get('/api/stocks/market-calendar', protect, (req, res) => res.json({
+      economicEvents: localization ? [{ date: new Date(Date.now() + 86400000).toISOString().slice(0, 10), time: '08:30', event: 'CPI (Nov)', country: 'US', importance: 3, category: 'inflation' }] : [],
+      marketHolidays: localization ? [{ date: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10), name: 'Thanksgiving Day', tradingHour: 'closed', exchange: 'NYSE' }] : [],
+      stockSplits: localization ? [{ date: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10), symbol: 'AAPL', description: '4:1' }] : [],
+    }));
     app.get('/api/stocks/search', protect, (req, res) => res.json(securities.filter(s => `${s.symbol} ${s.description}`.toLowerCase().includes(String(req.query.q || '').toLowerCase()))));
     app.get('/api/stocks/forex/usd-ils', protect, (req, res) => res.json({ rate: 3.5, source: 'QA fixture' }));
     app.get('/api/stocks/batch-extended-quote', protect, (req, res) => res.json(Object.fromEntries(String(req.query.symbols || '').split(',').filter(Boolean).map(symbol => [symbol, {
@@ -92,14 +100,15 @@ export async function createFixtureServer({ port = 0, frontend = false } = {}) {
       c: [148, 149, 150], t: [2, 1, 0].map(days => Math.floor(Date.now() / 1000) - days * 86400), s: 'ok', currency: 'USD',
     }]))));
     app.get('/api/stocks/batch-insights', protect, async (req, res) => res.json({
-      recommendations: {}, priceTargets: {}, profiles: Object.fromEntries(await Promise.all(String(req.query.symbols || '').split(',').filter(Boolean).map(async symbol => [symbol, await fixtureProfile(symbol)]))),
+      recommendations: localization ? { GOOG: [{ buy: 5, strongBuy: 4, hold: 2, sell: 1, strongSell: 0 }] } : {},
+      priceTargets: localization ? { GOOG: { targetMean: 175 } } : {}, profiles: Object.fromEntries(await Promise.all(String(req.query.symbols || '').split(',').filter(Boolean).map(async symbol => [symbol, await fixtureProfile(symbol)]))),
     }));
     app.get('/api/stocks/portfolio-analytics', protect, async (req, res) => {
       const positions = combinePositions(await Position.find({ user: req.user._id, isDeleted: { $ne: true } }).lean());
       const rows = await Promise.all(positions.map(async p => { const profile = await fixtureProfile(p.symbol); return { symbol: p.symbol, value: p.quantity * 150, sector: profile.sector, classification: profile.classification, fundExposure: profile.fundExposure, country: profile.country, currency: profile.currency, beta: 1 }; }));
       const risk = calculatePortfolioRisk(rows);
       const exDate = new Date(Date.now() + 10 * 86400000).toISOString(), paymentDate = new Date(Date.now() + 20 * 86400000).toISOString();
-      res.json({ ...risk, quoteCoverage: true, benchmarkData: [], dividends: positions.map(p => ({ ...buildDividendEstimate(p.symbol, positions, { exDate, paymentDate, amount: 0.5 }), source: 'QA fixture' })), correlationMatrix: { symbols: [], matrix: [] }, lastUpdated: new Date().toISOString() });
+      res.json({ ...risk, quoteCoverage: true, benchmarkData: localization ? [2, 1, 0].map(days => ({ date: new Date(Date.now() - days * 86400000).toISOString().slice(0, 10), portfolio: 3 - days, spy: 2 - days / 2 })) : [], dividends: positions.map(p => ({ ...buildDividendEstimate(p.symbol, positions, { exDate, paymentDate, amount: 0.5 }), source: 'QA fixture' })), correlationMatrix: { symbols: [], matrix: [] }, lastUpdated: new Date().toISOString() });
     });
     app.get('/api/stocks/:symbol/quote', protect, async (req, res) => {
       try { res.json(await fixtureQuote(req.params.symbol)); }

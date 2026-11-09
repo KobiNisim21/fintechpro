@@ -1,0 +1,2734 @@
+{
+  "BUY": {
+    "en": "BUY",
+    "he": "קנייה"
+  },
+  "SELL": {
+    "en": "SELL",
+    "he": "מכירה"
+  },
+  "DIVIDEND": {
+    "en": "DIVIDEND",
+    "he": "דיבידנד"
+  },
+  "FEE": {
+    "en": "FEE",
+    "he": "עמלה"
+  },
+  "OPENING": {
+    "en": "OPENING",
+    "he": "יתרת פתיחה"
+  },
+  "ADJUSTMENT": {
+    "en": "ADJUSTMENT",
+    "he": "תיקון"
+  },
+  "REMOVE": {
+    "en": "REMOVE",
+    "he": "הסרה"
+  },
+  "RESTORE": {
+    "en": "RESTORE",
+    "he": "שחזור"
+  },
+  "Activity could not be loaded. Please retry.": {
+    "en": "Activity could not be loaded. Please retry.",
+    "he": "לא ניתן לטעון את היסטוריית הפעולות. נסו שוב."
+  },
+  "Recording failed. Please retry.": {
+    "en": "Recording failed. Please retry.",
+    "he": "רישום הפעולה נכשל. נסו שוב."
+  },
+  "Activity history": {
+    "en": "Activity history",
+    "he": "היסטוריית פעולות"
+  },
+  "Record activity": {
+    "en": "Record activity",
+    "he": "רישום פעולה"
+  },
+  "Legacy Opening entries reconstruct remaining lots; earlier sales and payments may be missing. Corrections/removals are not sales. Costs use USD. Income and fees do not change cash balances.": {
+    "en": "Legacy Opening entries reconstruct remaining lots; earlier sales and payments may be missing. Corrections/removals are not sales. Costs use USD. Income and fees do not change cash balances.",
+    "he": "רשומות פתיחה ישנות משחזרות את הרכישות שנותרו; מכירות ותשלומים קודמים עשויים להיות חסרים. תיקונים והסרות אינם מכירות. העלויות מוצגות בדולר. הכנסות ועמלות אינן משנות יתרות מזומן."
+  },
+  "Activity type": {
+    "en": "Activity type",
+    "he": "סוג פעולה"
+  },
+  "All": {
+    "en": "All",
+    "he": "הכול"
+  },
+  "Refresh activity": {
+    "en": "Refresh activity",
+    "he": "רענון פעולות"
+  },
+  "Loading activity…": {
+    "en": "Loading activity…",
+    "he": "טוען פעולות…"
+  },
+  "entries · FIFO realized results exclude other fees and taxes. Corrections can change the cost basis.": {
+    "en": "entries · FIFO realized results exclude other fees and taxes. Corrections can change the cost basis.",
+    "he": "רשומות · רווח ממומש לפי FIFO אינו כולל עמלות אחרות ומסים. תיקונים עשויים לשנות את בסיס העלות."
+  },
+  "No recorded activity yet.": {
+    "en": "No recorded activity yet.",
+    "he": "טרם נרשמו פעולות."
+  },
+  "Shares:": {
+    "en": "Shares:",
+    "he": "מניות:"
+  },
+  "Unit price:": {
+    "en": "Unit price:",
+    "he": "מחיר ליחידה:"
+  },
+  "Amount:": {
+    "en": "Amount:",
+    "he": "סכום:"
+  },
+  "Realized:": {
+    "en": "Realized:",
+    "he": "רווח ממומש:"
+  },
+  "· Average cost:": {
+    "en": "· Average cost:",
+    "he": "· עלות ממוצעת:"
+  },
+  "· Account:": {
+    "en": "· Account:",
+    "he": "· חשבון:"
+  },
+  "Loading…": {
+    "en": "Loading…",
+    "he": "טוען…"
+  },
+  "Load more": {
+    "en": "Load more",
+    "he": "טעינה נוספת"
+  },
+  "Type": {
+    "en": "Type",
+    "he": "סוג"
+  },
+  "Sale (FIFO)": {
+    "en": "Sale (FIFO)",
+    "he": "מכירה (FIFO)"
+  },
+  "Dividend received": {
+    "en": "Dividend received",
+    "he": "דיבידנד שהתקבל"
+  },
+  "Fee paid": {
+    "en": "Fee paid",
+    "he": "עמלה ששולמה"
+  },
+  "Holding / account": {
+    "en": "Holding / account",
+    "he": "החזקה / חשבון"
+  },
+  "Archived": {
+    "en": "Archived",
+    "he": "בארכיון"
+  },
+  "{0} shares": {
+    "en": "{0} shares",
+    "he": "{0} מניות"
+  },
+  "Shares sold": {
+    "en": "Shares sold",
+    "he": "מניות שנמכרו"
+  },
+  "Price USD": {
+    "en": "Price USD",
+    "he": "מחיר בדולר"
+  },
+  "Sale fee USD": {
+    "en": "Sale fee USD",
+    "he": "עמלת מכירה בדולר"
+  },
+  "Net amount received USD": {
+    "en": "Net amount received USD",
+    "he": "סכום נטו שהתקבל בדולר"
+  },
+  "Fee paid USD": {
+    "en": "Fee paid USD",
+    "he": "עמלה ששולמה בדולר"
+  },
+  "Date": {
+    "en": "Date",
+    "he": "תאריך"
+  },
+  "Note": {
+    "en": "Note",
+    "he": "הערה"
+  },
+  "Sale changes remaining shares. Dividend/fee entries record payments only. No cash posting or tax calculation. Leave date blank for the current time.": {
+    "en": "Sale changes remaining shares. Dividend/fee entries record payments only. No cash posting or tax calculation. Leave date blank for the current time.",
+    "he": "מכירה משנה את כמות המניות שנותרה. רישום דיבידנד או עמלה מתעד תשלום בלבד ואינו מעדכן מזומן או מחשב מס. השאירו את התאריך ריק לרישום בזמן הנוכחי."
+  },
+  "Saving…": {
+    "en": "Saving…",
+    "he": "שומר…"
+  },
+  "Save activity": {
+    "en": "Save activity",
+    "he": "שמירת פעולה"
+  },
+  "Close": {
+    "en": "Close",
+    "he": "סגירה"
+  },
+  "Default": {
+    "en": "Default",
+    "he": "ברירת מחדל"
+  },
+  "Search failed": {
+    "en": "Search failed",
+    "he": "החיפוש נכשל"
+  },
+  "Failed to add position": {
+    "en": "Failed to add position",
+    "he": "הוספת ההחזקה נכשלה"
+  },
+  "Add Position": {
+    "en": "Add Position",
+    "he": "הוספת החזקה"
+  },
+  "Add new position": {
+    "en": "Add new position",
+    "he": "הוספת החזקה חדשה"
+  },
+  "Enter the details of the stock you want to add to your portfolio.": {
+    "en": "Enter the details of the stock you want to add to your portfolio.",
+    "he": "הזינו את פרטי נייר הערך שברצונכם להוסיף לתיק."
+  },
+  "Symbol": {
+    "en": "Symbol",
+    "he": "סימול"
+  },
+  "Search stock...": {
+    "en": "Search stock...",
+    "he": "חיפוש מניה…"
+  },
+  "Search symbol...": {
+    "en": "Search symbol...",
+    "he": "חיפוש סימול…"
+  },
+  "Searching...": {
+    "en": "Searching...",
+    "he": "מחפש…"
+  },
+  "No stock found.": {
+    "en": "No stock found.",
+    "he": "לא נמצאה מניה."
+  },
+  "Broker": {
+    "en": "Broker",
+    "he": "ברוקר"
+  },
+  "Default (or Blink, IBI...)": {
+    "en": "Default (or Blink, IBI...)",
+    "he": "ברירת מחדל (או Blink, IBI...)"
+  },
+  "Name": {
+    "en": "Name",
+    "he": "שם"
+  },
+  "Apple Inc. (optional)": {
+    "en": "Apple Inc. (optional)",
+    "he": "Apple Inc. (רשות)"
+  },
+  "Quantity": {
+    "en": "Quantity",
+    "he": "כמות"
+  },
+  "Avg Price": {
+    "en": "Avg Price",
+    "he": "מחיר ממוצע"
+  },
+  "Adding...": {
+    "en": "Adding...",
+    "he": "מוסיף…"
+  },
+  "Add Stock": {
+    "en": "Add Stock",
+    "he": "הוספת נייר ערך"
+  },
+  "Holdings": {
+    "en": "Holdings",
+    "he": "החזקות"
+  },
+  "Insights": {
+    "en": "Insights",
+    "he": "תובנות"
+  },
+  "Watchlist": {
+    "en": "Watchlist",
+    "he": "רשימת מעקב"
+  },
+  "Calendar": {
+    "en": "Calendar",
+    "he": "יומן"
+  },
+  "Main navigation": {
+    "en": "Main navigation",
+    "he": "ניווט ראשי"
+  },
+  "More": {
+    "en": "More",
+    "he": "עוד"
+  },
+  "Menu": {
+    "en": "Menu",
+    "he": "תפריט"
+  },
+  "Live": {
+    "en": "Live",
+    "he": "מחובר"
+  },
+  "Connecting...": {
+    "en": "Connecting...",
+    "he": "מתחבר…"
+  },
+  "Reconnecting...": {
+    "en": "Reconnecting...",
+    "he": "מתחבר מחדש…"
+  },
+  "Offline": {
+    "en": "Offline",
+    "he": "לא מחובר"
+  },
+  "Skip to content": {
+    "en": "Skip to content",
+    "he": "דילוג לתוכן"
+  },
+  "Portfolio Holdings": {
+    "en": "Portfolio Holdings",
+    "he": "החזקות התיק"
+  },
+  "Portfolio Insights": {
+    "en": "Portfolio Insights",
+    "he": "תובנות על התיק"
+  },
+  "Market Calendar": {
+    "en": "Market Calendar",
+    "he": "יומן שוק ההון"
+  },
+  "Performance History": {
+    "en": "Performance History",
+    "he": "היסטוריית ביצועים"
+  },
+  "Not announced": {
+    "en": "Not announced",
+    "he": "טרם פורסם"
+  },
+  "Dividend calendar": {
+    "en": "Dividend calendar",
+    "he": "יומן דיבידנדים"
+  },
+  "Current holdings only. Ex-date determines purchase eligibility; payment date is when the company pays. Annual rates are not divided by four. Forecasts are indicative, before tax, and are not received payments. Sold holdings may still be entitled; record actual net payments in Activity, including archived holdings.": {
+    "en": "Current holdings only. Ex-date determines purchase eligibility; payment date is when the company pays. Annual rates are not divided by four. Forecasts are indicative, before tax, and are not received payments. Sold holdings may still be entitled; record actual net payments in Activity, including archived holdings.",
+    "he": "החזקות נוכחיות בלבד. יום האקס קובע זכאות לפי מועד הרכישה; יום התשלום הוא מועד העברת הדיבידנד. שיעור שנתי אינו מחולק בארבע. התחזיות הן אומדן לפני מס, ולא תשלומים שהתקבלו. גם החזקות שנמכרו עשויות להיות זכאיות; רשמו תשלומי נטו בפועל בהיסטוריית הפעולות, גם להחזקות בארכיון."
+  },
+  "Loading dividends…": {
+    "en": "Loading dividends…",
+    "he": "טוען דיבידנדים…"
+  },
+  "No dividend dates available. This does not prove that no dividend will be paid.": {
+    "en": "No dividend dates available. This does not prove that no dividend will be paid.",
+    "he": "אין מועדי דיבידנד זמינים. אין להסיק מכך שלא ישולם דיבידנד."
+  },
+  "Ex-date": {
+    "en": "Ex-date",
+    "he": "יום האקס"
+  },
+  "Payment date": {
+    "en": "Payment date",
+    "he": "יום התשלום"
+  },
+  "Per payment / share": {
+    "en": "Per payment / share",
+    "he": "תשלום למניה"
+  },
+  "Indicative payout": {
+    "en": "Indicative payout",
+    "he": "תשלום משוער"
+  },
+  "Eligibility requires purchase history": {
+    "en": "Eligibility requires purchase history",
+    "he": "בדיקת זכאות מחייבת היסטוריית רכישות"
+  },
+  "Updated": {
+    "en": "Updated",
+    "he": "עודכן"
+  },
+  "Something went wrong": {
+    "en": "Something went wrong",
+    "he": "משהו השתבש"
+  },
+  "An unexpected error occurred": {
+    "en": "An unexpected error occurred",
+    "he": "אירעה שגיאה בלתי צפויה"
+  },
+  "Try Again": {
+    "en": "Try Again",
+    "he": "ניסיון נוסף"
+  },
+  "No sector data": {
+    "en": "No sector data",
+    "he": "אין נתוני ענפים"
+  },
+  "% of portfolio": {
+    "en": "% of portfolio",
+    "he": "% מהתיק"
+  },
+  "Unknown": {
+    "en": "Unknown",
+    "he": "לא ידוע"
+  },
+  "Neutral": {
+    "en": "Neutral",
+    "he": "ניטרלי"
+  },
+  "Buy": {
+    "en": "Buy",
+    "he": "קנייה"
+  },
+  "Sell": {
+    "en": "Sell",
+    "he": "מכירה"
+  },
+  "Hold": {
+    "en": "Hold",
+    "he": "החזקה"
+  },
+  "Sector Distribution": {
+    "en": "Sector Distribution",
+    "he": "פיזור לפי ענפים"
+  },
+  "Portfolio Allocation": {
+    "en": "Portfolio Allocation",
+    "he": "חלוקת התיק"
+  },
+  "Analyst Recommendations & Price Targets": {
+    "en": "Analyst Recommendations & Price Targets",
+    "he": "המלצות אנליסטים ומחירי יעד"
+  },
+  "No analyst-rated holdings in your portfolio.": {
+    "en": "No analyst-rated holdings in your portfolio.",
+    "he": "אין בתיק החזקות עם דירוג אנליסטים."
+  },
+  "Current": {
+    "en": "Current",
+    "he": "נוכחי"
+  },
+  "Avg Target": {
+    "en": "Avg Target",
+    "he": "יעד ממוצע"
+  },
+  "No Data": {
+    "en": "No Data",
+    "he": "אין נתונים"
+  },
+  "Potential": {
+    "en": "Potential",
+    "he": "פוטנציאל"
+  },
+  "Ratings (": {
+    "en": "Ratings (",
+    "he": "דירוגים ("
+  },
+  "Live Alerts": {
+    "en": "Live Alerts",
+    "he": "התראות בזמן אמת"
+  },
+  "No alerts yet": {
+    "en": "No alerts yet",
+    "he": "אין התראות עדיין"
+  },
+  "Price moves, 52-week lows &amp; earnings": {
+    "en": "Price moves, 52-week lows &amp; earnings",
+    "he": "שינויי מחיר, שפל שנתי ודוחות כספיים"
+  },
+  "Market News": {
+    "en": "Market News",
+    "he": "חדשות השוק"
+  },
+  "LIVE": {
+    "en": "LIVE",
+    "he": "בזמן אמת"
+  },
+  "new": {
+    "en": "new",
+    "he": "חדש"
+  },
+  "No news matching your portfolio yet": {
+    "en": "No news matching your portfolio yet",
+    "he": "אין עדיין חדשות התואמות לתיק"
+  },
+  "News will appear when sources mention $TICKER symbols in your holdings": {
+    "en": "News will appear when sources mention $TICKER symbols in your holdings",
+    "he": "חדשות יופיעו כאשר המקורות יזכירו סימולי $TICKER של ניירות הערך בתיק"
+  },
+  "recently": {
+    "en": "recently",
+    "he": "לאחרונה"
+  },
+  "(No content)": {
+    "en": "(No content)",
+    "he": "(ללא תוכן)"
+  },
+  "Go to page {0} of {1}": {
+    "en": "Go to page {0} of {1}",
+    "he": "מעבר לעמוד {0} מתוך {1}"
+  },
+  "Showing": {
+    "en": "Showing",
+    "he": "מציג"
+  },
+  "of": {
+    "en": "of",
+    "he": "מתוך"
+  },
+  "items": {
+    "en": "items",
+    "he": "פריטים"
+  },
+  "Real-time portfolio management & market insights": {
+    "en": "Real-time portfolio management & market insights",
+    "he": "ניהול תיק השקעות ותובנות שוק בזמן אמת"
+  },
+  "Signing you in...": {
+    "en": "Signing you in...",
+    "he": "מתחבר לחשבון…"
+  },
+  "By signing in, you agree to our Terms of Service.": {
+    "en": "By signing in, you agree to our Terms of Service.",
+    "he": "התחברות מהווה הסכמה לתנאי השירות שלנו."
+  },
+  "Your portfolio data is stored securely.": {
+    "en": "Your portfolio data is stored securely.",
+    "he": "נתוני התיק נשמרים באופן מאובטח."
+  },
+  "Configuration Error": {
+    "en": "Configuration Error",
+    "he": "שגיאת הגדרות"
+  },
+  "VITE_GOOGLE_CLIENT_ID is not set. Please configure it in your environment variables.": {
+    "en": "VITE_GOOGLE_CLIENT_ID is not set. Please configure it in your environment variables.",
+    "he": "ההתחברות אינה מוגדרת. יש לפנות למנהל האתר."
+  },
+  "Logo": {
+    "en": "Logo",
+    "he": "לוגו"
+  },
+  "Price at or above (USD)": {
+    "en": "Price at or above (USD)",
+    "he": "מחיר שווה או גבוה מ־ (דולר)"
+  },
+  "Price at or below (USD)": {
+    "en": "Price at or below (USD)",
+    "he": "מחיר שווה או נמוך מ־ (דולר)"
+  },
+  "Absolute daily move (%)": {
+    "en": "Absolute daily move (%)",
+    "he": "שינוי יומי מוחלט (%)"
+  },
+  "Holding weight at or above (%)": {
+    "en": "Holding weight at or above (%)",
+    "he": "משקל החזקה שווה או גבוה מ־ (%)"
+  },
+  "Could not load alerts. Please retry.": {
+    "en": "Could not load alerts. Please retry.",
+    "he": "לא ניתן לטעון התראות. נסו שוב."
+  },
+  "Action failed. Please retry.": {
+    "en": "Action failed. Please retry.",
+    "he": "הפעולה נכשלה. נסו שוב."
+  },
+  "Personal alerts": {
+    "en": "Personal alerts",
+    "he": "התראות אישיות"
+  },
+  "In-app alerts, checked about once a minute by the running backend and on demand. Quotes may be delayed. Price alerts pause after triggering; percentage rules repeat at most once per 24 hours. No email or Telegram delivery.": {
+    "en": "In-app alerts, checked about once a minute by the running backend and on demand. Quotes may be delayed. Price alerts pause after triggering; percentage rules repeat at most once per 24 hours. No email or Telegram delivery.",
+    "he": "התראות בתוך האתר, הנבדקות בערך אחת לדקה ובאופן יזום כאשר השרת פעיל. הציטוטים עשויים להתעכב. התראות מחיר מושהות לאחר הפעלה; כללי אחוזים מופעלים לכל היותר פעם ב־24 שעות. אין משלוח בדוא״ל או בטלגרם."
+  },
+  "Holding": {
+    "en": "Holding",
+    "he": "החזקה"
+  },
+  "Condition": {
+    "en": "Condition",
+    "he": "תנאי"
+  },
+  "Threshold": {
+    "en": "Threshold",
+    "he": "ערך סף"
+  },
+  "Create alert": {
+    "en": "Create alert",
+    "he": "יצירת התראה"
+  },
+  "{0} alert(s) triggered. Missing data does not trigger an alert.": {
+    "en": "{0} alert(s) triggered. Missing data does not trigger an alert.",
+    "he": "הופעלו {0} התראות. נתונים חסרים אינם מפעילים התראה."
+  },
+  "Check now": {
+    "en": "Check now",
+    "he": "בדיקה כעת"
+  },
+  "Refresh alerts": {
+    "en": "Refresh alerts",
+    "he": "רענון התראות"
+  },
+  "Loading alerts…": {
+    "en": "Loading alerts…",
+    "he": "טוען התראות…"
+  },
+  "No personal alerts yet.": {
+    "en": "No personal alerts yet.",
+    "he": "אין עדיין התראות אישיות."
+  },
+  "Active": {
+    "en": "Active",
+    "he": "פעילה"
+  },
+  "Paused": {
+    "en": "Paused",
+    "he": "מושהית"
+  },
+  "Pause": {
+    "en": "Pause",
+    "he": "השהיה"
+  },
+  "Rearm": {
+    "en": "Rearm",
+    "he": "הפעלה מחדש"
+  },
+  "Delete alert": {
+    "en": "Delete alert",
+    "he": "מחיקת התראה"
+  },
+  "Exchange rate unavailable": {
+    "en": "Exchange rate unavailable",
+    "he": "שער החליפין אינו זמין"
+  },
+  "Portfolio Growth": {
+    "en": "Portfolio Growth",
+    "he": "צמיחת התיק"
+  },
+  "Last 30 Days Performance": {
+    "en": "Last 30 Days Performance",
+    "he": "ביצועי 30 הימים האחרונים"
+  },
+  "Historical value of today's holdings at the current exchange rate. Assets without history are excluded.": {
+    "en": "Historical value of today's holdings at the current exchange rate. Assets without history are excluded.",
+    "he": "השווי ההיסטורי של ההחזקות הנוכחיות לפי שער החליפין הנוכחי. נכסים ללא היסטוריית מחירים אינם נכללים."
+  },
+  "₪{0}K": {
+    "en": "₪{0}K",
+    "he": "₪{0} אלף"
+  },
+  "30-day price change": {
+    "en": "30-day price change",
+    "he": "שינוי מחיר ב־30 יום"
+  },
+  "Total Gain": {
+    "en": "Total Gain",
+    "he": "רווח כולל"
+  },
+  "Best Day": {
+    "en": "Best Day",
+    "he": "היום הטוב ביותר"
+  },
+  "Estimated exchange rate": {
+    "en": "Estimated exchange rate",
+    "he": "שער חליפין משוער"
+  },
+  "Last known exchange rate": {
+    "en": "Last known exchange rate",
+    "he": "שער החליפין האחרון הידוע"
+  },
+  "Portfolio Overview": {
+    "en": "Portfolio Overview",
+    "he": "סקירת התיק"
+  },
+  "Includes estimates": {
+    "en": "Includes estimates",
+    "he": "כולל אומדנים"
+  },
+  "Previous quotes": {
+    "en": "Previous quotes",
+    "he": "ציטוטים קודמים"
+  },
+  "Market data": {
+    "en": "Market data",
+    "he": "נתוני שוק"
+  },
+  "TODAY": {
+    "en": "TODAY",
+    "he": "היום"
+  },
+  "1W": {
+    "en": "1W",
+    "he": "שבוע"
+  },
+  "1M": {
+    "en": "1M",
+    "he": "חודש"
+  },
+  "1Y": {
+    "en": "1Y",
+    "he": "שנה"
+  },
+  "Return": {
+    "en": "Return",
+    "he": "תשואה"
+  },
+  "Portfolio Health & exposure": {
+    "en": "Portfolio Health & exposure",
+    "he": "בריאות התיק וחשיפות"
+  },
+  "Refresh analysis": {
+    "en": "Refresh analysis",
+    "he": "רענון ניתוח"
+  },
+  "Loading analysis…": {
+    "en": "Loading analysis…",
+    "he": "טוען ניתוח…"
+  },
+  "Partial analysis": {
+    "en": "Partial analysis",
+    "he": "ניתוח חלקי"
+  },
+  "Sector data covers": {
+    "en": "Sector data covers",
+    "he": "נתוני הענפים מכסים"
+  },
+  "% of the portfolio; at least 80% is required to calculate the score.": {
+    "en": "% of the portfolio; at least 80% is required to calculate the score.",
+    "he": "% מהתיק; לחישוב הציון נדרש כיסוי של 80% לפחות."
+  },
+  "Market-sensitivity data is missing for some holdings.": {
+    "en": "Market-sensitivity data is missing for some holdings.",
+    "he": "חסרים נתוני רגישות לשוק בחלק מההחזקות."
+  },
+  "Some price data is unavailable.": {
+    "en": "Some price data is unavailable.",
+    "he": "חלק מנתוני המחירים אינם זמינים."
+  },
+  "This is a data limitation, not a judgment that your portfolio is unhealthy. No investment action is required because of this message.": {
+    "en": "This is a data limitation, not a judgment that your portfolio is unhealthy. No investment action is required because of this message.",
+    "he": "זוהי מגבלה בנתונים, ולא קביעה שהתיק אינו בריא. אין צורך לבצע פעולת השקעה בשל הודעה זו."
+  },
+  "Missing sector data:": {
+    "en": "Missing sector data:",
+    "he": "נתוני ענף חסרים:"
+  },
+  "A concentration and market-sensitivity heuristic, not a low-risk guarantee. Higher is better under this formula. Supported broad equity ETFs contribute their underlying diversification. Cash is excluded.": {
+    "en": "A concentration and market-sensitivity heuristic, not a low-risk guarantee. Higher is better under this formula. Supported broad equity ETFs contribute their underlying diversification. Cash is excluded.",
+    "he": "מדד עזר לריכוזיות ולרגישות לשוק, שאינו מבטיח סיכון נמוך. לפי הנוסחה, ציון גבוה יותר עדיף. קרנות מנייתיות רחבות נתמכות תורמות את הפיזור של החזקותיהן. מזומן אינו נכלל."
+  },
+  "Showing previous analysis; the latest refresh failed.": {
+    "en": "Showing previous analysis; the latest refresh failed.",
+    "he": "מוצג ניתוח קודם; הרענון האחרון נכשל."
+  },
+  "Sector coverage": {
+    "en": "Sector coverage",
+    "he": "כיסוי ענפים"
+  },
+  "Beta coverage": {
+    "en": "Beta coverage",
+    "he": "כיסוי בטא"
+  },
+  "Covered weighted beta": {
+    "en": "Covered weighted beta",
+    "he": "בטא משוקללת של ההחזקות המכוסות"
+  },
+  "Quote coverage": {
+    "en": "Quote coverage",
+    "he": "כיסוי ציטוטים"
+  },
+  "Available": {
+    "en": "Available",
+    "he": "זמין"
+  },
+  "Incomplete": {
+    "en": "Incomplete",
+    "he": "חלקי"
+  },
+  "How the score works": {
+    "en": "How the score works",
+    "he": "איך מחושב הציון"
+  },
+  "Current USD market values. 40% underlying issuer concentration, 40% sector concentration, 20% absolute beta sensitivity. Supported ETFs are expanded into their published holdings or an explicitly identified benchmark proxy. Direct and fund exposures to the same issuer are combined. Missing fund data receives no diversification credit. Requires at least 80% sector and beta coverage and quotes for every holding. Beta measures market sensitivity, not total volatility. Country and currency views describe listed instruments.": {
+    "en": "Current USD market values. 40% underlying issuer concentration, 40% sector concentration, 20% absolute beta sensitivity. Supported ETFs are expanded into their published holdings or an explicitly identified benchmark proxy. Direct and fund exposures to the same issuer are combined. Missing fund data receives no diversification credit. Requires at least 80% sector and beta coverage and quotes for every holding. Beta measures market sensitivity, not total volatility. Country and currency views describe listed instruments.",
+    "he": "לפי שווי שוק נוכחי בדולר: 40% ריכוזיות במנפיקים, 40% ריכוזיות ענפית, 20% רגישות לפי בטא מוחלטת. קרנות נתמכות מפורקות להחזקותיהן שפורסמו או לאומדן מדד ייחוס המסומן במפורש. חשיפות ישירות ודרך קרנות לאותו מנפיק מחוברות. נתוני קרן חסרים אינם מקנים תוספת פיזור. נדרשים כיסוי ענפים ובטא של 80% לפחות וציטוטים לכל החזקה. בטא מודדת רגישות לשוק, ולא תנודתיות כוללת. תצוגות המדינה והמטבע מתייחסות לניירות הרשומים למסחר."
+  },
+  "Broad-market funds": {
+    "en": "Broad-market funds",
+    "he": "קרנות שוק רחבות"
+  },
+  "% of the portfolio is held in supported broad equity ETFs. Their underlying companies and sectors contribute to diversification.": {
+    "en": "% of the portfolio is held in supported broad equity ETFs. Their underlying companies and sectors contribute to diversification.",
+    "he": "% מהתיק מוחזקים בקרנות מנייתיות רחבות נתמכות. החברות והענפים שבקרנות תורמים לפיזור."
+  },
+  "equity positions": {
+    "en": "equity positions",
+    "he": "החזקות מנייתיות"
+  },
+  "· Benchmark proxy estimate": {
+    "en": "· Benchmark proxy estimate",
+    "he": "· אומדן לפי מדד ייחוס"
+  },
+  "What your portfolio data shows": {
+    "en": "What your portfolio data shows",
+    "he": "מה מראים נתוני התיק"
+  },
+  "Your largest listed position is": {
+    "en": "Your largest listed position is",
+    "he": "ההחזקה הרשומה הגדולה ביותר היא"
+  },
+  ", at": {
+    "en": ", at",
+    "he": ", במשקל"
+  },
+  "% of securities value across accounts.": {
+    "en": "% of securities value across accounts.",
+    "he": "% משווי ניירות הערך בכל החשבונות."
+  },
+  "Your three largest listed positions account for": {
+    "en": "Your three largest listed positions account for",
+    "he": "שלוש ההחזקות הרשומות הגדולות מהוות"
+  },
+  "%. A broad ETF can contain many companies within one listed position.": {
+    "en": "%. A broad ETF can contain many companies within one listed position.",
+    "he": "%. קרן רחבה יכולה לכלול חברות רבות בתוך החזקה רשומה אחת."
+  },
+  "The largest combined underlying issuer exposure is": {
+    "en": "The largest combined underlying issuer exposure is",
+    "he": "החשיפה המצטברת הגדולה ביותר למנפיק היא"
+  },
+  "%, including supported fund holdings.": {
+    "en": "%, including supported fund holdings.",
+    "he": "%, כולל החזקות בקרנות נתמכות."
+  },
+  "The daily change calculated from received quotes is": {
+    "en": "The daily change calculated from received quotes is",
+    "he": "השינוי היומי המחושב מהציטוטים שהתקבלו הוא"
+  },
+  "% of value uses cached or estimated quotes. Allow for this when interpreting results.": {
+    "en": "% of value uses cached or estimated quotes. Allow for this when interpreting results.",
+    "he": "% מהשווי משתמשים בציטוטים שמורים או משוערים. יש להביא זאת בחשבון בפרשנות התוצאות."
+  },
+  "Calculated from the displayed data. No language model or external AI service is used.": {
+    "en": "Calculated from the displayed data. No language model or external AI service is used.",
+    "he": "מחושב מהנתונים המוצגים. ללא שימוש במודל שפה או בשירות בינה מלאכותית חיצוני."
+  },
+  "Listing currencies": {
+    "en": "Listing currencies",
+    "he": "מטבעות מסחר"
+  },
+  "Issuer / fund domicile": {
+    "en": "Issuer / fund domicile",
+    "he": "מדינת המנפיק / רישום הקרן"
+  },
+  "Underlying issuer exposure": {
+    "en": "Underlying issuer exposure",
+    "he": "חשיפה למנפיקים דרך נכסי הבסיס"
+  },
+  "Combined listed positions": {
+    "en": "Combined listed positions",
+    "he": "החזקות רשומות משולבות"
+  },
+  "Top 20 exposures. Alphabet share classes are combined.": {
+    "en": "Top 20 exposures. Alphabet share classes are combined.",
+    "he": "20 החשיפות הגדולות ביותר. סוגי המניות של Alphabet מאוחדים."
+  },
+  "Exposure percentages cover available quotes only; missing quotes can change the weights.": {
+    "en": "Exposure percentages cover available quotes only; missing quotes can change the weights.",
+    "he": "אחוזי החשיפה מבוססים על ציטוטים זמינים בלבד; ציטוטים חסרים עשויים לשנות את המשקולות."
+  },
+  "Classification sources": {
+    "en": "Classification sources",
+    "he": "מקורות הסיווג"
+  },
+  "Not classified": {
+    "en": "Not classified",
+    "he": "ללא סיווג"
+  },
+  "No verified source": {
+    "en": "No verified source",
+    "he": "אין מקור מאומת"
+  },
+  "· Previous data": {
+    "en": "· Previous data",
+    "he": "· נתונים קודמים"
+  },
+  "Uses a broad-market holdings proxy, not this fund's exact holdings.": {
+    "en": "Uses a broad-market holdings proxy, not this fund's exact holdings.",
+    "he": "משתמש באומדן החזקות שוק רחב, ולא בהחזקות המדויקות של הקרן הזו."
+  },
+  "Supported funds use dated issuer holdings. Sector and issuer weights include direct/fund overlap; unresolved holdings remain unknown.": {
+    "en": "Supported funds use dated issuer holdings. Sector and issuer weights include direct/fund overlap; unresolved holdings remain unknown.",
+    "he": "קרנות נתמכות משתמשות בהחזקות מתוארכות של המנפיק. המשקולות כוללות חפיפה בין החזקות ישירות לקרנות; החזקות שלא זוהו נשארות לא ידועות."
+  },
+  "Export failed. Please try again.": {
+    "en": "Export failed. Please try again.",
+    "he": "הייצוא נכשל. נסו שוב."
+  },
+  "Portfolio tools": {
+    "en": "Portfolio tools",
+    "he": "כלי התיק"
+  },
+  "Activity": {
+    "en": "Activity",
+    "he": "פעולות"
+  },
+  "triggered": {
+    "en": "triggered",
+    "he": "שהופעלו"
+  },
+  "Exporting…": {
+    "en": "Exporting…",
+    "he": "מייצא…"
+  },
+  "Export Excel": {
+    "en": "Export Excel",
+    "he": "ייצוא לאקסל"
+  },
+  "Loading portfolio tools…": {
+    "en": "Loading portfolio tools…",
+    "he": "טוען את כלי התיק…"
+  },
+  "Estimated from purchase cost": {
+    "en": "Estimated from purchase cost",
+    "he": "אומדן לפי עלות הרכישה"
+  },
+  "Previous quote · refresh pending": {
+    "en": "Previous quote · refresh pending",
+    "he": "ציטוט קודם · ממתין לרענון"
+  },
+  "Cached quote": {
+    "en": "Cached quote",
+    "he": "ציטוט שמור"
+  },
+  "Latest received quote": {
+    "en": "Latest received quote",
+    "he": "הציטוט האחרון שהתקבל"
+  },
+  "Source unavailable": {
+    "en": "Source unavailable",
+    "he": "המקור אינו זמין"
+  },
+  "· Update time unavailable": {
+    "en": "· Update time unavailable",
+    "he": "· זמן העדכון אינו זמין"
+  },
+  "Wealth Management": {
+    "en": "Wealth Management",
+    "he": "ניהול השקעות"
+  },
+  "Log Out": {
+    "en": "Log Out",
+    "he": "יציאה מהחשבון"
+  },
+  "Manage holding": {
+    "en": "Manage holding",
+    "he": "ניהול החזקה"
+  },
+  "Close dialog": {
+    "en": "Close dialog",
+    "he": "סגירת חלון"
+  },
+  "Are you sure you want to delete {0}?": {
+    "en": "Are you sure you want to delete {0}?",
+    "he": "האם להסיר את {0} מהתיק?"
+  },
+  "Removing all lots will delete the position. Continue?": {
+    "en": "Removing all lots will delete the position. Continue?",
+    "he": "הסרת כל הרכישות תמחק את ההחזקה. להמשיך?"
+  },
+  "Failed to save changes. Please try again.": {
+    "en": "Failed to save changes. Please try again.",
+    "he": "שמירת השינויים נכשלה. נסו שוב."
+  },
+  "Edit position": {
+    "en": "Edit position",
+    "he": "עריכת החזקה"
+  },
+  "Edit {0} position": {
+    "en": "Edit {0} position",
+    "he": "עריכת החזקת {0}"
+  },
+  "Remove position": {
+    "en": "Remove position",
+    "he": "הסרת החזקה"
+  },
+  "Remove {0} position": {
+    "en": "Remove {0} position",
+    "he": "הסרת החזקת {0}"
+  },
+  "(estimated)": {
+    "en": "(estimated)",
+    "he": "(משוער)"
+  },
+  "PM": {
+    "en": "PM",
+    "he": "טרום מסחר"
+  },
+  "AH": {
+    "en": "AH",
+    "he": "מסחר מאוחר"
+  },
+  "Pre-market": {
+    "en": "Pre-market",
+    "he": "טרום מסחר"
+  },
+  "After-hours": {
+    "en": "After-hours",
+    "he": "מסחר מאוחר"
+  },
+  "Closed": {
+    "en": "Closed",
+    "he": "סגור"
+  },
+  "at close": {
+    "en": "at close",
+    "he": "בסגירה"
+  },
+  "Pre-market:": {
+    "en": "Pre-market:",
+    "he": "טרום מסחר:"
+  },
+  "After-hours:": {
+    "en": "After-hours:",
+    "he": "מסחר מאוחר:"
+  },
+  "Pre-market INFO": {
+    "en": "Pre-market INFO",
+    "he": "נתוני טרום מסחר"
+  },
+  "After-hours INFO": {
+    "en": "After-hours INFO",
+    "he": "נתוני מסחר מאוחר"
+  },
+  "Market closed": {
+    "en": "Market closed",
+    "he": "השוק סגור"
+  },
+  "Shares": {
+    "en": "Shares",
+    "he": "מניות"
+  },
+  "Total Value": {
+    "en": "Total Value",
+    "he": "שווי כולל"
+  },
+  "Near 52W Low": {
+    "en": "Near 52W Low",
+    "he": "קרוב לשפל של 52 שבועות"
+  },
+  "Next Earnings:": {
+    "en": "Next Earnings:",
+    "he": "הדוח הבא:"
+  },
+  "Edit {0} holdings": {
+    "en": "Edit {0} holdings",
+    "he": "עריכת החזקות {0}"
+  },
+  "Qty": {
+    "en": "Qty",
+    "he": "כמות"
+  },
+  "Price": {
+    "en": "Price",
+    "he": "מחיר"
+  },
+  "Purchase date": {
+    "en": "Purchase date",
+    "he": "תאריך רכישה"
+  },
+  "Purchase date for lot {0}": {
+    "en": "Purchase date for lot {0}",
+    "he": "תאריך הרכישה ברכישה {0}"
+  },
+  "Quantity for lot {0}": {
+    "en": "Quantity for lot {0}",
+    "he": "כמות ברכישה {0}"
+  },
+  "Price for lot {0}": {
+    "en": "Price for lot {0}",
+    "he": "מחיר ברכישה {0}"
+  },
+  "Remove lot {0} from draft": {
+    "en": "Remove lot {0} from draft",
+    "he": "הסרת רכישה {0} מהטיוטה"
+  },
+  "Price per Share": {
+    "en": "Price per Share",
+    "he": "מחיר למניה"
+  },
+  "Cancel": {
+    "en": "Cancel",
+    "he": "ביטול"
+  },
+  "Add Lot": {
+    "en": "Add Lot",
+    "he": "הוספת רכישה"
+  },
+  "Add Another Lot": {
+    "en": "Add Another Lot",
+    "he": "הוספת רכישה נוספת"
+  },
+  "Total Shares": {
+    "en": "Total Shares",
+    "he": "סך המניות"
+  },
+  "Saving...": {
+    "en": "Saving...",
+    "he": "שומר…"
+  },
+  "Save Changes": {
+    "en": "Save Changes",
+    "he": "שמירת שינויים"
+  },
+  "Updating market data…": {
+    "en": "Updating market data…",
+    "he": "מעדכן נתוני שוק…"
+  },
+  "Prices show the latest received quote; fund NAVs update daily.": {
+    "en": "Prices show the latest received quote; fund NAVs update daily.",
+    "he": "המחירים הם הציטוטים האחרונים שהתקבלו; שווי נכסי קרנות מתעדכן מדי יום."
+  },
+  "Refreshing…": {
+    "en": "Refreshing…",
+    "he": "מרענן…"
+  },
+  "Refresh": {
+    "en": "Refresh",
+    "he": "רענון"
+  },
+  "Could not refresh your portfolio.": {
+    "en": "Could not refresh your portfolio.",
+    "he": "לא ניתן לרענן את התיק."
+  },
+  "Previously received data remains visible.": {
+    "en": "Previously received data remains visible.",
+    "he": "הנתונים האחרונים שהתקבלו נשארים מוצגים."
+  },
+  "Check your connection and try again.": {
+    "en": "Check your connection and try again.",
+    "he": "בדקו את החיבור ונסו שוב."
+  },
+  "Try again": {
+    "en": "Try again",
+    "he": "ניסיון נוסף"
+  },
+  "Loading portfolio": {
+    "en": "Loading portfolio",
+    "he": "טוען תיק"
+  },
+  "Loading your portfolio…": {
+    "en": "Loading your portfolio…",
+    "he": "טוען את התיק שלך…"
+  },
+  "Start your portfolio": {
+    "en": "Start your portfolio",
+    "he": "בניית התיק שלך"
+  },
+  "Add your first holding to see its value, performance and market data.": {
+    "en": "Add your first holding to see its value, performance and market data.",
+    "he": "הוסיפו החזקה ראשונה לצפייה בשווי, בביצועים ובנתוני השוק שלה."
+  },
+  "Failed to add": {
+    "en": "Failed to add",
+    "he": "ההוספה נכשלה"
+  },
+  "No Stocks in Watchlist": {
+    "en": "No Stocks in Watchlist",
+    "he": "רשימת המעקב ריקה"
+  },
+  "Add stocks to track their daily, weekly, monthly, and yearly performance — without adding them to your portfolio.": {
+    "en": "Add stocks to track their daily, weekly, monthly, and yearly performance — without adding them to your portfolio.",
+    "he": "הוסיפו ניירות ערך למעקב אחר הביצועים היומיים, השבועיים, החודשיים והשנתיים שלהם, בלי להוסיף אותם לתיק."
+  },
+  "Add to Watchlist": {
+    "en": "Add to Watchlist",
+    "he": "הוספה למעקב"
+  },
+  "Search for a stock to track its performance.": {
+    "en": "Search for a stock to track its performance.",
+    "he": "חפשו נייר ערך למעקב אחר הביצועים שלו."
+  },
+  "Search by symbol or name...": {
+    "en": "Search by symbol or name...",
+    "he": "חיפוש לפי סימול או שם…"
+  },
+  "No stocks found.": {
+    "en": "No stocks found.",
+    "he": "לא נמצאו ניירות ערך."
+  },
+  "+ Add": {
+    "en": "+ Add",
+    "he": "+ הוספה"
+  },
+  "stock": {
+    "en": "stock",
+    "he": "נייר ערך"
+  },
+  "tracked": {
+    "en": "tracked",
+    "he": "במעקב"
+  },
+  "Remove from watchlist": {
+    "en": "Remove from watchlist",
+    "he": "הסרה מרשימת המעקב"
+  },
+  "Day": {
+    "en": "Day",
+    "he": "יום"
+  },
+  "Week": {
+    "en": "Week",
+    "he": "שבוע"
+  },
+  "Month": {
+    "en": "Month",
+    "he": "חודש"
+  },
+  "Year": {
+    "en": "Year",
+    "he": "שנה"
+  },
+  "Loading chart...": {
+    "en": "Loading chart...",
+    "he": "טוען תרשים…"
+  },
+  "Correlation Matrix": {
+    "en": "Correlation Matrix",
+    "he": "מטריצת מתאמים"
+  },
+  "Up to 30 aligned returns": {
+    "en": "Up to 30 aligned returns",
+    "he": "עד 30 תשואות מתואמות לפי תאריך"
+  },
+  "vs": {
+    "en": "vs",
+    "he": "מול"
+  },
+  "N/A": {
+    "en": "N/A",
+    "he": "לא זמין"
+  },
+  "Economic Events": {
+    "en": "Economic Events",
+    "he": "אירועים כלכליים"
+  },
+  "Market Holidays": {
+    "en": "Market Holidays",
+    "he": "חופשות מסחר"
+  },
+  "Stock Splits": {
+    "en": "Stock Splits",
+    "he": "פיצולי מניות"
+  },
+  "No upcoming events": {
+    "en": "No upcoming events",
+    "he": "אין אירועים קרובים"
+  },
+  "No upcoming market holidays": {
+    "en": "No upcoming market holidays",
+    "he": "אין חופשות מסחר קרובות"
+  },
+  "Exchange Closed": {
+    "en": "Exchange Closed",
+    "he": "הבורסה סגורה"
+  },
+  "No upcoming splits for your holdings": {
+    "en": "No upcoming splits for your holdings",
+    "he": "אין פיצולים קרובים בהחזקות שלך"
+  },
+  "6M": {
+    "en": "6M",
+    "he": "6 חודשים"
+  },
+  "Portfolio vs S&P 500": {
+    "en": "Portfolio vs S&P 500",
+    "he": "התיק מול S&P 500"
+  },
+  "Estimate from remaining purchase lots. Excludes closed holdings, sale proceeds, cash, fees and dividends; not a complete account return.": {
+    "en": "Estimate from remaining purchase lots. Excludes closed holdings, sale proceeds, cash, fees and dividends; not a complete account return.",
+    "he": "אומדן המבוסס על רכישות שנותרו. אינו כולל החזקות שנסגרו, תמורה ממכירות, מזומן, עמלות ודיבידנדים; אינו משקף תשואה מלאה של החשבון."
+  },
+  "My Portfolio": {
+    "en": "My Portfolio",
+    "he": "התיק שלי"
+  },
+  "No benchmark data": {
+    "en": "No benchmark data",
+    "he": "אין נתוני מדד ייחוס"
+  },
+  "Loading...": {
+    "en": "Loading...",
+    "he": "טוען…"
+  },
+  "Loading portfolio…": {
+    "en": "Loading portfolio…",
+    "he": "טוען את התיק…"
+  },
+  "Failed to load positions": {
+    "en": "Failed to load positions",
+    "he": "טעינת ההחזקות נכשלה"
+  },
+  "Price history temporarily unavailable": {
+    "en": "Price history temporarily unavailable",
+    "he": "היסטוריית המחירים אינה זמינה כרגע"
+  },
+  "Failed to update position": {
+    "en": "Failed to update position",
+    "he": "עדכון ההחזקה נכשל"
+  },
+  "Failed to remove position": {
+    "en": "Failed to remove position",
+    "he": "הסרת ההחזקה נכשלה"
+  },
+  "Invalid saved session": {
+    "en": "Invalid saved session",
+    "he": "ההתחברות השמורה אינה תקינה"
+  },
+  "Google authentication failed": {
+    "en": "Google authentication failed",
+    "he": "האימות מול Google נכשל"
+  },
+  "Previous quote": {
+    "en": "Previous quote",
+    "he": "ציטוט קודם"
+  },
+  "Purchase cost": {
+    "en": "Purchase cost",
+    "he": "עלות רכישה"
+  },
+  "לא התקבל אימות מגוגל": {
+    "en": "No verification was received from Google",
+    "he": "לא התקבל אימות מגוגל"
+  },
+  "ההתחברות נכשלה": {
+    "en": "Sign-in failed",
+    "he": "ההתחברות נכשלה"
+  },
+  "חלון ההתחברות של גוגל נחסם על ידי הדפדפן. אנא בדוק אם יש חוסם חלונות קופצים (Pop-up Blocker) או תוסף חוסם פרסומות (AdBlock) הפעיל בדפדפן.": {
+    "en": "The Google sign-in window could not open. Check your browser's pop-up blocker or blocking extensions.",
+    "he": "חלון ההתחברות של גוגל נחסם על ידי הדפדפן. אנא בדוק אם יש חוסם חלונות קופצים (Pop-up Blocker) או תוסף חוסם פרסומות (AdBlock) הפעיל בדפדפן."
+  },
+  "שים לב:": {
+    "en": "Please note:",
+    "he": "שים לב:"
+  },
+  "(בדוק בשורת הכתובות של הדפדפן למעלה אם מופיע אייקון חסימת חלון קופץ 🚫)": {
+    "en": "(Check the browser address bar for a blocked pop-up icon.)",
+    "he": "(בדוק בשורת הכתובות של הדפדפן למעלה אם מופיע אייקון חסימת חלון קופץ 🚫)"
+  },
+  "שגיאה ביצירת מפתח:": {
+    "en": "Error creating key:",
+    "he": "שגיאה ביצירת מפתח:"
+  },
+  "שגיאת שרת": {
+    "en": "Server error",
+    "he": "שגיאת שרת"
+  },
+  "האם אתה בטוח שברצונך לבטל את המפתח \"{0}\" ({1})? סוכן AI המשתמש בו יאבד גישה מידית.": {
+    "en": "Revoke key \"{0}\" ({1})? AI agents using it will lose access immediately.",
+    "he": "האם אתה בטוח שברצונך לבטל את המפתח \"{0}\" ({1})? סוכן AI המשתמש בו יאבד גישה מידית."
+  },
+  "שגיאה בביטול מפתח:": {
+    "en": "Error revoking key:",
+    "he": "שגיאה בביטול מפתח:"
+  },
+  "האם לשחזר את הפעולה: \"{0}\"?": {
+    "en": "Undo the action \"{0}\"?",
+    "he": "האם לשחזר את הפעולה: \"{0}\"?"
+  },
+  "הפעולה שוחזרה בהצלחה!": {
+    "en": "Action restored successfully!",
+    "he": "הפעולה שוחזרה בהצלחה!"
+  },
+  "שגיאה בשחזור פעולה:": {
+    "en": "Error restoring action:",
+    "he": "שגיאה בשחזור פעולה:"
+  },
+  "טרם שומש": {
+    "en": "Never used",
+    "he": "טרם שומש"
+  },
+  "חיבור ל-Claude / AI": {
+    "en": "Connect Claude / AI",
+    "he": "חיבור ל-Claude / AI"
+  },
+  "סגור": {
+    "en": "Close",
+    "he": "סגור"
+  },
+  "חיבור סוכן AI לתיק (": {
+    "en": "Connect an AI agent to your portfolio (",
+    "he": "חיבור סוכן AI לתיק ("
+  },
+  "חיבור מאובטח ל-Claude, Cursor וסוכני AI נוספים עם בקרת הרשאות ויומן שינויים מלא.": {
+    "en": "Connect securely to Claude, Cursor and other AI agents, with permission controls and an activity log.",
+    "he": "חיבור מאובטח ל-Claude, Cursor וסוכני AI נוספים עם בקרת הרשאות ויומן שינויים מלא."
+  },
+  "מפתחות גישה": {
+    "en": "Access keys",
+    "he": "מפתחות גישה"
+  },
+  "חיבור ל-Claude": {
+    "en": "Connect Claude",
+    "he": "חיבור ל-Claude"
+  },
+  "פעולות AI & שחזור": {
+    "en": "AI activity & undo",
+    "he": "פעולות AI & שחזור"
+  },
+  "כלים זמינים": {
+    "en": "Available tools",
+    "he": "כלים זמינים"
+  },
+  "כתובת שרת MCP:": {
+    "en": "MCP server address:",
+    "he": "כתובת שרת MCP:"
+  },
+  "הועתק!": {
+    "en": "Copied!",
+    "he": "הועתק!"
+  },
+  "העתק כתובת": {
+    "en": "Copy address",
+    "he": "העתק כתובת"
+  },
+  "טוען הגדרות ומפתחות...": {
+    "en": "Loading settings and keys…",
+    "he": "טוען הגדרות ומפתחות..."
+  },
+  "מפתחות גישה פעילים (": {
+    "en": "Active access keys (",
+    "he": "מפתחות גישה פעילים ("
+  },
+  "צור מפתח חדש": {
+    "en": "Create a new key",
+    "he": "צור מפתח חדש"
+  },
+  "עדיין לא נוצר אף מפתח גישה": {
+    "en": "No access keys created yet",
+    "he": "עדיין לא נוצר אף מפתח גישה"
+  },
+  "לחץ על \"צור מפתח חדש\" כדי לחבר את Claude או Cursor לתיק שלך.": {
+    "en": "Click \"Create a new key\" to connect Claude or Cursor to your portfolio.",
+    "he": "לחץ על \"צור מפתח חדש\" כדי לחבר את Claude או Cursor לתיק שלך."
+  },
+  "צור מפתח ל-Claude": {
+    "en": "Create a key for Claude",
+    "he": "צור מפתח ל-Claude"
+  },
+  "בוטל (Revoked)": {
+    "en": "Revoked",
+    "he": "בוטל (Revoked)"
+  },
+  "קריאה וכתיבה (Read+Write)": {
+    "en": "Read & Write",
+    "he": "קריאה וכתיבה (Read+Write)"
+  },
+  "קריאה בלבד (Read Only)": {
+    "en": "Read Only",
+    "he": "קריאה בלבד (Read Only)"
+  },
+  "נוצר:": {
+    "en": "Created:",
+    "he": "נוצר:"
+  },
+  "שימוש אחרון:": {
+    "en": "Last used:",
+    "he": "שימוש אחרון:"
+  },
+  "בטל מפתח": {
+    "en": "Revoke key",
+    "he": "בטל מפתח"
+  },
+  "ביטול": {
+    "en": "Cancel",
+    "he": "ביטול"
+  },
+  "אבטחת מפתחות ברמה הגבוהה ביותר:": {
+    "en": "Key protection:",
+    "he": "אבטחת מפתחות ברמה הגבוהה ביותר:"
+  },
+  "המפתחות מוצפנים ב-DB באמצעות גיבוב חד-כיווני": {
+    "en": "Keys are stored as one-way hashes in the database using",
+    "he": "המפתחות מוצפנים ב-DB באמצעות גיבוב חד-כיווני"
+  },
+  "חיבור ישיר לממשק האינטרנט של Claude (claude.ai):": {
+    "en": "Connect to Claude on the web (claude.ai):",
+    "he": "חיבור ישיר לממשק האינטרנט של Claude (claude.ai):"
+  },
+  "חבר את תיק ההשקעות שלך למודל של Anthropic כדי לשאול שאלות, לנתח רווח/הפסד ולבקש המלצות בזמן אמת.": {
+    "en": "Connect your portfolio to Anthropic's model to ask questions, analyze gains and losses, and discuss your holdings.",
+    "he": "חבר את תיק ההשקעות שלך למודל של Anthropic כדי לשאול שאלות, לנתח רווח/הפסד ולבקש המלצות בזמן אמת."
+  },
+  "פתח את ההגדרות ב-Claude:": {
+    "en": "Open Claude settings:",
+    "he": "פתח את ההגדרות ב-Claude:"
+  },
+  "היכנס אל": {
+    "en": "Go to",
+    "he": "היכנס אל"
+  },
+  "ולחץ על": {
+    "en": "and click",
+    "he": "ולחץ על"
+  },
+  "הגדרת שם וכתובת:": {
+    "en": "Set a name and address:",
+    "he": "הגדרת שם וכתובת:"
+  },
+  "שם מחבר (": {
+    "en": "Connector name (",
+    "he": "שם מחבר ("
+  },
+  "כתובת שרת (": {
+    "en": "Server address (",
+    "he": "כתובת שרת ("
+  },
+  "העתק": {
+    "en": "Copy",
+    "he": "העתק"
+  },
+  "הגדרת אימות (Authorization Header):": {
+    "en": "Set the Authorization header:",
+    "he": "הגדרת אימות (Authorization Header):"
+  },
+  "תחת": {
+    "en": "Under",
+    "he": "תחת"
+  },
+  "בחר באפשרות": {
+    "en": "choose",
+    "he": "בחר באפשרות"
+  },
+  "לחץ על": {
+    "en": "Click",
+    "he": "לחץ על"
+  },
+  "והזן:": {
+    "en": "and enter:",
+    "he": "והזן:"
+  },
+  "Bearer ft_live_... (המפתח שיצרת)": {
+    "en": "Bearer ft_live_... (the key you created)",
+    "he": "Bearer ft_live_... (המפתח שיצרת)"
+  },
+  "סיום ובדיקה:": {
+    "en": "Finish and test:",
+    "he": "סיום ובדיקה:"
+  },
+  "\"מה שווי תיק ההשקעות שלי ב-FinTechPro?\"": {
+    "en": "\"What is the value of my portfolio in FinTechPro?\"",
+    "he": "\"מה שווי תיק ההשקעות שלי ב-FinTechPro?\""
+  },
+  "ו-Claude ימשוך את הנתונים בזמן אמת!": {
+    "en": "and Claude will retrieve your data!",
+    "he": "ו-Claude ימשוך את הנתונים בזמן אמת!"
+  },
+  "הגדרות עבור": {
+    "en": "Configuration for",
+    "he": "הגדרות עבור"
+  },
+  "העתק JSON": {
+    "en": "Copy JSON",
+    "he": "העתק JSON"
+  },
+  "הוראות חיבור ב-Cursor / VS Code:": {
+    "en": "Connection instructions for Cursor / VS Code:",
+    "he": "הוראות חיבור ב-Cursor / VS Code:"
+  },
+  "פתח ב-Cursor את": {
+    "en": "In Cursor, open",
+    "he": "פתח ב-Cursor את"
+  },
+  "בחר סוג (": {
+    "en": "Choose type (",
+    "he": "בחר סוג ("
+  },
+  "שם:": {
+    "en": "Name:",
+    "he": "שם:"
+  },
+  "כתובת ה-SSE:": {
+    "en": "SSE address:",
+    "he": "כתובת ה-SSE:"
+  },
+  "הוסף כותרת:": {
+    "en": "Add header:",
+    "he": "הוסף כותרת:"
+  },
+  "יומן פעולות AI והיסטוריית שינויים:": {
+    "en": "AI activity and change history:",
+    "he": "יומן פעולות AI והיסטוריית שינויים:"
+  },
+  "רענן": {
+    "en": "Refresh",
+    "he": "רענן"
+  },
+  "טרם נרשמו פעולות שבוצעו ע\"י סוכן AI": {
+    "en": "No AI agent activity recorded yet",
+    "he": "טרם נרשמו פעולות שבוצעו ע\"י סוכן AI"
+  },
+  "כאשר סוכן עם הרשאת כתיבה יבצע שינוי בתיק, הפעולה תופיע כאן וניתן יהיה לבטלה בקליק.": {
+    "en": "Changes by an agent with write permission appear here and can be undone.",
+    "he": "כאשר סוכן עם הרשאת כתיבה יבצע שינוי בתיק, הפעולה תופיע כאן וניתן יהיה לבטלה בקליק."
+  },
+  "תיק": {
+    "en": "Portfolio",
+    "he": "תיק"
+  },
+  "בוטל (Undone)": {
+    "en": "Undone",
+    "he": "בוטל (Undone)"
+  },
+  "בטל שינוי": {
+    "en": "Undo change",
+    "he": "בטל שינוי"
+  },
+  "13 כלים זמינים לסוכן ה-AI:": {
+    "en": "13 tools available to the AI agent:",
+    "he": "13 כלים זמינים לסוכן ה-AI:"
+  },
+  "קריאה (Read)": {
+    "en": "Read",
+    "he": "קריאה (Read)"
+  },
+  "כתיבה (Write)": {
+    "en": "Write",
+    "he": "כתיבה (Write)"
+  },
+  "קריאה": {
+    "en": "Read",
+    "he": "קריאה"
+  },
+  "שווי כולל, מזומן, שווי נקי, פילוח לפי ברוקרים (Blink, IBI) ורווח/הפסד.": {
+    "en": "Total value, cash, net worth, broker breakdown and gains/losses.",
+    "he": "שווי כולל, מזומן, שווי נקי, פילוח לפי ברוקרים (Blink, IBI) ורווח/הפסד."
+  },
+  "כל המניות בתיק, מחירי שוק חיים, קרנות ישראליות (TASE), וברוקר.": {
+    "en": "Portfolio holdings, market quotes, Israeli funds (TASE) and brokers.",
+    "he": "כל המניות בתיק, מחירי שוק חיים, קרנות ישראליות (TASE), וברוקר."
+  },
+  "פירוט עמוק על מניה או קרן ישראלית והיסטוריית רכישות (Lots).": {
+    "en": "Detailed stock or Israeli fund information and purchase lots.",
+    "he": "פירוט עמוק על מניה או קרן ישראלית והיסטוריית רכישות (Lots)."
+  },
+  "יתרות מזומן וקרנות כספיות לפי ברוקר ולפי מטבע (USD, ILS, EUR).": {
+    "en": "Cash and money market fund balances by broker and currency (USD, ILS, EUR).",
+    "he": "יתרות מזומן וקרנות כספיות לפי ברוקר ולפי מטבע (USD, ILS, EUR)."
+  },
+  "היסטוריית עסקאות קנייה, מכירה ופעולות שבוצעו בתיק.": {
+    "en": "Purchase, sale and portfolio activity history.",
+    "he": "היסטוריית עסקאות קנייה, מכירה ופעולות שבוצעו בתיק."
+  },
+  "חדשות כלכליות ממוקדות למניות שמוחזקות בתיק שלך.": {
+    "en": "Market news focused on your portfolio holdings.",
+    "he": "חדשות כלכליות ממוקדות למניות שמוחזקות בתיק שלך."
+  },
+  "כתיבה": {
+    "en": "Write",
+    "he": "כתיבה"
+  },
+  "הוספת מניה או קרן ישראלית (ת\"א 125), מחשב ממוצע אוטומטית.": {
+    "en": "Add a stock or Israeli fund; average purchase cost is calculated automatically.",
+    "he": "הוספת מניה או קרן ישראלית (ת\"א 125), מחשב ממוצע אוטומטית."
+  },
+  "פעולה הרסנית": {
+    "en": "Destructive action",
+    "he": "פעולה הרסנית"
+  },
+  "מכירת כמות מניות או סגירת פוזיציה מלאה בתיק.": {
+    "en": "Sell part of a holding or close it entirely.",
+    "he": "מכירת כמות מניות או סגירת פוזיציה מלאה בתיק."
+  },
+  "מחיקה רכה": {
+    "en": "Soft deletion",
+    "he": "מחיקה רכה"
+  },
+  "מחיקת פוזיציה ממעקב (שומר גיבוי לשחזור מידי).": {
+    "en": "Remove a holding from tracking while preserving it for recovery.",
+    "he": "מחיקת פוזיציה ממעקב (שומר גיבוי לשחזור מידי)."
+  },
+  "עדכון יתרת מזומן או קרן כספית לפי ברוקר ומטבע.": {
+    "en": "Update cash or money market fund balances by broker and currency.",
+    "he": "עדכון יתרת מזומן או קרן כספית לפי ברוקר ומטבע."
+  },
+  "כתיבה מרוכזת": {
+    "en": "Bulk write",
+    "he": "כתיבה מרוכזת"
+  },
+  "ייבוא מרוכז של רשימת מניות בפקודה אחת מהסוכן.": {
+    "en": "Import a list of holdings in a single agent request.",
+    "he": "ייבוא מרוכז של רשימת מניות בפקודה אחת מהסוכן."
+  },
+  "רשימת המעקב האישית והציטוטים החיים שלה.": {
+    "en": "Your personal watchlist and its received quotes.",
+    "he": "רשימת המעקב האישית והציטוטים החיים שלה."
+  },
+  "יצירת מפתח גישה חדש": {
+    "en": "Create a new access key",
+    "he": "יצירת מפתח גישה חדש"
+  },
+  "שם המפתח (זיהוי):": {
+    "en": "Key name (for identification):",
+    "he": "שם המפתח (זיהוי):"
+  },
+  "למשל: \"Claude\", \"Cursor\", \"Mobile\"": {
+    "en": "For example: \"Claude\", \"Cursor\", \"Mobile\"",
+    "he": "למשל: \"Claude\", \"Cursor\", \"Mobile\""
+  },
+  "הרשאות גישה (": {
+    "en": "Access permissions (",
+    "he": "הרשאות גישה ("
+  },
+  "קריאה בלבד (מומלץ ובטוח)": {
+    "en": "Read only (recommended)",
+    "he": "קריאה בלבד (מומלץ ובטוח)"
+  },
+  "הסוכן יכול לצפות בשווי התיק, מניות, מזומן וחדשות, ללא אפשרות לשנות נתונים.": {
+    "en": "The agent can view portfolio value, holdings, cash and news without changing data.",
+    "he": "הסוכן יכול לצפות בשווי התיק, מניות, מזומן וחדשות, ללא אפשרות לשנות נתונים."
+  },
+  "קריאה וכתיבה (Read & Write)": {
+    "en": "Read & Write",
+    "he": "קריאה וכתיבה (Read & Write)"
+  },
+  "מאפשר לסוכן להוסיף, לעדכן ולמחוק מניות לפי הודעותיך בצ'אט (מגובה ביומן שינויים ושחזור).": {
+    "en": "Allows the agent to add, edit and remove holdings following your chat requests, with change history and undo.",
+    "he": "מאפשר לסוכן להוסיף, לעדכן ולמחוק מניות לפי הודעותיך בצ'אט (מגובה ביומן שינויים ושחזור)."
+  },
+  "תוקף המפתח:": {
+    "en": "Key expiry:",
+    "he": "תוקף המפתח:"
+  },
+  "ללא תפוגה (קבוע)": {
+    "en": "No expiry",
+    "he": "ללא תפוגה (קבוע)"
+  },
+  "30 יום": {
+    "en": "30 days",
+    "he": "30 יום"
+  },
+  "90 יום": {
+    "en": "90 days",
+    "he": "90 יום"
+  },
+  "יוצר...": {
+    "en": "Creating…",
+    "he": "יוצר..."
+  },
+  "צור מפתח": {
+    "en": "Create key",
+    "he": "צור מפתח"
+  },
+  "המפתח נוצר בהצלחה! שמור אותו עכשיו": {
+    "en": "Key created! Save it now",
+    "he": "המפתח נוצר בהצלחה! שמור אותו עכשיו"
+  },
+  "מטעמי אבטחה, המפתח המלא מוצג פעם אחת בלבד ולא ניתן לצפות בו שוב.": {
+    "en": "For security, the full key is shown only once and cannot be viewed again.",
+    "he": "מטעמי אבטחה, המפתח המלא מוצג פעם אחת בלבד ולא ניתן לצפות בו שוב."
+  },
+  "ערך המפתח (": {
+    "en": "Key value (",
+    "he": "ערך המפתח ("
+  },
+  "העתק מפתח": {
+    "en": "Copy key",
+    "he": "העתק מפתח"
+  },
+  "ערך מלא להדבקה ב-Claude (": {
+    "en": "Value to paste into Claude (",
+    "he": "ערך מלא להדבקה ב-Claude ("
+  },
+  "העתק Bearer": {
+    "en": "Copy Bearer",
+    "he": "העתק Bearer"
+  },
+  "העתק כעת את המפתח והדבק אותו ב-Claude או Cursor. לאחר סגירת חלון זה, תוכל לראות רק את תחילית המפתח (": {
+    "en": "Copy your key now and paste it into Claude or Cursor. After closing this window, only its prefix will be visible (",
+    "he": "העתק כעת את המפתח והדבק אותו ב-Claude או Cursor. לאחר סגירת חלון זה, תוכל לראות רק את תחילית המפתח ("
+  },
+  "הבנתי, שמרתי את המפתח": {
+    "en": "Understood, I saved the key",
+    "he": "הבנתי, שמרתי את המפתח"
+  },
+  "Technology": {
+    "en": "Technology",
+    "he": "טכנולוגיה"
+  },
+  "Communication Services": {
+    "en": "Communication Services",
+    "he": "שירותי תקשורת"
+  },
+  "Consumer Discretionary": {
+    "en": "Consumer Discretionary",
+    "he": "צריכה מחזורית"
+  },
+  "Consumer Staples": {
+    "en": "Consumer Staples",
+    "he": "צריכה בסיסית"
+  },
+  "Energy": {
+    "en": "Energy",
+    "he": "אנרגיה"
+  },
+  "Financials": {
+    "en": "Financials",
+    "he": "פיננסים"
+  },
+  "Health Care": {
+    "en": "Health Care",
+    "he": "בריאות"
+  },
+  "Industrials": {
+    "en": "Industrials",
+    "he": "תעשייה"
+  },
+  "Materials": {
+    "en": "Materials",
+    "he": "חומרי גלם"
+  },
+  "Real Estate": {
+    "en": "Real Estate",
+    "he": "נדל״ן"
+  },
+  "Utilities": {
+    "en": "Utilities",
+    "he": "תשתיות"
+  },
+  "Broad US equity ETF": {
+    "en": "Broad US equity ETF",
+    "he": "קרן סל מנייתית רחבה בארה״ב"
+  },
+  "US total stock market": {
+    "en": "US total stock market",
+    "he": "שוק המניות האמריקאי הכולל"
+  },
+  "This is not realized profit.": {
+    "en": "This is not realized profit.",
+    "he": "זהו אינו רווח ממומש."
+  },
+  "Projected from current lots": {
+    "en": "Projected from current lots",
+    "he": "תחזית לפי הרכישות הנוכחיות"
+  },
+  "Based on recorded purchase lots": {
+    "en": "Based on recorded purchase lots",
+    "he": "לפי הרכישות הרשומות"
+  },
+  "Historical entitlement unknown": {
+    "en": "Historical entitlement unknown",
+    "he": "הזכאות ההיסטורית אינה ידועה"
+  },
+  "Amount unavailable": {
+    "en": "Amount unavailable",
+    "he": "הסכום אינו זמין"
+  },
+  "Indicative, before tax": {
+    "en": "Indicative, before tax",
+    "he": "משוער, לפני מס"
+  },
+  "Israeli money market fund": {
+    "en": "Israeli money market fund",
+    "he": "קרן כספית ישראלית"
+  },
+  "TASE": {
+    "en": "TASE",
+    "he": "הבורסה בתל אביב"
+  },
+  "Observed value: {0}": {
+    "en": "Observed value: {0}",
+    "he": "ערך שנמדד: {0}"
+  },
+  "US": {
+    "en": "US",
+    "he": "ארצות הברית"
+  },
+  "IL": {
+    "en": "IL",
+    "he": "ישראל"
+  },
+  "unresolved": {
+    "en": "unresolved",
+    "he": "לא מזוהה"
+  },
+  ". This is not realized profit.": {
+    "en": ". This is not realized profit.",
+    "he": ". זהו אינו רווח ממומש."
+  },
+  "{0} securities tracked": {
+    "en": "{0} securities tracked",
+    "he": "{0} ניירות ערך במעקב"
+  },
+  "Economic event": {
+    "en": "Economic event",
+    "he": "אירוע כלכלי"
+  },
+  "Exchange holiday": {
+    "en": "Exchange holiday",
+    "he": "חופשת מסחר"
+  },
+  "External news is shown in its original language.": {
+    "en": "External news is shown in its original language.",
+    "he": "חדשות ממקורות חיצוניים מוצגות בשפת המקור."
+  },
+  "FOMC Rate Decision": {
+    "en": "FOMC Rate Decision",
+    "he": "החלטת הריבית של הפד"
+  },
+  "FOMC Rate Decision + SEP": {
+    "en": "FOMC Rate Decision + SEP",
+    "he": "החלטת הריבית ותחזיות הפד"
+  },
+  "Non-Farm Payrolls": {
+    "en": "Non-Farm Payrolls",
+    "he": "דוח התעסוקה בארה״ב"
+  },
+  "CPI": {
+    "en": "CPI",
+    "he": "מדד המחירים לצרכן בארה״ב"
+  },
+  "PPI": {
+    "en": "PPI",
+    "he": "מדד המחירים ליצרן בארה״ב"
+  },
+  "Israel CPI": {
+    "en": "Israel CPI",
+    "he": "מדד המחירים לצרכן בישראל"
+  },
+  "GDP": {
+    "en": "GDP",
+    "he": "תוצר מקומי גולמי"
+  },
+  "FOMC Meeting Minutes": {
+    "en": "FOMC Meeting Minutes",
+    "he": "פרוטוקול ישיבת הפד"
+  },
+  "Jan": {
+    "en": "Jan",
+    "he": "ינואר"
+  },
+  "Feb": {
+    "en": "Feb",
+    "he": "פברואר"
+  },
+  "Mar": {
+    "en": "Mar",
+    "he": "מרץ"
+  },
+  "Apr": {
+    "en": "Apr",
+    "he": "אפריל"
+  },
+  "May": {
+    "en": "May",
+    "he": "מאי"
+  },
+  "Jun": {
+    "en": "Jun",
+    "he": "יוני"
+  },
+  "Jul": {
+    "en": "Jul",
+    "he": "יולי"
+  },
+  "Aug": {
+    "en": "Aug",
+    "he": "אוגוסט"
+  },
+  "Sep": {
+    "en": "Sep",
+    "he": "ספטמבר"
+  },
+  "Oct": {
+    "en": "Oct",
+    "he": "אוקטובר"
+  },
+  "Nov": {
+    "en": "Nov",
+    "he": "נובמבר"
+  },
+  "Dec": {
+    "en": "Dec",
+    "he": "דצמבר"
+  },
+  "Q1 Advance": {
+    "en": "Q1 Advance",
+    "he": "אומדן ראשון לרבעון 1"
+  },
+  "Q2 Advance": {
+    "en": "Q2 Advance",
+    "he": "אומדן ראשון לרבעון 2"
+  },
+  "Q3 Advance": {
+    "en": "Q3 Advance",
+    "he": "אומדן ראשון לרבעון 3"
+  },
+  "Q4 Advance": {
+    "en": "Q4 Advance",
+    "he": "אומדן ראשון לרבעון 4"
+  },
+  "Q4 Final": {
+    "en": "Q4 Final",
+    "he": "אומדן סופי לרבעון 4"
+  },
+  "New Year's Day": {
+    "en": "New Year's Day",
+    "he": "ראש השנה האזרחית"
+  },
+  "Martin Luther King Jr. Day": {
+    "en": "Martin Luther King Jr. Day",
+    "he": "יום מרטין לותר קינג"
+  },
+  "Washington's Birthday": {
+    "en": "Washington's Birthday",
+    "he": "יום הולדתו של וושינגטון"
+  },
+  "Presidents' Day": {
+    "en": "Presidents' Day",
+    "he": "יום הנשיאים"
+  },
+  "Good Friday": {
+    "en": "Good Friday",
+    "he": "יום שישי הטוב"
+  },
+  "Memorial Day": {
+    "en": "Memorial Day",
+    "he": "יום הזיכרון האמריקאי"
+  },
+  "Juneteenth": {
+    "en": "Juneteenth",
+    "he": "יום שחרור העבדים בארה״ב"
+  },
+  "Juneteenth National Independence Day": {
+    "en": "Juneteenth National Independence Day",
+    "he": "יום שחרור העבדים בארה״ב"
+  },
+  "Independence Day": {
+    "en": "Independence Day",
+    "he": "יום העצמאות"
+  },
+  "Labor Day": {
+    "en": "Labor Day",
+    "he": "יום העבודה"
+  },
+  "Thanksgiving Day": {
+    "en": "Thanksgiving Day",
+    "he": "חג ההודיה"
+  },
+  "Christmas Day": {
+    "en": "Christmas Day",
+    "he": "חג המולד"
+  },
+  "Christmas": {
+    "en": "Christmas",
+    "he": "חג המולד"
+  },
+  "Thanksgiving": {
+    "en": "Thanksgiving",
+    "he": "חג ההודיה"
+  },
+  "Early Close": {
+    "en": "Early Close",
+    "he": "סגירה מוקדמת"
+  },
+  "observed": {
+    "en": "observed",
+    "he": "מועד חלופי"
+  },
+  "{0} up {1}% today": {
+    "en": "{0} up {1}% today",
+    "he": "{0} עלתה ב־{1}% היום"
+  },
+  "{0} down {1}% today": {
+    "en": "{0} down {1}% today",
+    "he": "{0} ירדה ב־{1}% היום"
+  },
+  "{0} is near its 52-week low (${1})": {
+    "en": "{0} is near its 52-week low (${1})",
+    "he": "{0} קרובה לשפל של 52 שבועות (${1})"
+  },
+  "{0} reports earnings on {1}": {
+    "en": "{0} reports earnings on {1}",
+    "he": "{0} מפרסמת דוחות בתאריך {1}"
+  },
+  "Activity temporarily unavailable": {
+    "en": "Activity temporarily unavailable",
+    "he": "היסטוריית הפעולות אינה זמינה כרגע"
+  },
+  "Invalid position": {
+    "en": "Invalid position",
+    "he": "החזקה לא תקינה"
+  },
+  "Position not found": {
+    "en": "Position not found",
+    "he": "ההחזקה לא נמצאה"
+  },
+  "Invalid request identifier": {
+    "en": "Invalid request identifier",
+    "he": "מזהה בקשה לא תקין"
+  },
+  "Only active holdings can be sold": {
+    "en": "Only active holdings can be sold",
+    "he": "ניתן למכור החזקות פעילות בלבד"
+  },
+  "Amount must be positive": {
+    "en": "Amount must be positive",
+    "he": "הסכום חייב להיות חיובי"
+  },
+  "Date must be valid and cannot be in the future": {
+    "en": "Date must be valid and cannot be in the future",
+    "he": "יש להזין תאריך תקין שאינו בעתיד"
+  },
+  "Unsupported activity type": {
+    "en": "Unsupported activity type",
+    "he": "סוג הפעולה אינו נתמך"
+  },
+  "Holding changed; refresh before retrying": {
+    "en": "Holding changed; refresh before retrying",
+    "he": "ההחזקה השתנתה; רעננו לפני ניסיון נוסף"
+  },
+  "Export temporarily unavailable": {
+    "en": "Export temporarily unavailable",
+    "he": "הייצוא אינו זמין כרגע"
+  },
+  "Invalid sale quantity": {
+    "en": "Invalid sale quantity",
+    "he": "כמות המכירה אינה תקינה"
+  },
+  "Insufficient shares": {
+    "en": "Insufficient shares",
+    "he": "אין מספיק מניות למכירה"
+  },
+  "Sale quantity must be positive and cannot exceed remaining shares": {
+    "en": "Sale quantity must be positive and cannot exceed remaining shares",
+    "he": "כמות המכירה חייבת להיות חיובית ולא לעלות על כמות המניות שנותרה"
+  },
+  "Sale price must be non-negative": {
+    "en": "Sale price must be non-negative",
+    "he": "מחיר המכירה אינו יכול להיות שלילי"
+  },
+  "Fee must be non-negative": {
+    "en": "Fee must be non-negative",
+    "he": "העמלה אינה יכולה להיות שלילית"
+  },
+  "Authentication required": {
+    "en": "Authentication required",
+    "he": "נדרשת התחברות"
+  },
+  "Not authorized": {
+    "en": "Not authorized",
+    "he": "אין הרשאה"
+  },
+  "Invalid alert rule": {
+    "en": "Invalid alert rule",
+    "he": "כלל התראה אינו תקין"
+  },
+  "Alert not found": {
+    "en": "Alert not found",
+    "he": "ההתראה לא נמצאה"
+  },
+  "Invalid symbol": {
+    "en": "Invalid symbol",
+    "he": "סימול אינו תקין"
+  },
+  "Invalid threshold": {
+    "en": "Invalid threshold",
+    "he": "ערך הסף אינו תקין"
+  },
+  "Stock": {
+    "en": "Stock",
+    "he": "מניה"
+  },
+  "Common Stock": {
+    "en": "Common Stock",
+    "he": "מניה רגילה"
+  },
+  "Equity": {
+    "en": "Equity",
+    "he": "מניה"
+  },
+  "ETF": {
+    "en": "ETF",
+    "he": "קרן סל"
+  },
+  "ETP": {
+    "en": "ETP",
+    "he": "מוצר עוקב מדד"
+  },
+  "Mutual Fund": {
+    "en": "Mutual Fund",
+    "he": "קרן נאמנות"
+  },
+  "Latest NAV": {
+    "en": "Latest NAV",
+    "he": "שווי נכסי הקרן האחרון"
+  },
+  "Last known": {
+    "en": "Last known",
+    "he": "אחרון ידוע"
+  },
+  "Last-known quote": {
+    "en": "Last-known quote",
+    "he": "ציטוט אחרון ידוע"
+  },
+  "iShares IVV holdings": {
+    "en": "iShares IVV holdings",
+    "he": "החזקות IVV של iShares"
+  },
+  "iShares ITOT holdings": {
+    "en": "iShares ITOT holdings",
+    "he": "החזקות ITOT של iShares"
+  },
+  "Yahoo Finance assetProfile": {
+    "en": "Yahoo Finance assetProfile",
+    "he": "פרופיל ענפים של Yahoo Finance"
+  },
+  "Finnhub industry": {
+    "en": "Finnhub industry",
+    "he": "נתוני ענף של Finnhub"
+  },
+  "benchmark proxy for": {
+    "en": "benchmark proxy for",
+    "he": "אומדן מדד ייחוס עבור"
+  },
+  "Price moves, 52-week lows & earnings": {
+    "en": "Price moves, 52-week lows & earnings",
+    "he": "שינויי מחיר, שפל שנתי ודוחות כספיים"
+  },
+  "Fund — underlying exposure unavailable": {
+    "en": "Fund — underlying exposure unavailable",
+    "he": "קרן — נתוני נכסי הבסיס אינם זמינים"
+  },
+  ". המפתח המלא אינו נשמר באתר ואינו מועבר לעולם בלוגים.": {
+    "en": ". The full key is not stored on the site or written to logs.",
+    "he": ". המפתח המלא אינו נשמר באתר ואינו מועבר לעולם בלוגים."
+  },
+  ". עכשיו פתח שיחה חדשה עם Claude, שאל:": {
+    "en": ". Now start a new Claude conversation and ask:",
+    "he": ". עכשיו פתח שיחה חדשה עם Claude, שאל:"
+  },
+  "Yahoo Finance company profile": {
+    "en": "Yahoo Finance company profile",
+    "he": "פרופיל חברה של Yahoo Finance"
+  },
+  "Finnhub industry mapping": {
+    "en": "Finnhub industry mapping",
+    "he": "מיפוי ענפים של Finnhub"
+  },
+  "Yahoo Finance fund metadata": {
+    "en": "Yahoo Finance fund metadata",
+    "he": "פרטי קרן של Yahoo Finance"
+  },
+  "No verification was received from Google": {
+    "en": "No verification was received from Google",
+    "he": "לא התקבל אימות מגוגל"
+  },
+  "Sign-in failed": {
+    "en": "Sign-in failed",
+    "he": "ההתחברות נכשלה"
+  },
+  "The Google sign-in window could not open. Check your browser's pop-up blocker or blocking extensions.": {
+    "en": "The Google sign-in window could not open. Check your browser's pop-up blocker or blocking extensions.",
+    "he": "חלון ההתחברות של גוגל נחסם על ידי הדפדפן. אנא בדוק אם יש חוסם חלונות קופצים (Pop-up Blocker) או תוסף חוסם פרסומות (AdBlock) הפעיל בדפדפן."
+  },
+  "Please note:": {
+    "en": "Please note:",
+    "he": "שים לב:"
+  },
+  "(Check the browser address bar for a blocked pop-up icon.)": {
+    "en": "(Check the browser address bar for a blocked pop-up icon.)",
+    "he": "(בדוק בשורת הכתובות של הדפדפן למעלה אם מופיע אייקון חסימת חלון קופץ 🚫)"
+  },
+  "Error creating key:": {
+    "en": "Error creating key:",
+    "he": "שגיאה ביצירת מפתח:"
+  },
+  "Server error": {
+    "en": "Server error",
+    "he": "שגיאת שרת"
+  },
+  "Revoke key \"{0}\" ({1})? AI agents using it will lose access immediately.": {
+    "en": "Revoke key \"{0}\" ({1})? AI agents using it will lose access immediately.",
+    "he": "האם אתה בטוח שברצונך לבטל את המפתח \"{0}\" ({1})? סוכן AI המשתמש בו יאבד גישה מידית."
+  },
+  "Error revoking key:": {
+    "en": "Error revoking key:",
+    "he": "שגיאה בביטול מפתח:"
+  },
+  "Undo the action \"{0}\"?": {
+    "en": "Undo the action \"{0}\"?",
+    "he": "האם לשחזר את הפעולה: \"{0}\"?"
+  },
+  "Action restored successfully!": {
+    "en": "Action restored successfully!",
+    "he": "הפעולה שוחזרה בהצלחה!"
+  },
+  "Error restoring action:": {
+    "en": "Error restoring action:",
+    "he": "שגיאה בשחזור פעולה:"
+  },
+  "Never used": {
+    "en": "Never used",
+    "he": "טרם שומש"
+  },
+  "Connect Claude / AI": {
+    "en": "Connect Claude / AI",
+    "he": "חיבור ל-Claude / AI"
+  },
+  "Connect an AI agent to your portfolio (": {
+    "en": "Connect an AI agent to your portfolio (",
+    "he": "חיבור סוכן AI לתיק ("
+  },
+  "Connect securely to Claude, Cursor and other AI agents, with permission controls and an activity log.": {
+    "en": "Connect securely to Claude, Cursor and other AI agents, with permission controls and an activity log.",
+    "he": "חיבור מאובטח ל-Claude, Cursor וסוכני AI נוספים עם בקרת הרשאות ויומן שינויים מלא."
+  },
+  "Access keys": {
+    "en": "Access keys",
+    "he": "מפתחות גישה"
+  },
+  "Connect Claude": {
+    "en": "Connect Claude",
+    "he": "חיבור ל-Claude"
+  },
+  "AI activity & undo": {
+    "en": "AI activity & undo",
+    "he": "פעולות AI & שחזור"
+  },
+  "Available tools": {
+    "en": "Available tools",
+    "he": "כלים זמינים"
+  },
+  "MCP server address:": {
+    "en": "MCP server address:",
+    "he": "כתובת שרת MCP:"
+  },
+  "Copied!": {
+    "en": "Copied!",
+    "he": "הועתק!"
+  },
+  "Copy address": {
+    "en": "Copy address",
+    "he": "העתק כתובת"
+  },
+  "Loading settings and keys…": {
+    "en": "Loading settings and keys…",
+    "he": "טוען הגדרות ומפתחות..."
+  },
+  "Active access keys (": {
+    "en": "Active access keys (",
+    "he": "מפתחות גישה פעילים ("
+  },
+  "Create a new key": {
+    "en": "Create a new key",
+    "he": "צור מפתח חדש"
+  },
+  "No access keys created yet": {
+    "en": "No access keys created yet",
+    "he": "עדיין לא נוצר אף מפתח גישה"
+  },
+  "Click \"Create a new key\" to connect Claude or Cursor to your portfolio.": {
+    "en": "Click \"Create a new key\" to connect Claude or Cursor to your portfolio.",
+    "he": "לחץ על \"צור מפתח חדש\" כדי לחבר את Claude או Cursor לתיק שלך."
+  },
+  "Create a key for Claude": {
+    "en": "Create a key for Claude",
+    "he": "צור מפתח ל-Claude"
+  },
+  "Revoked": {
+    "en": "Revoked",
+    "he": "בוטל (Revoked)"
+  },
+  "Read & Write": {
+    "en": "Read & Write",
+    "he": "קריאה וכתיבה (Read+Write)"
+  },
+  "Read Only": {
+    "en": "Read Only",
+    "he": "קריאה בלבד (Read Only)"
+  },
+  "Created:": {
+    "en": "Created:",
+    "he": "נוצר:"
+  },
+  "Last used:": {
+    "en": "Last used:",
+    "he": "שימוש אחרון:"
+  },
+  "Revoke key": {
+    "en": "Revoke key",
+    "he": "בטל מפתח"
+  },
+  "Key protection:": {
+    "en": "Key protection:",
+    "he": "אבטחת מפתחות ברמה הגבוהה ביותר:"
+  },
+  "Keys are stored as one-way hashes in the database using": {
+    "en": "Keys are stored as one-way hashes in the database using",
+    "he": "המפתחות מוצפנים ב-DB באמצעות גיבוב חד-כיווני"
+  },
+  "Connect to Claude on the web (claude.ai):": {
+    "en": "Connect to Claude on the web (claude.ai):",
+    "he": "חיבור ישיר לממשק האינטרנט של Claude (claude.ai):"
+  },
+  "Connect your portfolio to Anthropic's model to ask questions, analyze gains and losses, and discuss your holdings.": {
+    "en": "Connect your portfolio to Anthropic's model to ask questions, analyze gains and losses, and discuss your holdings.",
+    "he": "חבר את תיק ההשקעות שלך למודל של Anthropic כדי לשאול שאלות, לנתח רווח/הפסד ולבקש המלצות בזמן אמת."
+  },
+  "Open Claude settings:": {
+    "en": "Open Claude settings:",
+    "he": "פתח את ההגדרות ב-Claude:"
+  },
+  "Go to": {
+    "en": "Go to",
+    "he": "היכנס אל"
+  },
+  "and click": {
+    "en": "and click",
+    "he": "ולחץ על"
+  },
+  "Set a name and address:": {
+    "en": "Set a name and address:",
+    "he": "הגדרת שם וכתובת:"
+  },
+  "Connector name (": {
+    "en": "Connector name (",
+    "he": "שם מחבר ("
+  },
+  "Server address (": {
+    "en": "Server address (",
+    "he": "כתובת שרת ("
+  },
+  "Copy": {
+    "en": "Copy",
+    "he": "העתק"
+  },
+  "Set the Authorization header:": {
+    "en": "Set the Authorization header:",
+    "he": "הגדרת אימות (Authorization Header):"
+  },
+  "Under": {
+    "en": "Under",
+    "he": "תחת"
+  },
+  "choose": {
+    "en": "choose",
+    "he": "בחר באפשרות"
+  },
+  "Click": {
+    "en": "Click",
+    "he": "לחץ על"
+  },
+  "and enter:": {
+    "en": "and enter:",
+    "he": "והזן:"
+  },
+  "Bearer ft_live_... (the key you created)": {
+    "en": "Bearer ft_live_... (the key you created)",
+    "he": "Bearer ft_live_... (המפתח שיצרת)"
+  },
+  "Finish and test:": {
+    "en": "Finish and test:",
+    "he": "סיום ובדיקה:"
+  },
+  "\"What is the value of my portfolio in FinTechPro?\"": {
+    "en": "\"What is the value of my portfolio in FinTechPro?\"",
+    "he": "\"מה שווי תיק ההשקעות שלי ב-FinTechPro?\""
+  },
+  "and Claude will retrieve your data!": {
+    "en": "and Claude will retrieve your data!",
+    "he": "ו-Claude ימשוך את הנתונים בזמן אמת!"
+  },
+  "Configuration for": {
+    "en": "Configuration for",
+    "he": "הגדרות עבור"
+  },
+  "Copy JSON": {
+    "en": "Copy JSON",
+    "he": "העתק JSON"
+  },
+  "Connection instructions for Cursor / VS Code:": {
+    "en": "Connection instructions for Cursor / VS Code:",
+    "he": "הוראות חיבור ב-Cursor / VS Code:"
+  },
+  "In Cursor, open": {
+    "en": "In Cursor, open",
+    "he": "פתח ב-Cursor את"
+  },
+  "Choose type (": {
+    "en": "Choose type (",
+    "he": "בחר סוג ("
+  },
+  "Name:": {
+    "en": "Name:",
+    "he": "שם:"
+  },
+  "SSE address:": {
+    "en": "SSE address:",
+    "he": "כתובת ה-SSE:"
+  },
+  "Add header:": {
+    "en": "Add header:",
+    "he": "הוסף כותרת:"
+  },
+  "AI activity and change history:": {
+    "en": "AI activity and change history:",
+    "he": "יומן פעולות AI והיסטוריית שינויים:"
+  },
+  "No AI agent activity recorded yet": {
+    "en": "No AI agent activity recorded yet",
+    "he": "טרם נרשמו פעולות שבוצעו ע\"י סוכן AI"
+  },
+  "Changes by an agent with write permission appear here and can be undone.": {
+    "en": "Changes by an agent with write permission appear here and can be undone.",
+    "he": "כאשר סוכן עם הרשאת כתיבה יבצע שינוי בתיק, הפעולה תופיע כאן וניתן יהיה לבטלה בקליק."
+  },
+  "Portfolio": {
+    "en": "Portfolio",
+    "he": "תיק"
+  },
+  "Undone": {
+    "en": "Undone",
+    "he": "בוטל (Undone)"
+  },
+  "Undo change": {
+    "en": "Undo change",
+    "he": "בטל שינוי"
+  },
+  "13 tools available to the AI agent:": {
+    "en": "13 tools available to the AI agent:",
+    "he": "13 כלים זמינים לסוכן ה-AI:"
+  },
+  "Read": {
+    "en": "Read",
+    "he": "קריאה (Read)"
+  },
+  "Write": {
+    "en": "Write",
+    "he": "כתיבה (Write)"
+  },
+  "Total value, cash, net worth, broker breakdown and gains/losses.": {
+    "en": "Total value, cash, net worth, broker breakdown and gains/losses.",
+    "he": "שווי כולל, מזומן, שווי נקי, פילוח לפי ברוקרים (Blink, IBI) ורווח/הפסד."
+  },
+  "Portfolio holdings, market quotes, Israeli funds (TASE) and brokers.": {
+    "en": "Portfolio holdings, market quotes, Israeli funds (TASE) and brokers.",
+    "he": "כל המניות בתיק, מחירי שוק חיים, קרנות ישראליות (TASE), וברוקר."
+  },
+  "Detailed stock or Israeli fund information and purchase lots.": {
+    "en": "Detailed stock or Israeli fund information and purchase lots.",
+    "he": "פירוט עמוק על מניה או קרן ישראלית והיסטוריית רכישות (Lots)."
+  },
+  "Cash and money market fund balances by broker and currency (USD, ILS, EUR).": {
+    "en": "Cash and money market fund balances by broker and currency (USD, ILS, EUR).",
+    "he": "יתרות מזומן וקרנות כספיות לפי ברוקר ולפי מטבע (USD, ILS, EUR)."
+  },
+  "Purchase, sale and portfolio activity history.": {
+    "en": "Purchase, sale and portfolio activity history.",
+    "he": "היסטוריית עסקאות קנייה, מכירה ופעולות שבוצעו בתיק."
+  },
+  "Market news focused on your portfolio holdings.": {
+    "en": "Market news focused on your portfolio holdings.",
+    "he": "חדשות כלכליות ממוקדות למניות שמוחזקות בתיק שלך."
+  },
+  "Add a stock or Israeli fund; average purchase cost is calculated automatically.": {
+    "en": "Add a stock or Israeli fund; average purchase cost is calculated automatically.",
+    "he": "הוספת מניה או קרן ישראלית (ת\"א 125), מחשב ממוצע אוטומטית."
+  },
+  "Destructive action": {
+    "en": "Destructive action",
+    "he": "פעולה הרסנית"
+  },
+  "Sell part of a holding or close it entirely.": {
+    "en": "Sell part of a holding or close it entirely.",
+    "he": "מכירת כמות מניות או סגירת פוזיציה מלאה בתיק."
+  },
+  "Soft deletion": {
+    "en": "Soft deletion",
+    "he": "מחיקה רכה"
+  },
+  "Remove a holding from tracking while preserving it for recovery.": {
+    "en": "Remove a holding from tracking while preserving it for recovery.",
+    "he": "מחיקת פוזיציה ממעקב (שומר גיבוי לשחזור מידי)."
+  },
+  "Update cash or money market fund balances by broker and currency.": {
+    "en": "Update cash or money market fund balances by broker and currency.",
+    "he": "עדכון יתרת מזומן או קרן כספית לפי ברוקר ומטבע."
+  },
+  "Bulk write": {
+    "en": "Bulk write",
+    "he": "כתיבה מרוכזת"
+  },
+  "Import a list of holdings in a single agent request.": {
+    "en": "Import a list of holdings in a single agent request.",
+    "he": "ייבוא מרוכז של רשימת מניות בפקודה אחת מהסוכן."
+  },
+  "Your personal watchlist and its received quotes.": {
+    "en": "Your personal watchlist and its received quotes.",
+    "he": "רשימת המעקב האישית והציטוטים החיים שלה."
+  },
+  "Create a new access key": {
+    "en": "Create a new access key",
+    "he": "יצירת מפתח גישה חדש"
+  },
+  "Key name (for identification):": {
+    "en": "Key name (for identification):",
+    "he": "שם המפתח (זיהוי):"
+  },
+  "For example: \"Claude\", \"Cursor\", \"Mobile\"": {
+    "en": "For example: \"Claude\", \"Cursor\", \"Mobile\"",
+    "he": "למשל: \"Claude\", \"Cursor\", \"Mobile\""
+  },
+  "Access permissions (": {
+    "en": "Access permissions (",
+    "he": "הרשאות גישה ("
+  },
+  "Read only (recommended)": {
+    "en": "Read only (recommended)",
+    "he": "קריאה בלבד (מומלץ ובטוח)"
+  },
+  "The agent can view portfolio value, holdings, cash and news without changing data.": {
+    "en": "The agent can view portfolio value, holdings, cash and news without changing data.",
+    "he": "הסוכן יכול לצפות בשווי התיק, מניות, מזומן וחדשות, ללא אפשרות לשנות נתונים."
+  },
+  "Allows the agent to add, edit and remove holdings following your chat requests, with change history and undo.": {
+    "en": "Allows the agent to add, edit and remove holdings following your chat requests, with change history and undo.",
+    "he": "מאפשר לסוכן להוסיף, לעדכן ולמחוק מניות לפי הודעותיך בצ'אט (מגובה ביומן שינויים ושחזור)."
+  },
+  "Key expiry:": {
+    "en": "Key expiry:",
+    "he": "תוקף המפתח:"
+  },
+  "No expiry": {
+    "en": "No expiry",
+    "he": "ללא תפוגה (קבוע)"
+  },
+  "30 days": {
+    "en": "30 days",
+    "he": "30 יום"
+  },
+  "90 days": {
+    "en": "90 days",
+    "he": "90 יום"
+  },
+  "Creating…": {
+    "en": "Creating…",
+    "he": "יוצר..."
+  },
+  "Create key": {
+    "en": "Create key",
+    "he": "צור מפתח"
+  },
+  "Key created! Save it now": {
+    "en": "Key created! Save it now",
+    "he": "המפתח נוצר בהצלחה! שמור אותו עכשיו"
+  },
+  "For security, the full key is shown only once and cannot be viewed again.": {
+    "en": "For security, the full key is shown only once and cannot be viewed again.",
+    "he": "מטעמי אבטחה, המפתח המלא מוצג פעם אחת בלבד ולא ניתן לצפות בו שוב."
+  },
+  "Key value (": {
+    "en": "Key value (",
+    "he": "ערך המפתח ("
+  },
+  "Copy key": {
+    "en": "Copy key",
+    "he": "העתק מפתח"
+  },
+  "Value to paste into Claude (": {
+    "en": "Value to paste into Claude (",
+    "he": "ערך מלא להדבקה ב-Claude ("
+  },
+  "Copy Bearer": {
+    "en": "Copy Bearer",
+    "he": "העתק Bearer"
+  },
+  "Copy your key now and paste it into Claude or Cursor. After closing this window, only its prefix will be visible (": {
+    "en": "Copy your key now and paste it into Claude or Cursor. After closing this window, only its prefix will be visible (",
+    "he": "העתק כעת את המפתח והדבק אותו ב-Claude או Cursor. לאחר סגירת חלון זה, תוכל לראות רק את תחילית המפתח ("
+  },
+  "Understood, I saved the key": {
+    "en": "Understood, I saved the key",
+    "he": "הבנתי, שמרתי את המפתח"
+  },
+  ". The full key is not stored on the site or written to logs.": {
+    "en": ". The full key is not stored on the site or written to logs.",
+    "he": ". המפתח המלא אינו נשמר באתר ואינו מועבר לעולם בלוגים."
+  },
+  ". Now start a new Claude conversation and ask:": {
+    "en": ". Now start a new Claude conversation and ask:",
+    "he": ". עכשיו פתח שיחה חדשה עם Claude, שאל:"
+  },
+  "Connect AI to portfolio": {
+    "en": "Connect AI to portfolio",
+    "he": "חיבור סוכן AI לתיק"
+  },
+  "1W Return": {
+    "en": "1W Return",
+    "he": "תשואה שבועית"
+  },
+  "1M Return": {
+    "en": "1M Return",
+    "he": "תשואה חודשית"
+  },
+  "1Y Return": {
+    "en": "1Y Return",
+    "he": "תשואה שנתית"
+  },
+  "Reconstructed remaining lot; earlier sales and fees are unknown": {
+    "en": "Reconstructed remaining lot; earlier sales and fees are unknown",
+    "he": "שחזור רכישה שנותרה; מכירות ועמלות קודמות אינן ידועות"
+  },
+  "Holding correction; not a priced trade": {
+    "en": "Holding correction; not a priced trade",
+    "he": "תיקון החזקה; אינו עסקה במחיר מתועד"
+  },
+  "Removed from tracking; not a priced sale": {
+    "en": "Removed from tracking; not a priced sale",
+    "he": "הוסרה ממעקב; אינה מכירה במחיר מתועד"
+  },
+  "Sale date cannot be in the future": {
+    "en": "Sale date cannot be in the future",
+    "he": "תאריך המכירה אינו יכול להיות בעתיד"
+  },
+  "Sale quantity must be positive and cannot exceed the holding": {
+    "en": "Sale quantity must be positive and cannot exceed the holding",
+    "he": "כמות המכירה חייבת להיות חיובית ולא לעלות על כמות המניות בהחזקה"
+  },
+  "Price and fee must be finite non-negative numbers": {
+    "en": "Price and fee must be finite non-negative numbers",
+    "he": "יש להזין מחיר ועמלה תקינים שאינם שליליים"
+  },
+  "Sale date must be valid and cannot be in the future": {
+    "en": "Sale date must be valid and cannot be in the future",
+    "he": "יש להזין תאריך מכירה תקין שאינו בעתיד"
+  },
+  "Sale must follow recorded purchases and prior changes; use a correction for historical restatement": {
+    "en": "Sale must follow recorded purchases and prior changes; use a correction for historical restatement",
+    "he": "המכירה חייבת להיות לאחר הרכישות והשינויים הרשומים; לעדכון היסטורי השתמשו בתיקון החזקה"
+  },
+  "MCP Live": {
+    "en": "MCP Live",
+    "he": "חיבור MCP"
+  },
+  "Cursor / Desktop": {
+    "en": "Cursor / Desktop",
+    "he": "Cursor / יישום מחשב"
+  }
+}

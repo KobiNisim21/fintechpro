@@ -1,3 +1,4 @@
+import { t, useLanguage } from '@/i18n';
 ﻿import { lazy, Suspense, useState, startTransition, useCallback } from 'react';
 import { LayoutGrid, PieChart, Eye, CalendarDays } from 'lucide-react';
 import { Sidebar } from './Sidebar';
@@ -18,6 +19,7 @@ const MarketCalendar = lazy(() => import('./Analytics/MarketCalendar').then(m =>
 const PortfolioChart = lazy(() => import('./PortfolioChart').then(m => ({ default: m.PortfolioChart })));
 
 function ViewSkeleton() {
+    useLanguage();
   return (
     <div className="space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200/50 rounded-xl w-1/3" />
@@ -32,6 +34,7 @@ function ViewSkeleton() {
 
 
 export default function Dashboard() {
+    useLanguage();
   const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist' | 'calendar'>('holdings');
   const { fetchPositions } = usePortfolio();
 
@@ -42,7 +45,7 @@ export default function Dashboard() {
   return (
     <ErrorBoundary>
       <ConnectionStatus />
-      <a className="skip-to-content" href="#main-content">Skip to content</a>
+      <a className="skip-to-content" href="#main-content">{t("Skip to content")}</a>
       <div className="dashboard-shell flex h-screen w-full overflow-hidden text-slate-800 relative z-0" style={{ background: 'var(--color-ios-bg-gradient)' }}>
       {/* Main UI Container */}
       <div className="flex h-full w-full relative z-10">
@@ -65,16 +68,16 @@ export default function Dashboard() {
 
             {/* Portfolio Content */}
             <section>
-              <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+              <div className="flex flex-col xl:flex-row xl:items-center justify-between mb-6 gap-4">
                 <div className="flex items-center justify-between w-full md:w-auto">
                   <h2 className="text-xl md:text-lg font-bold text-slate-800 desktop-section-title">
-                    {viewMode === 'holdings' ? 'Portfolio Holdings' : viewMode === 'insights' ? 'Portfolio Insights' : viewMode === 'watchlist' ? 'Watchlist' : 'Market Calendar'}
+                    {viewMode === 'holdings' ? t("Portfolio Holdings") : viewMode === 'insights' ? t("Portfolio Insights") : viewMode === 'watchlist' ? t("Watchlist") : t("Market Calendar")}
                   </h2>
                 </div>
 
-                <div className="hidden md:flex items-center gap-3">
+                <div className="hidden md:flex flex-wrap items-center gap-3 min-w-0">
               {/* View Toggle */}
-              <div className="flex p-1 bg-slate-200/50 rounded-xl">
+              <div className="flex flex-wrap p-1 bg-slate-200/50 rounded-xl">
                 <button
                   onClick={() => startTransition(() => setViewMode('holdings'))}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'holdings'
@@ -83,7 +86,7 @@ export default function Dashboard() {
                     }`}
                 >
                   <LayoutGrid className="w-4 h-4" />
-                  <span className="hidden sm:inline">Holdings</span>
+                  <span className="hidden sm:inline">{t("Holdings")}</span>
                 </button>
                 <button
                   onClick={() => startTransition(() => setViewMode('insights'))}
@@ -93,7 +96,7 @@ export default function Dashboard() {
                     }`}
                 >
                   <PieChart className="w-4 h-4" />
-                  <span className="hidden sm:inline">Insights</span>
+                  <span className="hidden sm:inline">{t("Insights")}</span>
                 </button>
                 <button
                   onClick={() => startTransition(() => setViewMode('watchlist'))}
@@ -103,7 +106,7 @@ export default function Dashboard() {
                     }`}
                 >
                   <Eye className="w-4 h-4" />
-                  <span className="hidden sm:inline">Watchlist</span>
+                  <span className="hidden sm:inline">{t("Watchlist")}</span>
                 </button>
                 <button
                   onClick={() => startTransition(() => setViewMode('calendar'))}
@@ -113,7 +116,7 @@ export default function Dashboard() {
                     }`}
                 >
                   <CalendarDays className="w-4 h-4" />
-                  <span className="hidden sm:inline">Calendar</span>
+                  <span className="hidden sm:inline">{t("Calendar")}</span>
                 </button>
               </div>
 
@@ -141,7 +144,7 @@ export default function Dashboard() {
 
         {/* Statistics & Analytics */}
         <section>
-            <h2 className="text-xl md:text-lg font-bold mb-4 md:mb-4 text-slate-800 desktop-section-title">Performance History</h2>
+            <h2 className="text-xl md:text-lg font-bold mb-4 md:mb-4 text-slate-800 desktop-section-title">{t("Performance History")}</h2>
             <Suspense fallback={<ViewSkeleton />}>
               <PortfolioChart />
             </Suspense>

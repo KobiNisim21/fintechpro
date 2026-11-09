@@ -1,3 +1,4 @@
+import { t, useLanguage, locale } from '@/i18n';
 import PortfolioRiskPanel from './PortfolioRiskPanel';
 import DividendCalendar from './DividendCalendar';
 import { usePortfolio } from '@/context/PortfolioContext';
@@ -51,7 +52,7 @@ const SkeletonCard = () => (
                 <Skeleton className="h-4 w-28" />
             </div>
             <div className="space-y-1.5">
-                <Skeleton className="h-3 w-12 ml-auto" />
+                <Skeleton className="h-3 w-12 ms-auto" />
                 <Skeleton className="h-5 w-16" />
             </div>
         </div>
@@ -72,8 +73,9 @@ const SkeletonCard = () => (
 
 // ─── Sector Distribution Grid Component ─────────────────────────
 const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
+    useLanguage();
     const totalValue = data.reduce((sum, d) => sum + d.value, 0);
-    if (totalValue === 0 || data.length === 0) return <div className="text-slate-400 text-center py-8">No sector data</div>;
+    if (totalValue === 0 || data.length === 0) return <div className="text-slate-400 text-center py-8">{t("No sector data")}</div>;
 
     const items = data.map((d, i) => ({
         ...d,
@@ -82,7 +84,7 @@ const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
     }));
 
     return (
-        <div className="grid grid-cols-3 auto-rows-fr gap-3 w-full h-full min-h-[340px]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 auto-rows-fr gap-3 w-full h-full min-h-[340px]">
             {items.map((item, i) => {
                 const isLarge = i < 2;
                 const textColor = item.gradient[2];
@@ -96,10 +98,10 @@ const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
                             background: `linear-gradient(135deg, ${item.gradient[0]} 0%, ${item.gradient[1]} 100%)`,
                         }}
                     >
-                        <span className="text-sm font-medium leading-tight truncate" style={{ color: textColor, opacity: 0.85 }}>
-                            {item.name}
+                        <span className="text-sm font-medium leading-tight break-words" style={{ color: textColor, opacity: 0.85 }}>
+                            {t(item.name)}
                         </span>
-                        <span className="text-xl font-bold mt-0.5" style={{ color: textColor }}>
+                        <span dir="ltr" className="text-xl font-bold mt-0.5" style={{ color: textColor }}>
                             {item.percent.toFixed(1)}%
                         </span>
                     </div>
@@ -111,18 +113,18 @@ const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
 
 // ─── Custom Tooltip ─────────────────────────────────────────────
 const CustomTooltip = ({ active, payload }: any) => {
+    useLanguage();
     if (active && payload && payload.length) {
         const data = payload[0];
         return (
             <div className="bg-[var(--color-ios-card)] backdrop-blur-xl border border-white/60 rounded-[16px] px-4 py-3 shadow-[var(--shadow-ios-card)]">
                 <p className="text-[var(--color-ios-secondary)] font-bold text-sm mb-1">{data.name}</p>
-                <p className="text-[var(--color-ios-fg)] font-bold  text-base">
-                    ${Number(data.value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <p dir="ltr" className="text-[var(--color-ios-fg)] font-bold  text-base">
+                    ${Number(data.value).toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 {data.payload?.percent !== undefined && (
                     <p className="text-cyan-600 font-bold text-xs mt-1">
-                        {(data.payload.percent * 100).toFixed(1)}% of portfolio
-                    </p>
+                        {(data.payload.percent * 100).toFixed(1)}{t("% of portfolio")}</p>
                 )}
             </div>
         );
@@ -158,6 +160,7 @@ const renderCustomLabel = ({ cx, cy, midAngle, outerRadius, name, percent }: any
 //  INSIGHTS VIEW
 // ═════════════════════════════════════════════════════════════════
 export function InsightsView({ isActive = true }: { isActive?: boolean }) {
+    useLanguage();
     const { positions, positionsReady, portfolioAnalytics, analyticsLoading, fetchAnalytics, insightsData, setInsightsData } = usePortfolio();
     const isMobile = useIsMobile();
     const [loading, setLoading] = useState(false);
@@ -342,8 +345,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                         <CardHeader className="pb-2">
                             <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2 tracking-tight">
                                 <Activity className="w-5 h-5 text-violet-400" />
-                                Sector Distribution
-                            </CardTitle>
+                                {t("Sector Distribution")}</CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1 min-h-[340px]">
                             <div className="w-full h-full bg-slate-100 rounded-2xl animate-pulse" />
@@ -354,8 +356,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                         <CardHeader className="pb-2">
                             <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2 tracking-tight">
                                 <Activity className="w-5 h-5 text-violet-400" />
-                                Sector Distribution
-                            </CardTitle>
+                                {t("Sector Distribution")}</CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1">
                             <SectorGrid data={sectorData} />
@@ -371,8 +372,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
                             <PieChartIcon className="w-5 h-5 text-cyan-400" />
-                            Portfolio Allocation
-                        </CardTitle>
+                            {t("Portfolio Allocation")}</CardTitle>
                     </CardHeader>
                     <CardContent className="h-[280px] flex justify-center items-center">
                         {loading ? (
@@ -410,15 +410,14 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
             <div>
                 <h3 className="text-lg font-bold text-[var(--color-ios-fg)]  mb-4 flex items-center gap-2 tracking-tight">
                     <Target className="w-5 h-5 text-emerald-400" />
-                    Analyst Recommendations & Price Targets
-                </h3>
+                    {t("Analyst Recommendations & Price Targets")}</h3>
 
                 {!insightsLoaded ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
                     </div>
                 ) : analystCards.length === 0 ? (
-                    <p className="text-zinc-500 text-sm">No analyst-rated holdings in your portfolio.</p>
+                    <p className="text-zinc-500 text-sm">{t("No analyst-rated holdings in your portfolio.")}</p>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         {analystCards.map((item) => (
@@ -431,27 +430,27 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                         <div className="flex items-center gap-2">
                                             <h4 className="font-bold text-[var(--color-ios-fg)] text-lg  tracking-tight">{item.symbol}</h4>
                                             <Badge className={`${item.consensusColor} text-white text-[10px] font-semibold border-none px-2 py-0.5`}>
-                                                {item.consensus}
+                                                {t(item.consensus)}
                                             </Badge>
                                         </div>
                                         <p className="text-sm text-[var(--color-ios-secondary)] font-bold truncate max-w-[180px]">{item.name}</p>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider">Current</div>
-                                        <div className="font-mono text-[var(--color-ios-fg)] font-bold">${item.price.toFixed(2)}</div>
+                                    <div className="text-end">
+                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider">{t("Current")}</div>
+                                        <div dir="ltr" className="font-mono text-[var(--color-ios-fg)] font-bold">${item.price.toFixed(2)}</div>
                                     </div>
                                 </div>
 
                                 {/* Target + Potential */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                     <div className="bg-[var(--color-ios-input)] shadow-none rounded-[16px] p-3">
-                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider mb-1">Avg Target</div>
+                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider mb-1">{t("Avg Target")}</div>
                                         <div className="font-bold text-[var(--color-ios-fg)]  text-sm">
-                                            {item.target ? `$${item.target.toFixed(2)}` : 'No Data'}
+                                            {item.target ? `$${item.target.toFixed(2)}` : t("No Data")}
                                         </div>
                                     </div>
                                     <div className="bg-[var(--color-ios-input)] shadow-none rounded-[16px] p-3">
-                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider mb-1">Potential</div>
+                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider mb-1">{t("Potential")}</div>
                                         <div className={`font-bold  text-sm flex items-center gap-1 ${item.target
                                             ? item.upside >= 0 ? 'text-[var(--color-ios-success)]' : 'text-[var(--color-ios-danger)]'
                                             : 'text-[var(--color-ios-secondary)]'
@@ -464,7 +463,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                                     }
                                                     {item.upside > 0 ? '+' : ''}{item.upside.toFixed(1)}%
                                                 </>
-                                            ) : 'No Data'}
+                                            ) : t("No Data")}
                                         </div>
                                     </div>
                                 </div>
@@ -472,7 +471,7 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                 {/* Rating Bar */}
                                 <div className="space-y-1.5">
                                     <div className="flex justify-between text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider">
-                                        <span>Ratings ({item.totalVotes})</span>
+                                        <span>{t("Ratings (")}{item.totalVotes})</span>
                                     </div>
                                     <div className="h-1.5 w-full flex rounded-full overflow-hidden bg-[var(--color-ios-input)] shadow-none">
                                         {item.buyVotes > 0 && (
@@ -489,9 +488,9 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                                         )}
                                     </div>
                                     <div className="flex justify-between text-[10px] text-[var(--color-ios-secondary)] font-bold">
-                                        <span>Buy {item.buyVotes}</span>
-                                        <span>Hold {item.holdVotes}</span>
-                                        <span>Sell {item.sellVotes}</span>
+                                        <span>{t("Buy ")}{item.buyVotes}</span>
+                                        <span>{t("Hold ")}{item.holdVotes}</span>
+                                        <span>{t("Sell ")}{item.sellVotes}</span>
                                     </div>
                                 </div>
                             </div>

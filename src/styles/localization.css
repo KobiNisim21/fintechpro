@@ -1,0 +1,31 @@
+/* Reading order follows the chosen language. Charts and numeric fields keep
+   their mathematical direction; identifiers are isolated from RTL prose. */
+html[lang="he"] body { font-family: Arial, 'DM Sans', sans-serif; }
+html[lang="he"] :is(.data-panel, .glass-card, .glass-card-solid) { font-family: inherit; }
+[dir="rtl"] :is(.text-left, .text-right) { text-align: start; }
+[dir="rtl"] input:not([type="number"]):not([type="date"]):not([dir]) { text-align: start; }
+input:is([type="number"], [type="date"]), .recharts-wrapper, .numeric-value { direction: ltr; unicode-bidi: isolate; }
+.recharts-wrapper { text-align: left; }
+bdi { unicode-bidi: isolate; }
+.desktop-stock-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+[dir="rtl"] .recharts-tooltip-wrapper { direction: rtl; text-align: start; }
+[dir="rtl"] [data-slot="sheet-content"] > button { right: auto; left: 1rem; }
+.language-switch { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; flex-shrink: 0; padding: 8px 12px; border-radius: 14px; border: 1px solid #10b981; color: #065f46; background: #ecfdf5; font-size: 14px; font-weight: 700; cursor: pointer; }
+.language-switch:hover { background: #d1fae5; }
+.holding-dialog-header .language-switch { margin-inline-start: auto; }
+.holding-dialog-header .language-switch svg { display: none; }
+.data-panel.holding-dialog-wide { width: min(720px, 100%); }
+.login-language-switch { position: absolute; inset-block-start: max(16px, env(safe-area-inset-top)); inset-inline-end: 16px; }
+.mobile-header { gap: 8px; }
+.mobile-header-brand { min-width: 0; }
+.mobile-header-actions { flex-shrink: 0; }
+.mobile-header-add-label { display: none; }
+@media (min-width: 560px) { .mobile-header-add-label { display: inline; } }
+@media (max-width: 767px) {
+  .mobile-header { padding-inline: 12px; }
+  .mobile-header .language-switch { padding-inline: 8px; font-size: 12px; }
+  .mobile-header .language-switch svg { display: none; }
+  .mobile-header h1 { font-size: 16px; }
+  .mobile-header img { width: 22px; height: 22px; }
+  .mobile-header-actions > button { padding-inline: 12px; }
+}

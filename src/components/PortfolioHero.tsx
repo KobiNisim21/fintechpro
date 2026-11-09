@@ -1,9 +1,11 @@
+import { t, useLanguage, locale } from '@/i18n';
 import { Activity } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { usePortfolio } from '@/context/PortfolioContext';
 import { stocksAPI } from '@/api/stocks';
 
 export function PortfolioHero() {
+    useLanguage();
   const [usdToIls, setUsdToIls] = useState(3.6); // Default fallback
   const [forexSource, setForexSource] = useState('Estimated exchange rate');
   const { positions, portfolioAnalytics } = usePortfolio();
@@ -78,17 +80,17 @@ export function PortfolioHero() {
         <div className="flex flex-wrap items-start justify-between gap-6 mb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Portfolio Overview</h3>
+              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{t("Portfolio Overview")}</h3>
               <div className="flex items-center gap-2">
-                <span className="price-freshness">{hasEstimates ? 'Includes estimates' : hasPreviousQuotes ? 'Previous quotes' : 'Market data'}</span>
+                <span className="price-freshness">{hasEstimates ? t("Includes estimates") : hasPreviousQuotes ? t("Previous quotes") : t("Market data")}</span>
               </div>
             </div>
 
             {/* ILS Primary — large balance number matching reference */}
             <div className="mb-3">
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold tracking-tight text-slate-900 hero-balance-ils">
-                  ₪{totalValueILS.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                <span dir="ltr" className="text-5xl font-bold tracking-tight text-slate-900 hero-balance-ils">
+                  ₪{totalValueILS.toLocaleString(locale(), { maximumFractionDigits: 0 })}
                 </span>
                 <span className="text-2xl font-medium text-slate-500 hero-currency-label">ILS</span>
               </div>
@@ -96,15 +98,15 @@ export function PortfolioHero() {
 
             {/* Daily Change */}
             <p className={`text-sm font-semibold mt-1 ${isDailyPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
-              {isDailyPositive ? '+' : ''}₪{dailyChangeILS.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)
-              <span className="text-slate-400 font-normal ml-1">TODAY</span>
+              <bdi dir="ltr">{isDailyPositive ? '+' : ''}₪{dailyChangeILS.toLocaleString(locale(), { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)</bdi>
+              <span className="text-slate-400 font-normal ms-1">{t("TODAY")}</span>
             </p>
 
             {/* USD Secondary */}
             <div className="mt-4">
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-slate-900 hero-balance-usd">
-                  ${totalValueUSD.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                <span dir="ltr" className="text-3xl font-bold text-slate-900 hero-balance-usd">
+                  ${totalValueUSD.toLocaleString(locale(), { maximumFractionDigits: 2 })}
                 </span>
                 <span className="text-lg font-medium text-slate-500 uppercase hero-currency-label">USD</span>
               </div>
@@ -113,12 +115,12 @@ export function PortfolioHero() {
             {/* Total Gain/Loss */}
             <div className="mt-6 space-y-1">
               <p className={`text-sm font-medium ${isDailyPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {isDailyPositive ? '+' : ''}${dailyChangeUSD.toLocaleString('en-US', { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)
-                <span className="text-slate-400 font-normal ml-1">TODAY</span>
+                <bdi dir="ltr">{isDailyPositive ? '+' : ''}${dailyChangeUSD.toLocaleString(locale(), { maximumFractionDigits: 2 })} ({dailyChangePercent.toFixed(2)}%)</bdi>
+                <span className="text-slate-400 font-normal ms-1">{t("TODAY")}</span>
               </p>
-              <p className={`text-sm font-medium ${isTotalPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {isTotalPositive ? '+' : '-'}₪{Math.abs(totalGainILS).toLocaleString(undefined, { maximumFractionDigits: 2 })} /
-                {isTotalPositive ? ' +$' : ' -$'}{Math.abs(totalGainUSD).toLocaleString(undefined, { maximumFractionDigits: 2 })} ({isTotalPositive ? '+' : ''}{totalGainPercent.toFixed(2)}%)
+              <p dir="ltr" className={`text-sm font-medium ${isTotalPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {isTotalPositive ? '+' : '-'}₪{Math.abs(totalGainILS).toLocaleString(locale(), { maximumFractionDigits: 2 })} /
+                {isTotalPositive ? ' +$' : ' -$'}{Math.abs(totalGainUSD).toLocaleString(locale(), { maximumFractionDigits: 2 })} ({isTotalPositive ? '+' : ''}{totalGainPercent.toFixed(2)}%)
               </p>
             </div>
           </div>
@@ -132,8 +134,8 @@ export function PortfolioHero() {
               </div>
               <div className="glass-card-solid rounded-2xl flex flex-col items-center justify-center p-4 min-w-[90px] hover-lift hero-exchange-card">
                 <div className="text-[11px] text-slate-500 font-medium uppercase tracking-wider mb-1">USD/ILS</div>
-                <div className="text-lg font-bold text-slate-800 tracking-tight">{ usdToIls.toFixed(4)}</div>
-                <div className="price-freshness" title={forexSource}>{forexSource}</div>
+                <div dir="ltr" className="text-lg font-bold text-slate-800 tracking-tight">{ usdToIls.toFixed(4)}</div>
+                <div className="price-freshness" title={forexSource}>{t(forexSource)}</div>
               </div>
             </div>
 
@@ -154,8 +156,8 @@ export function PortfolioHero() {
                         : 'bg-rose-50/80'
                         }`}
                     >
-                      <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-1.5 hero-period-label">{label} Return</span>
-                      <span className={`text-xl font-bold tracking-tight hero-period-value ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-1.5 hero-period-label">{t(`${label} Return`)}</span>
+                      <span dir="ltr" className={`text-xl font-bold tracking-tight hero-period-value ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {isPositive ? '+' : ''}{value.toFixed(1)}%
                       </span>
                     </div>
