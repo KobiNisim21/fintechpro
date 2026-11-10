@@ -65,3 +65,32 @@ check found no worker source dependencies outside the server directory. The
 Docker image itself was not built locally because the Docker engine is not
 running; the Northflank image build and live readiness remain to be verified.
 Do not disable Render's personal-alert timer until that verification succeeds.
+
+## Provisioning status (2026-11-10)
+
+The newly created FinTechPro team was pay-as-you-go and not eligible for Sandbox.
+The owner's existing Sandbox team has one free PaaS project; creating another
+project is blocked by the provider's project limit. A SECOND, separate service
+named fintechpro-alert-worker was instead created inside that existing free
+project. Northflank labels the new service Free, with one nf-compute-10 instance
+(0.1 shared vCPU / 256 MB) in Europe West/London. The pre-existing application was
+not modified. No paid project, compute upgrade or database was created.
+
+Source main/a194df3 was built using /Dockerfile.alert-worker. Northflank build
+careful-crowd-2579 completed in 23 seconds and is marked Deployed. Port 8080 HTTP
+and readiness /api/health are configured. Health still returns 503 because the
+new service has no database/quote-provider runtime credentials yet. A deployed
+image is not confirmation of a functioning worker or a completed cutover.
+
+The environment editor has UNSAVED, empty rows named MONGODB_URI and
+FINNHUB_API_KEY ready for entry. Automatic approval review rejected returning
+secret values in tool output and also rejected direct clipboard transfer from
+Render to Northflank without explicit authorization for that credential transfer.
+No values were exported, printed, committed or pasted into the new service.
+Render secrets were hidden again. The owner was asked either to explicitly
+authorize direct transfer from Render/fintechpro-backend to this new service, or
+to enter the values directly in the provider UI. Never request values in chat.
+
+After authorization/configuration, verify runtime readiness and minute checks,
+then carry out the documented cutover. Render's personal-alert timer remains
+enabled until Northflank has been proved healthy.
