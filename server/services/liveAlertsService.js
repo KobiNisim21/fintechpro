@@ -475,8 +475,10 @@ function emitSpecialAlert(io, userPortfolios, ticker, alertData) {
  */
 export function startLiveAlertsService(io) {
     const checkRules = () => pollPersonalAlerts(io).catch(error => console.warn('Personal alert check unavailable:', error.message));
-    checkRules();
-    setInterval(checkRules, 60_000);
+    if (process.env.PERSONAL_ALERT_WORKER_ENABLED !== 'false') {
+        checkRules();
+        setInterval(checkRules, 60_000);
+    }
     console.log('');
     console.log('========================================');
     console.log('🔔 LIVE ALERTS SERVICE STARTED');

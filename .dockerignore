@@ -1,0 +1,14 @@
+.git
+.beads
+.agents
+.codex
+.aws
+.env
+.env.*
+node_modules
+dist
+build
+.runtime
+*.log
+*.exe
+design-system-summary.md

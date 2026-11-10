@@ -85,6 +85,7 @@
       "scripts": {
             "dev": "vite",
             "start": "node server/index.js",
+            "start:alert-worker": "node server/alert-worker.js",
             "server": "nodemon server/index.js",
             "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
             "typecheck": "tsc --noEmit",
