@@ -81,11 +81,16 @@ owner's iPhone after deployment. Keep the owner's production rules unchanged.
 References: https://webkit.org/blog/13878/ and
 https://github.com/web-push-libs/web-push
 
-Production follow-up: frontend d3cab72 is deployed; the authenticated push config
-returns HTTP 200 and the installation/push panel is visible. The existing Render
-backend still returns 404 for its new push config route and has no recent worker
-heartbeat, confirming it needs a deployment of the updated Node code. The Render
-dashboard is at its sign-in page and no CLI/API deployment credentials are
-configured in this workspace. Owner sign-in is needed to finish that deployment.
-Until then, open-session checks can send push but closed-app background checking
-is not confirmed. No real device opt-in or native notification receipt is claimed.
+Production verification (2026-11-10): after owner sign-in, Render was manually
+deployed from main commit 36a292e. Deploy status is Live / succeeded; backend
+health returns HTTP 200 with MongoDB connected. Both Vercel and Render push config
+return HTTP 200, report backgroundChecks=true and share the same signing identity.
+The background worker is therefore deployed and its heartbeat is confirmed.
+No existing portfolio holding or rule was edited during deployment.
+
+Render's dashboard identifies this as a free instance, which can spin down during
+inactivity. Current heartbeat confirmation is not an uptime guarantee. Reliable
+24/7 operation needs an approved always-on instance or an authenticated external
+scheduler (TraderAi-rjn); no paid upgrade was made. Physical Home Screen install,
+native permission and test-notification receipt remain in TraderAi-cz1. No real
+device opt-in or native notification receipt is claimed by the browser checks.
