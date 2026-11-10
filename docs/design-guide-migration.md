@@ -101,3 +101,48 @@ or errors were observed in the application. Native donut opening/closing retaine
 MA/GOOG/IVV at 40/40/20, matching bubble percentages and USD600/USD600/USD300.
 The synthetic financial digest remained unchanged. A separate four-asset preview
 was rendered and inspected, then removed; no production portfolio was modified.
+
+## Stage 4: quiet sectors and large-portfolio colors
+
+The owner requested softer sector colors and reliable allocation colors for many
+holdings. `chartPalette.ts` now assigns twelve distinct pastel sector backgrounds
+by sector identity, with a readable slate foreground. Compact equal-size tiles,
+subtle borders and thin percentage bars replace the tall saturated blocks. The
+sector percentage calculation is unchanged. The design guide's sector section
+has been updated to reflect the owner's newer direction.
+
+Holding colors use a sixteen-color coordinated base with generated fallback
+colors and collision resolution. Assignment is deterministic for the same set
+of symbols regardless of incoming order or performance ranking. It does not
+depend on the symbol's current weight. Label foregrounds are selected for at
+least 4.5:1 contrast against their circle fill. Labels and values remain necessary:
+hundreds of technically distinct colors are not all perceptually distinguishable.
+
+The proportional overview is bounded to sixteen bubbles: fifteen individual
+holdings and an explicitly labeled neutral aggregate for larger portfolios.
+Largest circles are packed first. A native all-holdings disclosure additionally
+shows every holding as an individual circle with its own color, symbol and
+percentage. The full grid scrolls, keeps proportional areas, and does not invent
+minimum weights. The complete legend and original donut chart remain available.
+
+Validation (2026-11-10):
+
+- 41 offline tests passed, including twelve distinct readable sector pairs,
+  1,000 defined unique holding colors with readable label contrast, stable colors
+  under reordered input, proportional geometry, and intact totals for 1,000 rows.
+- Production build and whitespace checks passed. Existing hook bodies, fetching
+  and event handlers in InsightsView and AllocationBubbles match the previous
+  revision exactly. Only presentation calculations and styling were extended.
+- Local browser exercised 100 and 1,000 synthetic holdings, full-grid disclosure,
+  one defined color per holding, scrollable lists and Hebrew/English labels.
+  Desktop, 768px and 320px layouts had no horizontal overflow; all twelve sector
+  names fit. Application console had no warnings/errors in these checks.
+- The three seeded holdings' financial digest was unchanged; sector percentages
+  still read 42.5/41.8/7.2/... and the donut retained GOOG/MA/IVV at 40/40/20.
+- Screenshots of the soft sector card and a synthetic 100-holding preview were
+  inspected. Preview roots were removed after checking, without editing any
+  production holdings.
+
+Remaining visual migration (`TraderAi-7dj`): health-panel information hierarchy,
+holding-card consistency, forms/dialog details and navigation/sidebar styling.
+Owner-authenticated production and physical iPhone checks remain `TraderAi-cz1`.

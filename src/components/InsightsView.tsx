@@ -1,6 +1,7 @@
 import { t, useLanguage, locale } from '@/i18n';
 import PortfolioRiskPanel from './PortfolioRiskPanel';
 import AllocationBubbles from './AllocationBubbles';
+import { sectorColors } from '@/lib/chartPalette';
 import DividendCalendar from './DividendCalendar';
 import { usePortfolio } from '@/context/PortfolioContext';
 import { useMemo, useState, useEffect, useRef } from 'react';
@@ -20,13 +21,6 @@ import PortfolioBenchmarkChart from './Analytics/PortfolioBenchmarkChart';
 const COLORS = [
     '#22d3ee', '#34d399', '#818cf8', '#f472b6', '#fbbf24',
     '#a78bfa', '#fb923c', '#38bdf8', '#4ade80', '#e879f9',
-];
-
-// Solid sector tiles with text contrast independent of the page appearance.
-const SECTOR_COLORS: [string, string][] = [
-    ['#0f766e', '#ffffff'], ['#4338ca', '#ffffff'], ['#fef3c7', '#172b3a'],
-    ['#9d174d', '#ffffff'], ['#1d4ed8', '#ffffff'], ['#6d28d9', '#ffffff'],
-    ['#166534', '#ffffff'], ['#9a3412', '#ffffff'], ['#155e75', '#ffffff'], ['#6b21a8', '#ffffff'],
 ];
 
 // ─── Skeleton Component ─────────────────────────────────────────
@@ -73,30 +67,31 @@ const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
     const items = data.map((d, i) => ({
         ...d,
         percent: (d.value / totalValue) * 100,
-        colors: SECTOR_COLORS[i % SECTOR_COLORS.length],
+        colors: sectorColors(d.name, i),
     }));
 
     return (
-        <div className="sector-distribution-grid grid grid-cols-2 sm:grid-cols-3 auto-rows-fr gap-3 w-full h-full min-h-[300px]">
+        <div className="sector-distribution-grid grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
             {items.map((item, i) => {
                 const isLarge = i < 2;
                 const textColor = item.colors[1];
                 return (
                     <div
                         key={item.name}
-                        className={`flex flex-col justify-end min-w-0 p-4 overflow-hidden rounded-lg transition-shadow duration-base ${
-                            isLarge ? 'row-span-2' : ''
+                        className={`sector-tile flex flex-col justify-end min-w-0 p-4 overflow-hidden rounded-lg transition-shadow duration-base ${
+                            isLarge ? 'sector-tile-major' : ''
                         }`}
                         style={{
                             backgroundColor: item.colors[0],
                         }}
                     >
-                        <span className="text-caption font-medium leading-tight break-words opacity-90" style={{ color: textColor }}>
+                        <span className="text-caption font-medium leading-tight break-words" style={{ color: textColor }}>
                             {t(item.name)}
                         </span>
-                        <span dir="ltr" className="text-heading font-bold tabular-nums mt-1" style={{ color: textColor }}>
+                        <span dir="ltr" className="sector-tile-value text-heading font-bold tabular-nums mt-1" style={{ color: textColor }}>
                             {item.percent.toFixed(1)}%
                         </span>
+                        <span className="sector-share-track" aria-hidden="true"><span style={{ width: `${item.percent}%`, backgroundColor: textColor }} /></span>
                     </div>
                 );
             })}

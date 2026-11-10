@@ -28,8 +28,8 @@ test('many holdings use a disclosed aggregate bubble without losing any legend v
     const data = Array.from({ length: 100 }, (_, i) => ({ name: `STOCK${i}`, value: i + 1 }));
     const result = buildAllocationBubbles(data);
     assert.equal(result.rows.length, 100);
-    assert.equal(result.bubbles.length, 8);
-    assert.equal(result.bubbles.at(-1).otherCount, 93);
+    assert.equal(result.bubbles.length, 16);
+    assert.equal(result.bubbles.find(b => b.otherCount).otherCount, 85);
     assert.equal(result.rows.reduce((sum, r) => sum + r.value, 0), 5050);
     assert.equal(result.bubbles.reduce((sum, r) => sum + r.value, 0), 5050);
     assert.ok(Math.abs(result.bubbles.reduce((sum, r) => sum + r.percent, 0) - 100) < 1e-10);
@@ -43,7 +43,7 @@ test('empty, invalid, single, repeated-symbol and small-weight cases remain fini
     assert.equal(single.bubbles[0].percent, 100); verifyGeometry(single);
     const repeated = buildAllocationBubbles([{ name: 'GOOG', value: 20 }, { name: 'GOOG', value: 30 }, { name: 'IVV', value: 50 }]);
     assert.deepEqual(repeated.rows.map(r => r.percent), [50, 50]); verifyGeometry(repeated);
-    for (let count = 2; count <= 8; count++) {
+    for (let count = 2; count <= 16; count++) {
         verifyGeometry(buildAllocationBubbles(Array.from({ length: count }, (_, i) => ({ name: `S${i}`, value: (i + 1) ** 4 }))));
     }
     const tiny = buildAllocationBubbles([{ name: 'BIG', value: 1e6 }, { name: 'SMALL', value: 1 }]);

@@ -1,4 +1,5 @@
 export interface AllocationValue { name: string; value: number }
+export const ALLOCATION_BUBBLE_LIMIT = 16;
 export interface AllocationBubble extends AllocationValue {
     percent: number;
     otherCount: number;
@@ -18,16 +19,16 @@ export function buildAllocationBubbles(data: readonly AllocationValue[]) {
     if (!Number.isFinite(total) || total <= 0) return { rows: [], bubbles: [], viewBox: '0 0 120 120' };
     const rows = values.map(row => ({ ...row, percent: row.value / total * 100 }));
     // Keep the graphic legible at any portfolio size; the legend retains EVERY holding.
-    const visible = rows.length > 8
-        ? [...rows.slice(0, 7).map(row => ({ ...row, otherCount: 0 })), {
-            name: '', value: rows.slice(7).reduce((sum, row) => sum + row.value, 0),
-            percent: rows.slice(7).reduce((sum, row) => sum + row.percent, 0), otherCount: rows.length - 7,
+    const visible = rows.length > ALLOCATION_BUBBLE_LIMIT
+        ? [...rows.slice(0, ALLOCATION_BUBBLE_LIMIT - 1).map(row => ({ ...row, otherCount: 0 })), {
+            name: '', value: rows.slice(ALLOCATION_BUBBLE_LIMIT - 1).reduce((sum, row) => sum + row.value, 0),
+            percent: rows.slice(ALLOCATION_BUBBLE_LIMIT - 1).reduce((sum, row) => sum + row.percent, 0), otherCount: rows.length - ALLOCATION_BUBBLE_LIMIT + 1,
         }]
         : rows.map(row => ({ ...row, otherCount: 0 }));
     const largest = Math.max(...visible.map(row => row.value));
     const bubbles: AllocationBubble[] = [];
     const gap = 2;
-    for (const row of visible) {
+    for (const row of [...visible].sort((a, b) => b.value - a.value)) {
         const r = 52 * Math.sqrt(row.value / largest);
         const circle = { ...row, r, x: 0, y: 0 };
         if (bubbles.length === 1) circle.x = -(bubbles[0].r + r + gap);

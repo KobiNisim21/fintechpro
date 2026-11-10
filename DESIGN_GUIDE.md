@@ -512,13 +512,24 @@ Value:  "text-body text-ink font-semibold"
 Container:  "bg-surface rounded-xl shadow-card p-card border border-line/50"
 ```
 
-**Sector blocks retain their semantic colors** (green, blue, yellow, purple, red, etc.) — do not change those. Style adjustments:
+**Sector colors:** Use the soft, identity-based palette in `src/lib/chartPalette.ts`.
+The owner requested this refinement after reviewing the original saturated tiles.
+Known sectors have distinct pastel backgrounds and readable slate foregrounds;
+colors stay tied to sector names when weights/rankings change. Avoid saturated
+full-card fills or repeating a ten-color array across twelve standard categories.
 
 ```
-Block:       "rounded-lg p-4 text-white"
-Block label: "text-caption font-medium opacity-90"
+Block:       "rounded-lg" with subtle border and compact padding
+Block label: "text-caption font-medium" with palette foreground
 Block value: "text-heading font-bold"
 ```
+
+Equal-size tiles keep this dense view compact. The numeric percentage and thin
+inset bar represent sector weight; tile area does not represent weight.
+Portfolio Allocation bubbles use proportional circle area, with a 16-bubble
+overview and a disclosed neutral aggregate for larger portfolios. The native
+all-holdings disclosure shows every holding separately. Use identity-based
+generated colors from the same palette helper, never an undefined array index.
 
 ---
 

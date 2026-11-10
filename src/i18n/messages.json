@@ -2766,5 +2766,17 @@
   "Donut chart": {
     "en": "Donut chart",
     "he": "תרשים טבעת"
+  },
+  "Other holdings": {
+    "en": "Other holdings",
+    "he": "יתר ההחזקות"
+  },
+  "Other": {
+    "en": "Other",
+    "he": "יתר"
+  },
+  "All holding bubbles ({0})": {
+    "en": "All holding bubbles ({0})",
+    "he": "בועות לכל ההחזקות ({0})"
   }
 }
