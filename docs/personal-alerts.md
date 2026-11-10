@@ -90,7 +90,10 @@ No existing portfolio holding or rule was edited during deployment.
 
 Render's dashboard identifies this as a free instance, which can spin down during
 inactivity. Current heartbeat confirmation is not an uptime guarantee. Reliable
-24/7 operation needs an approved always-on instance or an authenticated external
-scheduler (TraderAi-rjn); no paid upgrade was made. Physical Home Screen install,
+24/7 operation needed an always-on worker or authenticated external scheduler.
+Later on 2026-11-10, the separate Free Northflank worker was deployed and verified;
+Render's personal-alert timer is now disabled while its API remains active. See
+docs/northflank-alert-worker.md for completed cutover/coexistence checks and rollback.
+No paid upgrade was made. Physical Home Screen install,
 native permission and test-notification receipt remain in TraderAi-cz1. No real
 device opt-in or native notification receipt is claimed by the browser checks.

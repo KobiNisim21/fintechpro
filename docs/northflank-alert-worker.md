@@ -57,14 +57,14 @@ device subscriptions throughout.
 Runtime tests cover independent periodic checks, no overlap, recovery from errors,
 health readiness/staleness, endpoint isolation and shutdown. Existing alert/push
 integration tests cover durable jobs, account separation and duplicate suppression.
-Deployment remains pending Northflank sign-in and resource/secret configuration.
+The completed deployment and cutover verification are recorded below.
 
 Validation on 2026-11-10: 50 offline tests, 30 disposable MongoDB integration
 tests, typecheck and the frontend production build passed. A transitive import
 check found no worker source dependencies outside the server directory. The
 Docker image itself was not built locally because the Docker engine is not
-running; the Northflank image build and live readiness remain to be verified.
-Do not disable Render's personal-alert timer until that verification succeeds.
+running; the image was subsequently built successfully on Northflank and live
+readiness verified after the owner configured runtime credentials.
 
 ## Provisioning status (2026-11-10)
 
@@ -78,19 +78,35 @@ not modified. No paid project, compute upgrade or database was created.
 
 Source main/a194df3 was built using /Dockerfile.alert-worker. Northflank build
 careful-crowd-2579 completed in 23 seconds and is marked Deployed. Port 8080 HTTP
-and readiness /api/health are configured. Health still returns 503 because the
-new service has no database/quote-provider runtime credentials yet. A deployed
-image is not confirmation of a functioning worker or a completed cutover.
+and readiness /api/health are configured. Initial health returned 503 pending
+runtime credentials; the owner subsequently entered and saved MONGODB_URI and
+FINNHUB_API_KEY directly in the new service's environment editor. Health is now
+200. No credential values were exported, logged or committed.
 
-The environment editor has UNSAVED, empty rows named MONGODB_URI and
-FINNHUB_API_KEY ready for entry. Automatic approval review rejected returning
-secret values in tool output and also rejected direct clipboard transfer from
-Render to Northflank without explicit authorization for that credential transfer.
-No values were exported, printed, committed or pasted into the new service.
-Render secrets were hidden again. The owner was asked either to explicitly
-authorize direct transfer from Render/fintechpro-backend to this new service, or
-to enter the values directly in the provider UI. Never request values in chat.
+## Completed cutover and coexistence checks (2026-11-10)
 
-After authorization/configuration, verify runtime readiness and minute checks,
-then carry out the documented cutover. Render's personal-alert timer remains
-enabled until Northflank has been proved healthy.
+The new worker's /api/live and /api/health return HTTP 200 with the expected
+personal-alert-worker role. Its lastCheckedAt advanced through repeated minute
+checks. After Northflank readiness was confirmed, PERSONAL_ALERT_WORKER_ENABLED=false
+was set ONLY on Render's fintechpro-backend, which successfully deployed main/bdfe736.
+The persisted boolean switch was verified without reading private credentials.
+Render's HTTP, sockets and market/news services remain available; only its
+personal-alert timer is disabled.
+
+More than three minutes after the disabled Render timer was observed (beyond the
+shared heartbeat freshness window), FinTechPro's authenticated /api/push/config
+still returned HTTP 200 and backgroundChecks=true. Northflank health returned 200
+with lastCheckedAt=2026-11-10T21:41:55.329Z. This confirms the new worker continues
+background checking independently of Render's personal timer. The freshly loaded
+production application's console reported no warnings or errors. No holdings or
+alert thresholds were changed. Native push receipt after this migration was not
+directly observed; the owner reported working notifications before cutover.
+
+The original knreminder-backend was inspected read-only. Northflank shows it
+Running on the same aaee8b6 source with one instance, 0.1 vCPU/256 MB, 10 days
+uptime and 0 restarts. Its last active deployment remains dated 2026-10-31,
+predating this work. The new worker has a distinct service name, repository,
+container and endpoint inside the SAME free project. The project/account quota
+is shared by the two services. No old application settings, repository, endpoint
+or notification rules were modified. KNReminder's business-level notification
+delivery was not exercised during these read-only checks.
