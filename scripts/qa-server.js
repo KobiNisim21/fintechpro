@@ -35,6 +35,18 @@ if (process.argv.includes('--seed-live-alerts')) {
     });
   });
 }
+if (process.argv.includes('--seed-market-news')) {
+  // Populate all five pages, including ticker buttons, without external feeds.
+  const items = Array.from({ length: 20 }, (_, index) => ({
+    id: `qa-market-news-${index}`, source: 'QA Market Source',
+    headline: `QA market headline ${String(index + 1).padStart(2, '0')}`,
+    content: 'Synthetic market news for mobile pagination testing.',
+    summary: 'Synthetic market news for mobile pagination testing.',
+    tickers: [['IVV'], ['GOOG'], ['MA']][index % 3],
+    pubDate: new Date(Date.now() - index * 3600000).toISOString(), relativeTime: 'just now',
+  }));
+  fixture.io.on('connection', socket => socket.emit('market-news-update', { items, newCount: 0 }));
+}
 console.log(`Disposable local QA: ${fixture.baseUrl}/__qa/login/one`);
 console.log('Second fixture user: /__qa/login/two. No production data or external providers are used.');
 let stopping = false;

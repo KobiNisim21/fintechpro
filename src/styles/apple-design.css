@@ -397,3 +397,24 @@ html .data-panel.holding-dialog { border-radius: 16px; border-color: #e8e8ed; bo
 .portfolio-tab-bar button[aria-current="page"] > div { background: #ede9fc; border-radius: 10px; box-shadow: none; }
 .portfolio-tab-bar button > span { font-size: 12px; font-weight: 500; }
 .portfolio-tab-bar button[aria-current="page"] > span { font-weight: 600; }
+
+/* Keep a full touch target around each small visual pagination indicator. */
+.live-market-news .news-pagination { display: flex; flex-direction: column; align-items: center; gap: 2px; background: transparent; box-shadow: none; border-radius: 0; }
+.news-pagination-controls { display: flex; flex-wrap: wrap; justify-content: center; width: 100%; gap: 0; }
+.news-pagination-controls .news-page-button { display: grid; place-items: center; flex: 0 0 44px; width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; box-shadow: none; }
+.news-page-button > span { display: block; min-width: 0; min-height: 0; max-width: 28px; box-shadow: none !important; pointer-events: none; }
+@media (hover: hover) { .news-page-button:hover { background: #f5f3fc; } }
+.news-page-count { color: #64748b; font-size: 12px; line-height: 1.5; white-space: nowrap; }
+
+/* Dialog button wrapping must not squeeze five navigation labels into columns. */
+html .holding-dialog-body .mcp-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 6px; padding: 6px; margin-bottom: 20px; width: 100%; min-width: 0; border: 1px solid #e8e8ed; border-radius: 12px; background: #fafafa; overflow: visible; }
+html .holding-dialog-body .mcp-tabs > button { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px; width: 100%; min-width: 0; min-height: 44px; height: auto; padding: 8px; flex: none; border-radius: 8px; font-size: 13px; line-height: 1.4; white-space: normal; overflow-wrap: normal; word-break: normal; text-align: center; }
+html .holding-dialog-body .mcp-tabs > button > span { min-width: 0; white-space: normal; overflow-wrap: normal; word-break: normal; }
+html .holding-dialog-body .mcp-tabs > button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.sidebar-footer .mcp-connect-button { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; text-align: start; }
+.mcp-connect-button .mcp-connect-label { min-width: 0; white-space: normal; overflow: visible; overflow-wrap: normal; word-break: normal; text-overflow: clip; font-size: 13px; line-height: 1.45; letter-spacing: normal; }
+.mcp-connect-button > span { justify-self: start; margin-inline-start: 44px; max-width: calc(100% - 44px); }
+@media (min-width: 640px) {
+  html .holding-dialog-body .mcp-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  html .holding-dialog-body .mcp-tabs > button:last-child:nth-child(odd) { grid-column: auto; }
+}

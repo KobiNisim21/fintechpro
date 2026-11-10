@@ -196,3 +196,41 @@ Validation (2026-11-10):
 This closes the agreed component pass in `TraderAi-7dj`. The separate final
 owner-authenticated production and physical iPhone validation remains open in
 `TraderAi-cz1`; browser viewport checks do not constitute a physical Safari test.
+
+## Mobile regression: populated news pagination and MCP tabs
+
+Owner screenshots revealed two conflicts that empty-news checks did not expose:
+the global 44px minimum touch size was applied directly to 10px pagination dots,
+and shared dialog button wrapping compressed five MCP labels into character-wide
+columns. The trigger label was also truncated beside its status badge.
+
+Pagination now uses native 44px buttons around separate 10px indicators (28px
+for the active indicator). The existing click callback, page slicing and automatic
+rotation are unchanged. Native buttons additionally activate with Enter/Space.
+The compact count sits beneath the indicators, hover fill is mouse-only, and the
+focus outline remains available for keyboard navigation.
+
+MCP navigation uses two readable columns on phones and five columns on larger
+screens, with word wrapping instead of character breaking. The final phone tab
+spans the row. The sidebar trigger keeps its complete label and puts the status
+badge on a second line. Existing tab handlers, key actions, hooks and API calls
+were retained; no key was created during QA.
+
+Reproduction fixture: run `npm run qa:server -- --seed-fund --localization
+--seed-market-news` and open the fixture login route. The added flag supplies
+twenty synthetic news items over five pages through the real local socket.
+
+Validation (2026-11-10): 41 offline tests, typecheck and production build passed;
+original hooks and all event callback bodies in both edited components match
+HEAD. Browser verified all five populated news pages, page-five headlines 17–20,
+keyboard activation of page two, and normal automatic advancement. Each visible
+button measured 44x44px with 10px-high indicators. All five MCP tabs opened, with
+no body/label overflow at 320x568, 390x844 and desktop width. Hebrew/RTL and
+English/LTR labels, visible close controls, the complete trigger label and footer
+fit were checked. The synthetic financial digest was unchanged.
+
+The reduced-motion run intentionally produced Framer Motion's development notice;
+after restoring normal media preferences and reloading, application console
+reported zero errors and warnings. Screenshots were inspected for the compact
+indicators and readable mobile MCP tabs. Physical iPhone verification remains
+tracked separately in `TraderAi-cz1`.

@@ -152,13 +152,18 @@ export function LiveMarketNews() {
 
             {/* Pagination Dots with smooth transitions */}
             {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-3 mt-4 py-3 px-4 bg-[var(--color-ios-card)] rounded-[20px] shadow-sm border border-white/40">
+                <div className="news-pagination mt-3 border-t border-line pt-2">
+                    <div className="news-pagination-controls">
                     {Array.from({ length: totalPages }).map((_, i) => (
-                        <motion.div
+                        <button
+                            type="button"
                             key={i}
                             onClick={() => handlePageChange(i)}
-                            role="button"
-                            tabIndex={0}
+                            className="news-page-button"
+                            aria-current={i === currentPage ? 'page' : undefined}
+                            aria-label={t("Go to page {0} of {1}", [i + 1, totalPages])}
+                        >
+                        <motion.span
                             animate={{
                                 width: i === currentPage ? 28 : 10,
                                 backgroundColor: i === currentPage ? 'var(--color-ios-info)' : 'rgba(74, 70, 81, 0.2)',
@@ -170,10 +175,12 @@ export function LiveMarketNews() {
                                 borderRadius: '5px',
                                 cursor: 'pointer'
                             }}
-                            aria-label={t("Go to page {0} of {1}", [i + 1, totalPages])}
+                            aria-hidden="true"
                         />
+                        </button>
                     ))}
-                    <span className="text-[11px] text-[var(--color-ios-secondary)] ms-2 font-bold">
+                    </div>
+                    <span dir="ltr" className="news-page-count text-caption text-secondary tabular-nums">
                         {currentPage + 1}/{totalPages}
                     </span>
                 </div>

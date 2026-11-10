@@ -167,7 +167,7 @@ export function McpModal() {
                     <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-accent shrink-0">
                         <Bot className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-semibold tracking-wide truncate">{t("חיבור ל-Claude / AI")}</span>
+                    <span className="mcp-connect-label text-caption font-semibold">{t("חיבור ל-Claude / AI")}</span>
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 shrink-0">
                     {t("MCP Live")}
@@ -176,7 +176,7 @@ export function McpModal() {
 
             {/* Modal Portal */}
             {open && <SimpleDialog open={!!open} onClose={() => setOpen(false)} title={t("Connect AI to portfolio")} wide>{/* Navigation Tabs */}
-                        <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-2xl mb-5 overflow-x-auto text-xs font-semibold custom-scrollbar">
+                        <div className="mcp-tabs grid gap-1.5 p-1 bg-canvas rounded-xl mb-5 text-caption font-semibold">
                             <button
                                 type="button"
                                 onClick={() => setActiveTab('keys')}
