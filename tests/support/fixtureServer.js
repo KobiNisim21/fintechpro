@@ -12,6 +12,7 @@ import { protect } from '../../server/middleware/auth.js';
 import { createAddPosition, getPositions, updatePosition, deletePosition } from '../../server/controllers/positionsController.js';
 import activityRoutes from '../../server/routes/activity.js';
 import { createAlertRoutes } from '../../server/routes/alerts.js';
+import { createPushRoutes } from '../../server/routes/push.js';
 import { calculatePortfolioRisk, combinePositions, buildDividendEstimate } from '../../server/services/portfolioRisk.js';
 import { readFileSync } from 'node:fs';
 import { createProfileResolver, createHoldingsReference } from '../../server/services/sectorClassification.js';
@@ -35,7 +36,7 @@ export async function fixtureQuote(symbol) {
   return { c: 150, pc: 149, d: 1, dp: 100 / 149, name: security.description, source: 'QA fixture', t: Math.floor(Date.now() / 1000) };
 }
 
-export async function createFixtureServer({ port = 0, frontend = false, localization = false } = {}) {
+export async function createFixtureServer({ port = 0, frontend = false, localization = false, pushSender } = {}) {
   if (process.env.NODE_ENV === 'production') throw new Error('QA fixture server cannot run in production');
   // No .env, production connection string or provider credentials are read.
   const mongod = await MongoMemoryServer.create({
@@ -62,10 +63,13 @@ export async function createFixtureServer({ port = 0, frontend = false, localiza
     ]);
     const tokens = users.map(user => jwt.sign({ id: user._id }, secret, { expiresIn: '1h' }));
     const app = express();
+    const pushMessages = [];
+    const sender = pushSender || (async (subscription, payload) => { pushMessages.push({ endpoint: subscription.endpoint, payload: JSON.parse(payload) }); return { statusCode: 201 }; });
     let failedPositionReads = 0;
     app.use(express.json());
     app.use('/api/activity', activityRoutes);
-    app.use('/api/alerts', createAlertRoutes(fixtureQuote));
+    app.use('/api/alerts', createAlertRoutes(fixtureQuote, { pushSender: sender }));
+    app.use('/api/push', createPushRoutes({ sender }));
     app.use((req, res, next) => {
       res.setHeader('Cache-Control', 'no-store');
       next();
@@ -184,7 +188,7 @@ export async function createFixtureServer({ port = 0, frontend = false, localiza
       });
       app.use(vite.middlewares);
     }
-    return { baseUrl, tokens, users, io, close };
+    return { baseUrl, tokens, users, io, close, pushMessages };
   } catch (error) {
     await close();
     throw error;

@@ -7,7 +7,7 @@ const ActivityView = lazy(() => import('./ActivityView'));
 const PersonalAlertsView = lazy(() => import('./PersonalAlertsView'));
 export default function PortfolioTools() {
     useLanguage();
-    const [panel, setPanel] = useState<'activity' | 'alerts' | null>(null);
+    const [panel, setPanel] = useState<'activity' | 'alerts' | null>(() => new URLSearchParams(window.location.search).get('panel') === 'alerts' ? 'alerts' : null);
     const [downloading, setDownloading] = useState(false), [error, setError] = useState('');
     const [triggered, setTriggered] = useState(0);
     const [alertError, setAlertError] = useState('');

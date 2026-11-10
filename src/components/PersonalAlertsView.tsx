@@ -23,7 +23,7 @@ export default function PersonalAlertsView() {
     };
     return <div className="data-panel p-4 sm:p-6 space-y-4">
         <h2 className="font-bold text-lg">{t("Personal alerts")}</h2>
-        <p className="text-xs text-slate-600">{t("In-app alerts are checked when created, about once a minute while your portfolio is open, and with Check now. Background checks require a continuously running backend. Quotes may be delayed. Price alerts pause after triggering; percentage rules repeat at most once per 24 hours. No push, email or Telegram delivery.")}</p>
+        <p className="text-xs text-slate-600">{t("Alerts are checked when created, about once a minute while your portfolio is open, and with Check now. Enable push on each device to receive notifications outside the app. Background checks require a continuously running backend. Quotes may be delayed. Price alerts pause after triggering; percentage rules repeat at most once per 24 hours.")}</p>
         <form onSubmit={create} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
             <label className="text-sm">{t("Holding")}<select name="symbol" className="data-input w-full" required>{[...new Set(positions.map(p => p.symbol))].map(symbol => <option key={symbol}>{symbol}</option>)}</select></label>
             <label className="text-sm">{t("Condition")}<select name="kind" className="data-input w-full" required>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{t(label)}</option>)}</select></label>

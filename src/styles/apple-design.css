@@ -427,3 +427,12 @@ html .design-dialog .position-date-control > input[type="date"] { position: abso
 .position-date-input::-webkit-date-and-time-value { display: block; min-width: 0; min-inline-size: 0; margin: 0; padding: 0; line-height: 46px; text-align: start; }
 .position-date-input::-webkit-datetime-edit { min-width: 0; padding: 0; line-height: normal; }
 .position-date-input::-webkit-calendar-picker-indicator { margin: 0; padding: 0; flex-shrink: 0; }
+
+.pwa-install-row, .pwa-push-row { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: start; gap: 12px; }
+.pwa-install-row > button, .pwa-push-row > div:last-child { grid-column: 2; justify-self: start; max-width: 100%; }
+.pwa-install-row { position: relative; padding-inline-end: 40px; }
+.pwa-install-row > .pwa-dismiss { position: absolute; inset-inline-end: 0; top: -6px; width: 44px; height: 44px; padding: 0; justify-content: center; border: 0; box-shadow: none; }
+.pwa-notifications .data-action { white-space: normal; overflow-wrap: normal; }
+.pwa-push-row { border-top: 1px solid #e8e8ed; padding-top: 16px; }
+.pwa-push-row:first-child { border-top: 0; padding-top: 0; }
+@media (min-width: 768px) { .pwa-push-row { grid-template-columns: 24px minmax(0, 1fr) auto; } .pwa-push-row > div:last-child { grid-column: 3; } }

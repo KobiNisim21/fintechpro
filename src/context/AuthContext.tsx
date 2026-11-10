@@ -3,6 +3,7 @@ import { authAPI, AuthResponse } from '../api/auth';
 import { disconnectSocket } from '../services/socket';
 import { getFinnhubWebSocket } from '../services/websocket';
 import { clearMarketDataCache } from '../api/stocks';
+import { disablePushForLogout } from '../api/push';
 
 interface User {
     _id: string;
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const logout = useCallback(() => {
+        void disablePushForLogout();
         clearMarketDataCache();
         getFinnhubWebSocket().disconnect();
         disconnectSocket();

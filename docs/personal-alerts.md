@@ -1,72 +1,82 @@
-# Personal alert checks
+# Personal alerts and Web Push
 
-Personal rules are durable, owner-scoped in-app alerts. Price rules pause after
-one trigger. Daily-move and concentration rules retain the persisted 24-hour
-cooldown. Missing/stale quotes must never produce a synthetic trigger.
+Personal rules are durable and owner-scoped. Price rules pause after one trigger;
+daily-move and concentration rules keep the persisted 24-hour cooldown. Missing
+or stale quotes never produce a synthetic trigger. Dashboard checks run on entry,
+every minute while visible, on return to the page, at creation and on demand.
+Results explain unmet conditions, missing data/holdings and cooldowns.
 
-The dashboard now calls the authenticated POST `/api/alerts/check` immediately,
-once per minute while visible, and when returning to a visible page. This covers
-open sessions even if a backend worker is unavailable. Creation also checks the
-new rule immediately. The continuously running Node backend retains its poller.
-Concurrent checks cannot duplicate a trigger because the conditional MongoDB
-update is atomic. The UI reports failed automatic requests instead of hiding them.
+## Enable notifications and install
 
-The check response retains `triggered` and adds `checkedAt` and per-rule
-`evaluations`: triggered, not_met, unavailable, no_holding or cooldown, including
-the actual observed value when available. The UI translates these explanations,
-shows the last-check time, and distinguishes triggered/paused price rules from
-ordinary paused rules. New automatic triggers show an in-app banner and badge.
-The client accepts the old response shape during separate frontend/backend rolls.
+The dashboard includes an installation suggestion and per-device push controls.
+Supported browsers expose their native install prompt from the Install app button.
+Browsers without that capability show installation instructions. iPhone/iPad users
+must add the app to the Home Screen and open its icon before enabling push (iOS
+16.4 or later). A site cannot install itself on iOS with a single automatic tap.
+The suggestion is hidden in standalone mode or after the appinstalled event.
+Dismissal hides the suggestion for the current view; push settings stay available.
 
-Deployment observation on 2026-11-10: the public frontend bundle points to
-`https://fintechpro-backend.onrender.com`. Vercel's serverless handler does not
-start the Node poller, but that alone does NOT establish the cause for this
-owner's rule: the active Render worker/version and quote values still require
-authenticated production verification. The dedicated browser is at the login
-page; no owner portfolio/rules were changed. Do not claim the GOOG 286 condition
-was or was not satisfied from the screenshot alone.
+Enable push requests system permission only after the user's explicit tap. The
+worker and public key are prepared beforehand to retain iOS user activation.
+Denied/unsupported states give actionable guidance. Each device opts in separately;
+users can disable that device or send a rate-limited test. Language at enrollment
+controls the notification language. The notification contains a ticker and generic
+message, never portfolio amounts. Tapping it opens the app's own alerts panel.
+Signing out removes the device registration when reachable and unsubscribes locally;
+expired sessions also unsubscribe locally. No financial holdings are changed.
 
-Checks while the site is closed require a deployed, continuously running worker
-or scheduler. Push/email/Telegram delivery is not implemented by these rules.
-Follow-up: TraderAi-c3g. Production/device verification: TraderAi-cz1.
+## Server delivery
 
-Validation: 41 offline tests and 24 disposable MongoDB integration tests passed,
-as did typecheck and production build. Regression coverage includes matching and
-unmet thresholds, observed values, missing holdings, missing/stale/invalid quotes,
-one-time pause, persisted cooldown, concurrent checks and owner separation.
-Mobile browser QA verified immediate creation checks (150 vs 149 triggers;
-150 vs 286 stays active), and a separate GOOG rule triggered automatically at the
-next minute without a manual check. Further browser results are recorded at the
-end of this document.
+Authenticated /api/push routes expose public config, device status, subscription
+create/delete and a test sender. Subscriptions are private, owner-scoped, validated
+against supported push-service HTTPS hosts, and limited to 10 devices per user.
+A subscription transferred to a newly opted-in account cannot receive pending
+messages belonging to the prior account. Expired endpoints (404/410) are removed.
 
-Final browser checks after a fresh reload: immediate creation also displays the
-new global banner (including triggers observed via rule reloads); the result says
-"new alerts in this check" to avoid confusing prior history with new triggers.
-Hebrew/RTL at 320px and English/LTR at 390px retained readable result text with no
-horizontal overflow. Repeated manual checks did not retrigger paused price rules.
-The synthetic financial digest was unchanged. The final browser console had zero
-errors and warnings. The owner-specific GOOG 286 production diagnosis remains
-open in TraderAi-4xh until the owner signs in through the dedicated browser.
+VAPID signing keys are generated ONCE, persisted in MongoDB PushConfig and shared
+by serverless/Node instances. The private key is excluded from default model reads
+and all API responses. No per-instance ephemeral keys or client-side signing secret
+are used. Protect database access and retain this document during restores; deleting
+it rotates the identity and requires all devices to subscribe again.
 
-## Authenticated production verification (2026-11-10)
+A rule trigger atomically stores its push event on the rule. Projection upserts
+one durable delivery per event/device under a unique index before clearing the
+pending event. Leased dispatch coordinates concurrent workers. Provider failures
+retry with exponential backoff (up to 5 attempts); delivery records expire after
+24 hours. Retries after an ambiguous network failure may be accepted twice by a
+provider; stable notification tags replace the prior visible notification.
+Web Push provider acceptance does not prove device display or user interaction.
 
-After the owner signed in, the deployed dashboard and alert panel were verified
-in the dedicated browser. Automatic and manual POST checks returned HTTP 200.
-The owner's existing price rule correctly reported `not_met`, with an observed
-market price below its threshold, and remained active. No rule was created,
-edited, rearmed or deleted. Private portfolio values are omitted here.
+The Node backend's minute poll checks rules and drains pending deliveries even
+without connected sockets or enabled rules. It records a background-worker heartbeat.
+The UI warns opted-in devices when a recent heartbeat is missing. Background
+notifications need this backend to remain running; a sleeping Render instance
+cannot evaluate prices while asleep. An alternative scheduler may invoke
+/api/cron/check-personal-alerts with Authorization: Bearer CRON_SECRET. That endpoint
+fails closed if the secret is absent. No new paid/minutely Vercel cron is assumed
+or silently enabled. An operator must provision a reliable schedule if the Node
+backend is not always on. The existing daily Israeli-prices cron is unchanged.
 
-The deployed PWA has a registered service worker, but this repository implements
-no permission request, Push API subscription, service-worker push handler or
-server push sender. Consequently a notification permission prompt is not
-expected. Browser diagnostics showed no push subscription in the test profile;
-this does not measure permissions on the owner's physical iPhone.
+## Deployment and validation
 
-Apple's documented iPhone flow requires iOS 16.4 or later, opening a Home Screen
-web app, and requesting permission after a direct user action. Permission alone
-does not implement delivery. A future implementation must include explicit
-opt-in, subscription storage, a server sender and reliable background checking.
-Reference: https://webkit.org/blog/13878/
+Deploy frontend AND backend from this commit; both use the same MongoDB. No manual
+VAPID environment setup is needed. Manifest icons are real 180/192/512px square PNGs
+normalized from the existing brand asset; the original asset remains intact.
+Regenerate them on Windows with scripts/generate-pwa-icons.ps1.
 
-The original rule diagnosis is complete (TraderAi-4xh); background/push delivery
-remains follow-up work (TraderAi-c3g). No application code changed in this check.
+Validation: 46 offline tests, 30 disposable MongoDB integration tests, typecheck
+and production build passed. Coverage includes real Web Push encryption, private
+config, owner separation, atomic triggers, durable/concurrent projection/dispatch,
+transient failure retry, endpoint expiry, account switch, worker heartbeat, strict
+scheduler authentication, visible worker notifications and safe click destinations.
+
+Browser QA used a disposable portfolio and stubbed Notification/PushManager APIs
+and push transport: enable, direct user activation, test-send and unsubscribe
+completed through the real authenticated routes. Deferred native install prompting
+was simulated, and iPhone instructions were tested using a simulated user agent.
+These are NOT physical iPhone delivery or native installation tests. Verify a real
+Home Screen installation, system permission and received test notification on the
+owner's iPhone after deployment. Keep the owner's production rules unchanged.
+
+References: https://webkit.org/blog/13878/ and
+https://github.com/web-push-libs/web-push

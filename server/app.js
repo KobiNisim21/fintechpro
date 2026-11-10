@@ -11,6 +11,8 @@ import watchlistRoutes from './routes/watchlist.js';
 import mcpRoutes from './routes/mcp.js';
 import activityRoutes from './routes/activity.js';
 import alertsRoutes from './routes/alerts.js';
+import pushRoutes from './routes/push.js';
+import alertScheduler from './services/alertScheduler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 // Get directory path for ES modules
@@ -83,6 +85,8 @@ app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/mcp', mcpRoutes);
 app.use('/api/activity', activityRoutes);
 app.use('/api/alerts', alertsRoutes);
+app.use('/api/push', pushRoutes);
+app.get('/api/cron/check-personal-alerts', alertScheduler);
 
 // Root API route for testing
 app.get('/api', (req, res) => {

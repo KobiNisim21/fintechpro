@@ -8,5 +8,6 @@ const schema = new mongoose.Schema({
     lastTriggeredAt: { type: Date, default: null },
     lastValue: Number,
     message: String,
+    pushEvent: { type: String, default: null },
 }, { timestamps: true });
 export default mongoose.model('AlertRule', schema);

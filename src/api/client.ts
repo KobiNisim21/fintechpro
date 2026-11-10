@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { disableLocalPush } from '../lib/pwa';
 
 const isProduction = import.meta.env.PROD;
 const baseUrl = import.meta.env.VITE_API_URL || (isProduction ? '' : 'http://localhost:5000');
@@ -32,6 +33,7 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
+            void disableLocalPush();
             // Token expired or invalid - redirect to login
             localStorage.removeItem('token');
             localStorage.removeItem('user');

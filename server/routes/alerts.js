@@ -5,7 +5,7 @@ import AlertRule from '../models/AlertRule.js';
 import Position from '../models/Position.js';
 import { checkPersonalAlertStatus } from '../services/personalAlerts.js';
 
-export function createAlertRoutes(quoteProvider) {
+export function createAlertRoutes(quoteProvider, { pushSender } = {}) {
     const router = express.Router();
     router.use(protect);
     router.get('/', async (req, res) => {
@@ -22,7 +22,7 @@ export function createAlertRoutes(quoteProvider) {
         } catch { res.status(503).json({ message: 'Could not create alert rule' }); }
     });
     router.post('/check', async (req, res) => {
-        try { res.set('Cache-Control', 'no-store'); res.json(await checkPersonalAlertStatus(req.user._id, quoteProvider)); }
+        try { res.set('Cache-Control', 'no-store'); res.json(await checkPersonalAlertStatus(req.user._id, quoteProvider, pushSender)); }
         catch { res.status(503).json({ message: 'Alert check unavailable; try again' }); }
     });
     router.put('/:id', async (req, res) => {

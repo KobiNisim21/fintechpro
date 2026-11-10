@@ -1,6 +1,8 @@
 import Position from '../models/Position.js';
 import AlertRule from '../models/AlertRule.js';
+import PushConfig from '../models/PushConfig.js';
 import { getQuote } from './stockDataService.js';
+import { projectPendingPush, flushPushQueue } from './webPush.js';
 
 export function observeRule(rule, quotes, positions) {
     const quote = quotes.get(rule.symbol);
@@ -24,7 +26,7 @@ export function evaluateRule(rule, quotes, positions) {
     return (rule.kind === 'price_below' ? value <= rule.threshold : value >= rule.threshold) ? value : null;
 }
 
-export async function checkPersonalAlertStatus(userId, quoteProvider = getQuote) {
+export async function checkPersonalAlertStatus(userId, quoteProvider = getQuote, pushSender) {
     const [rules, positions] = await Promise.all([
         AlertRule.find({ user: userId, enabled: true }).lean(),
         Position.find({ user: userId, isDeleted: { $ne: true }, quantity: { $gt: 0 } }).select('symbol quantity').lean(),
@@ -44,10 +46,12 @@ export async function checkPersonalAlertStatus(userId, quoteProvider = getQuote)
         const oneTime = rule.kind.startsWith('price_');
         const now = new Date(), cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         const message = `${rule.symbol}: ${rule.kind.replaceAll('_', ' ')} ${rule.threshold}; observed ${value.toFixed(2)}${oneTime ? ' USD' : '%'}`;
-        const updated = await AlertRule.findOneAndUpdate({ _id: rule._id, user: userId, enabled: true, $or: [{ lastTriggeredAt: null }, { lastTriggeredAt: { $lt: cutoff } }] }, { $set: { lastTriggeredAt: now, lastValue: value, message, ...(oneTime ? { enabled: false } : {}) } }, { new: true });
+        const updated = await AlertRule.findOneAndUpdate({ _id: rule._id, user: userId, enabled: true, $or: [{ lastTriggeredAt: null }, { lastTriggeredAt: { $lt: cutoff } }] }, { $set: { lastTriggeredAt: now, lastValue: value, message, pushEvent: `${rule._id}:${now.getTime()}`, ...(oneTime ? { enabled: false } : {}) } }, { new: true });
         if (updated) triggered.push(updated);
         evaluations.push({ ruleId: String(rule._id), status: updated ? 'triggered' : 'cooldown', value });
     }
+    try { await projectPendingPush(userId); await flushPushQueue({ userId, limit: 4, sender: pushSender }); }
+    catch { console.warn('Push delivery deferred; pending events will retry.'); }
     return { triggered, evaluations, checkedAt: new Date().toISOString() };
 }
 
@@ -62,10 +66,16 @@ export async function pollPersonalAlerts(io) {
     try {
         const users = await AlertRule.distinct('user', { enabled: true });
         for (const user of users) {
-            const triggered = await checkPersonalAlerts(user);
-            if (triggered.length && io) {
-                for (const socket of await io.fetchSockets()) if (socket.userId === String(user)) socket.emit('personal-alert', { count: triggered.length });
-            }
+            try {
+                const triggered = await checkPersonalAlerts(user);
+                if (triggered.length && io) {
+                    for (const socket of await io.fetchSockets()) if (socket.userId === String(user)) socket.emit('personal-alert', { count: triggered.length });
+                }
+            } catch { console.warn('One personal-alert portfolio check deferred; continuing with other users.'); }
         }
+        // Includes paused one-time rules and retries when no rules remain active.
+        await projectPendingPush();
+        await flushPushQueue();
+        await PushConfig.updateOne({ _id: 'vapid-v1' }, { $set: { lastWorkerAt: new Date() } });
     } finally { checking = false; }
 }

@@ -13,6 +13,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { ConnectionStatus } from './ConnectionStatus';
 import { AddPositionDialog } from './AddPositionDialog';
 import PortfolioTools from './PortfolioTools';
+import { PwaNotifications } from './PwaNotifications';
 
 const InsightsView = lazy(() => import('./InsightsView').then(m => ({ default: m.InsightsView })));
 const WatchlistView = lazy(() => import('./WatchlistView').then(m => ({ default: m.WatchlistView })));
@@ -67,6 +68,7 @@ export default function Dashboard() {
             <div className="w-full max-w-[1400px] mx-auto space-y-6">
             {/* Hero Card */}
             <PortfolioHero />
+            <PwaNotifications />
             <PortfolioTools />
 
             {/* Portfolio Content */}

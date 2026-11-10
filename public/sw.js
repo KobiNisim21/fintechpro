@@ -1,11 +1,41 @@
-const CACHE_NAME = 'fintechpro-v3';
+const CACHE_NAME = 'fintechpro-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/icon.png',
   '/logo.png',
   '/manifest.json',
+  '/pwa-icon-180.png',
+  '/pwa-icon-192.png',
+  '/pwa-icon-512.png',
 ];
+
+// Every push produces a visible notification, including malformed/empty payloads.
+self.addEventListener('push', event => {
+  let payload = {};
+  try { payload = event.data?.json() || {}; } catch { /* Display the safe fallback. */ }
+  const he = payload.language === 'he';
+  event.waitUntil(self.registration.showNotification('FinTechPro', {
+    body: typeof payload.body === 'string' ? payload.body.slice(0, 300) : 'A personal alert is ready. Open your portfolio for details.',
+    icon: '/pwa-icon-192.png', badge: '/pwa-icon-192.png',
+    tag: typeof payload.tag === 'string' ? payload.tag.slice(0, 120) : 'fintechpro-personal-alert',
+    lang: he ? 'he' : 'en', dir: he ? 'rtl' : 'ltr',
+    data: { url: '/?panel=alerts' },
+  }));
+});
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const destination = new URL('/?panel=alerts', self.location.origin).href;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of windows) {
+      if (new URL(client.url).origin !== self.location.origin) continue;
+      if (client.navigate) await client.navigate(destination);
+      return client.focus();
+    }
+    return self.clients.openWindow(destination);
+  })());
+});
 
 // Install: cache static assets
 self.addEventListener('install', (event) => {
