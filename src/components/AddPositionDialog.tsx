@@ -247,14 +247,16 @@ export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
                             <Label htmlFor="date" className="text-[12px] font-medium text-secondary  text-end block">{t("Date")}</Label>
-                            <Input
-                                id="date"
-                                type="date"
-                                className="h-12 rounded-lg bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 scheme-light focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
-                                value={formData.date}
-                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                required
-                            />
+                            <div className="position-date-control">
+                                <Input
+                                    id="date"
+                                    type="date"
+                                    className="position-date-input h-12 rounded-lg bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 scheme-light focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                    value={formData.date}
+                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                    required
+                                />
+                            </div>
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">

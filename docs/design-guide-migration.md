@@ -234,3 +234,22 @@ after restoring normal media preferences and reloading, application console
 reported zero errors and warnings. Screenshots were inspected for the compact
 indicators and readable mobile MCP tabs. Physical iPhone verification remains
 tracked separately in `TraderAi-cz1`.
+
+## Native date control containment (2026-11-10)
+
+The add-position date input now sits inside a shrinkable, 48px-high wrapper.
+Explicit physical/logical dimensions and zero vertical input padding contain
+native date sizing within the same bounds as the other form controls. WebKit
+date text is vertically aligned; the wrapper retains a visible focus outline.
+The native date type, required validation, state, handlers and submit path are
+unchanged (verified by comparing the component AST excluding visual markup).
+
+Validation: 41 offline tests, typecheck and production build passed. In Chromium,
+Hebrew/RTL at 320, 390, 768 and 1440px and English/LTR at 320px measured the date
+and broker controls at identical horizontal bounds and 48px height, without
+horizontal page overflow. The close control remained visible on the short phone
+viewport. Required validation rejected an empty date. A synthetic AAPL holding
+with date 2024-02-29 was saved through the UI and retained its exact date after
+reload. A mobile screenshot was inspected. These checks used disposable QA data;
+physical iPhone/Safari rendering and the native picker remain a device follow-up
+under `TraderAi-cz1`.

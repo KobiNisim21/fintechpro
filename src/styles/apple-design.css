@@ -418,3 +418,12 @@ html .holding-dialog-body .mcp-tabs > button:last-child:nth-child(odd) { grid-co
   html .holding-dialog-body .mcp-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   html .holding-dialog-body .mcp-tabs > button:last-child:nth-child(odd) { grid-column: auto; }
 }
+
+/* Contain iOS's native date sizing inside the same 48px form control box. */
+.position-entry-form .position-form-row { min-width: 0; }
+.position-date-control { position: relative; display: block; width: 100%; min-width: 0; max-width: 100%; inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; height: 48px; block-size: 48px; box-sizing: border-box; border-radius: 10px; overflow: hidden; direction: ltr; }
+.position-date-control:focus-within { outline: 3px solid #5d41ec; outline-offset: 3px; }
+html .design-dialog .position-date-control > input[type="date"] { position: absolute; inset: 0; display: block; width: 100%; min-width: 0; max-width: 100%; inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; height: 48px; min-height: 48px; max-height: 48px; block-size: 48px; min-block-size: 48px; max-block-size: 48px; box-sizing: border-box; padding: 0 12px; margin: 0; line-height: normal; direction: ltr; text-align: start; -webkit-appearance: none; appearance: none; }
+.position-date-input::-webkit-date-and-time-value { display: block; min-width: 0; min-inline-size: 0; margin: 0; padding: 0; line-height: 46px; text-align: start; }
+.position-date-input::-webkit-datetime-edit { min-width: 0; padding: 0; line-height: normal; }
+.position-date-input::-webkit-calendar-picker-indicator { margin: 0; padding: 0; flex-shrink: 0; }
