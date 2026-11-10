@@ -29,12 +29,12 @@ export function StockGrid() {
         </div>
       ) : positionsReady && positions.length === 0 ? (
         <div className="data-panel text-center space-y-4">
-          <h3 style={{ fontFamily: 'Nunito, sans-serif' }} className="text-xl font-bold">{t("Start your portfolio")}</h3>
+          <h3 style={{ fontFamily: 'var(--app-font)' }} className="text-xl font-bold">{t("Start your portfolio")}</h3>
           <p>{t("Add your first holding to see its value, performance and market data.")}</p>
           <AddPositionDialog />
         </div>
       ) : null}
-    <div className="grid grid-cols-1 desktop-stock-grid gap-4 pb-4">
+    <div className="grid grid-cols-1 desktop-stock-grid gap-gap pb-4">
       {positions.map((stock) => (
         <StockCard key={stock._id} stock={stock} className="w-full" />
       ))}

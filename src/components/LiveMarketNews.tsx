@@ -50,7 +50,7 @@ export function LiveMarketNews() {
     };
 
     return (
-        <div className="mt-6">
+        <div className="live-market-news mt-6">
             {/* Header */}
             <div className="flex items-center gap-2 mb-4">
                 <Newspaper className="w-5 h-5 text-[var(--color-ios-info)]" />

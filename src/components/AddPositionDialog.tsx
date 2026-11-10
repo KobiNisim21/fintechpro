@@ -144,33 +144,33 @@ export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
             <Button
                 aria-label={t("Add Position")}
                 onClick={() => setOpen(true)}
-                className="primary-action rounded-[20px] bg-white shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] active:shadow-none text-[var(--color-ios-fg)] font-bold px-6 h-12 transition-all duration-300"
+                className="primary-action rounded-xl bg-accent text-white font-semibold px-5 min-h-11 h-12 transition-colors duration-base"
             >
                 <Plus className="w-5 h-5 me-2" strokeWidth={2.5} />
                 <span className={compact ? "mobile-header-add-label" : "tracking-wide"}>{t("Add Position")}</span>
             </Button>
 
             <SimpleDialog open={open} onClose={() => setOpen(false)} title={t("Add new position")}>
-                <div className="relative px-2">
-                    <p className="text-[14px] font-bold text-[var(--color-ios-secondary)] mb-8">
+                <div className="position-form-content relative">
+                    <p className="text-caption text-secondary mb-5">
                         {t("Enter the details of the stock you want to add to your portfolio.")}</p>
 
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                    <form onSubmit={handleSubmit} className="position-entry-form flex flex-col gap-5">
                         {error && (
-                            <div className="p-4 bg-rose-50 text-rose-600 border border-rose-200 rounded-[16px] text-sm font-bold shadow-sm">
+                            <div className="p-4 bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-sm font-bold shadow-sm">
                                 {errorText(error)}
                             </div>
                         )}
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="symbol" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-end block">{t("Symbol")}</Label>
+                            <Label htmlFor="symbol" className="text-[12px] font-medium text-secondary  text-end block">{t("Symbol")}</Label>
                             <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
                                         role="combobox"
                                         aria-expanded={openCombobox}
-                                        className="w-full justify-between h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 hover:bg-[var(--color-ios-input)] hover:text-[var(--color-ios-fg)] active:scale-[0.98]"
+                                        className="w-full justify-between h-12 rounded-lg bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 hover:bg-[var(--color-ios-input)] hover:text-[var(--color-ios-fg)] active:scale-[0.98]"
                                     >
                                         {formData.symbol
                                             ? formData.symbol
@@ -178,7 +178,7 @@ export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
                                         <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[300px] p-2 bg-[var(--color-ios-bg)] border-none rounded-[24px] shadow-[var(--shadow-ios-card)] text-[var(--color-ios-fg)] z-[10010]">
+                                <PopoverContent className="position-search-popover w-[300px] p-2 bg-surface border border-line rounded-xl shadow-modal text-ink z-[10010]">
                                     <Command className="bg-transparent" shouldFilter={false}>
                                         <CommandInput
                                             placeholder={t("Search symbol...")}
@@ -246,11 +246,11 @@ export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="date" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-end block">{t("Date")}</Label>
+                            <Label htmlFor="date" className="text-[12px] font-medium text-secondary  text-end block">{t("Date")}</Label>
                             <Input
                                 id="date"
                                 type="date"
-                                className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 scheme-light focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                className="h-12 rounded-lg bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 scheme-light focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 value={formData.date}
                                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                 required
@@ -258,10 +258,10 @@ export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="broker" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest text-end block">{t("Broker")}</Label>
+                            <Label htmlFor="broker" className="text-[12px] font-medium text-secondary text-end block">{t("Broker")}</Label>
                             <Input
                                 id="broker"
-                                className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                className="h-12 rounded-lg bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 placeholder={t("Default (or Blink, IBI...)")}
                                 value={formData.broker}
                                 onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
@@ -269,10 +269,10 @@ export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="name" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-end block">{t("Name")}</Label>
+                            <Label htmlFor="name" className="text-[12px] font-medium text-secondary  text-end block">{t("Name")}</Label>
                             <Input
                                 id="name"
-                                className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                className="h-12 rounded-lg bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 placeholder={t("Apple Inc. (optional)")}
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -280,12 +280,12 @@ export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="quantity" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-end block">{t("Quantity")}</Label>
+                            <Label htmlFor="quantity" className="text-[12px] font-medium text-secondary  text-end block">{t("Quantity")}</Label>
                             <Input
                                 id="quantity"
                                 type="number"
                                 step="any"
-                                className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold  px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                className="h-12 rounded-lg bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold  px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 placeholder="10"
                                 value={formData.quantity}
                                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
@@ -294,12 +294,12 @@ export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
                         </div>
 
                         <div className="position-form-row grid grid-cols-1 sm:grid-cols-[100px_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                            <Label htmlFor="avgPrice" className="text-[12px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest  text-end block">{t("Avg Price")}</Label>
+                            <Label htmlFor="avgPrice" className="text-[12px] font-medium text-secondary  text-end block">{t("Avg Price")}</Label>
                             <Input
                                 id="avgPrice"
                                 type="number"
                                 step="any"
-                                className="h-12 rounded-[16px] bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold  px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
+                                className="h-12 rounded-lg bg-[var(--color-ios-input)] shadow-none border-none text-[var(--color-ios-fg)] font-bold  px-4 placeholder:text-black/20 focus-visible:ring-emerald-500 focus-visible:ring-offset-0"
                                 placeholder="150.00"
                                 value={formData.averagePrice}
                                 onChange={(e) => setFormData({ ...formData, averagePrice: e.target.value })}
@@ -308,7 +308,7 @@ export function AddPositionDialog({ compact = false }: { compact?: boolean }) {
                         </div>
 
                         <div className="flex justify-end mt-4">
-                            <Button type="submit" disabled={loading} className="rounded-[20px] bg-gradient-to-br from-violet-400 to-violet-600 shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)]Hover active:shadow-none active:scale-[0.92] text-white font-bold  tracking-wide h-12 px-8 transition-all duration-200 border-none disabled:opacity-50 disabled:active:scale-100">
+                            <Button type="submit" disabled={loading} className="primary-action w-full rounded-xl bg-accent text-white font-semibold h-12 px-5 transition-colors duration-base disabled:opacity-50">
                                 {loading ? t("Adding...") : t("Add Stock")}
                             </Button>
                         </div>

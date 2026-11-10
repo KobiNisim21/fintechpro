@@ -146,3 +146,53 @@ Validation (2026-11-10):
 Remaining visual migration (`TraderAi-7dj`): health-panel information hierarchy,
 holding-card consistency, forms/dialog details and navigation/sidebar styling.
 Owner-authenticated production and physical iPhone checks remain `TraderAi-cz1`.
+
+## Stage 5: health hierarchy, holdings, forms and navigation
+
+The remaining agreed visual pass was applied sequentially: PortfolioRiskPanel,
+StockCard/StockGrid, then shared dialogs, AddPositionDialog and navigation.
+Health keeps all information visible, with a grouped title/refresh header,
+prominent score, separate coverage cells, a quiet fund section and consistent
+native disclosure rows. The wide first row now uses two balanced columns.
+
+Holding cards use the shared white surface, 12px corners, consistent padding,
+24px tabular prices, soft change pills, 64px sparklines and separated position
+values. Grids fit available content width with a 280px minimum where possible.
+Edit/delete controls retain 44px targets and their original handlers.
+
+Dialogs retain the visualViewport implementation, portal stacking, safe areas,
+focus restoration and independently scrolling body. They now share 16px outer
+corners, a soft modal shadow, regular-weight readable fields and uniform actions.
+Lot editors retain their date/quantity/price fields and mobile stacking. The
+symbol-search popover is bounded to the viewport. Navigation uses an opaque white
+sidebar, quieter alert/news cards, uniform footer controls and a soft active tab.
+Mobile More, language, MCP and logout callbacks are unchanged.
+
+Validation (2026-11-10):
+
+- The entire non-visual TypeScript AST of all 12 edited components matches HEAD
+  after excluding only class/style attributes and static div layout wrappers.
+  This includes imports, types, hook bodies, API calls, handlers, props, conditionals
+  and translated text. No business calculation or server code was changed.
+- 41 offline tests, 23 disposable Mongo integration tests, typecheck, production
+  build and whitespace checks passed (64 tests total).
+- Browser on synthetic data: pre-write health score remained 71/100, sector
+  coverage 99.98%, beta coverage 100%, weighted beta 1.00. Draft GOOG quantity
+  7.5 survived switching Hebrew to English; closing the expanded lot editor
+  restored focus and left the financial digest unchanged.
+- Actual browser writes in the disposable fixture: added AAPL quantity 2 at
+  cost 100, refreshed and verified 2 shares/value 300; edited to 3 shares,
+  refreshed and verified value 450. The activity view retained both the buy
+  and correction entries. These writes never used a production portfolio.
+- Tested all four views, More, language switching, personal-alert screen,
+  activity/Record activity and opening/closing the MCP dialog from More.
+  No MCP key was created and logout was not invoked.
+- At 320x500, edit/Add/Record activity/MCP bodies had no horizontal overflow;
+  long content scrolled and close controls remained visible. Record activity
+  also passed at 200% root text size. Drawer footer controls stayed in view.
+  At 768 and 1440px, the sidebar measured 280px with no root/content overflow.
+  The tested application console reported zero warnings/errors.
+
+This closes the agreed component pass in `TraderAi-7dj`. The separate final
+owner-authenticated production and physical iPhone validation remains open in
+`TraderAi-cz1`; browser viewport checks do not constitute a physical Safari test.

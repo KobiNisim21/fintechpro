@@ -58,7 +58,7 @@ export function SimpleDialog({ open, onClose, children, title = 'Manage holding'
                         event.preventDefault();
                         if (openerRef.current?.isConnected) openerRef.current.focus({ preventScroll: true });
                     }}
-                    className={`data-panel holding-dialog text-[var(--color-ios-fg)]${wide ? ' holding-dialog-wide' : ''}`}
+                    className={`data-panel holding-dialog design-dialog text-ink${wide ? ' holding-dialog-wide' : ''}`}
                 >
                     <header className="holding-dialog-header">
                         <Dialog.Title className="holding-dialog-title">{t(title)}</Dialog.Title>

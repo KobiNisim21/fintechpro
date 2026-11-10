@@ -26,15 +26,15 @@ export function SidebarContent() {
                 {/* Live Market News from Socket.io */}
                 <LiveMarketNews />
             </div>
-            <div className="sidebar-footer mt-auto px-6 py-6 border-t border-slate-200/50 bg-white/40 backdrop-blur-md shrink-0 space-y-3">
+            <div className="sidebar-footer mt-auto px-6 py-5 border-t border-line bg-surface shrink-0 space-y-3">
                 <LanguageSwitch />
                 <McpModal />
                 <button
                     onClick={logout}
-                    className="flex items-center justify-center gap-3 w-full p-4 rounded-2xl glass-card-solid text-slate-800 font-bold hover-lift transition-all duration-300"
+                    className="sidebar-logout flex items-center justify-center gap-2 w-full min-h-11 py-3 rounded-xl bg-surface border border-line text-ink font-semibold text-caption hover:shadow-button transition-all duration-base"
                 >
                     <LogOut className="w-5 h-5 text-slate-700" strokeWidth={2.5} />
-                    <span className="tracking-wide uppercase text-sm">{t("Log Out")}</span>
+                    <span className="text-caption font-semibold">{t("Log Out")}</span>
                 </button>
             </div>
         </div>

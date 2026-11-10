@@ -161,10 +161,10 @@ export function McpModal() {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="flex items-center justify-between gap-3 w-full p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/20 text-slate-800 font-bold hover:border-emerald-500/40 hover:shadow-md transition-all duration-300 group"
+                className="mcp-connect-button flex items-center justify-between gap-3 w-full p-3 rounded-xl bg-accent-soft border border-line text-ink font-semibold transition-colors duration-base group"
             >
                 <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-sm shadow-emerald-500/30 group-hover:scale-105 transition-transform shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-accent shrink-0">
                         <Bot className="w-4 h-4" />
                     </div>
                     <span className="text-sm font-semibold tracking-wide truncate">{t("חיבור ל-Claude / AI")}</span>

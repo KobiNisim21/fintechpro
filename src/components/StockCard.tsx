@@ -175,33 +175,33 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
     <>
       <div
         data-ticker={stock.symbol}
-        className={`stock-card glass-card-solid rounded-2xl ${className || ''} ${isNear52wLow ? 'ring-2 ring-inset ring-amber-400' : ''}`}
+        className={`stock-card bg-surface rounded-xl shadow-card border border-line/50 transition-shadow duration-base hover:shadow-card-hover ${className || ''} ${isNear52wLow ? 'ring-2 ring-inset ring-amber-400' : ''}`}
       >
 
-        <div className="relative z-10 p-4">
+        <div className="stock-card-inner relative z-10 p-4">
           {/* Header */}
           <div className="stock-card-header flex items-start justify-between mb-1">
             <div className="stock-card-identity">
               <div className="flex items-center gap-1.5">
-                <h3 className="font-bold text-slate-800 text-base"><bdi dir="ltr">{stock.symbol}</bdi></h3>
+                <h3 className="text-subhead text-ink font-semibold"><bdi dir="ltr">{stock.symbol}</bdi></h3>
                 {stock.broker && stock.broker !== 'Default' && (
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+                  <span className="text-micro font-medium px-2 py-0.5 rounded-pill bg-canvas text-secondary">
                     {stock.broker}
                   </span>
                 )}
               </div>
-              <p className="stock-card-name font-medium text-slate-500" title={stock.name}><bdi>{stock.name}</bdi></p>
+              <p className="stock-card-name text-caption text-secondary" title={stock.name}><bdi>{stock.name}</bdi></p>
             </div>
 
             <div className="stock-card-actions flex items-center gap-1 shrink-0">
-              <span dir="ltr" className={`text-[10px] font-bold ${isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <span dir="ltr" className={`holding-change-badge text-micro font-semibold rounded-pill px-2 py-1 ${isPositive ? 'text-positive' : 'text-negative'}`}>
                 {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
               </span>
               {stock._id && (
                 <>
                   <button
                     onClick={handleEdit}
-                    className="p-1.5 ms-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all z-20"
+                    className="p-1.5 ms-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-secondary transition-all z-20"
                     title={t("Edit position")}
                     aria-label={t("Edit {0} position", [stock.symbol])}
                   >
@@ -209,7 +209,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-all z-20"
+                    className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-negative transition-all z-20"
                     title={t("Remove position")}
                     aria-label={t("Remove {0} position", [stock.symbol])}
                   >
@@ -222,7 +222,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
           {/* Price */}
           <div className="mb-2">
-            <div className="text-sm font-semibold text-slate-700 flex items-baseline gap-2">
+            <div className="stock-card-price text-heading text-ink font-semibold tabular-nums flex flex-wrap items-baseline gap-2">
               <span>${stock.price.toFixed(2)}{stock.priceStatus === 'estimated' ? t(" (estimated)") : ''}</span>
               {/* Extended hours price */}
               {stock.marketStatus && stock.marketStatus !== 'regular' && stock.extendedPrice && (
@@ -243,7 +243,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
               )}
             </div>
 
-            <div className={`text-[10px] font-semibold ${isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <div className={`text-[10px] font-semibold ${isPositive ? 'text-positive' : 'text-negative'}`}>
               {isPositive ? '+' : ''}${stock.change.toFixed(2)} ({isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%)
               {stock.marketStatus && stock.marketStatus !== 'regular' && !stock.extendedPrice && (
                 <span className="text-slate-400 font-medium ms-1 uppercase text-[9px]">{t("at close")}</span>
@@ -258,7 +258,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                   {stock.marketStatus === 'after-hours' && t("After-hours:")}
                   {stock.marketStatus === 'closed' && t("After-hours:")}
                 </span>
-                <span dir="ltr" className={`font-semibold ${stock.extendedChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                <span dir="ltr" className={`font-semibold ${stock.extendedChange >= 0 ? 'text-positive' : 'text-negative'}`}>
                   {stock.extendedChange >= 0 ? '+' : ''}${stock.extendedChange.toFixed(2)} ({stock.extendedChange >= 0 ? '+' : ''}{stock.extendedChangePercent?.toFixed(2)}%)
                 </span>
               </div>
@@ -268,7 +268,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
           <PriceFreshness source={stock.priceSource} updatedAt={stock.priceUpdatedAt} status={stock.priceStatus} />
 
           {/* Sparkline Chart */}
-          <div className="h-[30px] w-full mb-3">
+          <div className="holding-sparkline h-16 w-full mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <YAxis domain={['dataMin', 'dataMax']} hide />
@@ -295,14 +295,14 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
           {/* Position Details — compact like reference */}
           {quantity > 0 && (
-            <div className="space-y-0.5">
-              <div className="flex justify-between text-[10px] text-slate-500">
+            <div className="holding-values space-y-2">
+              <div className="flex justify-between text-[10px] text-secondary">
                 <span>{t("Shares")}</span>
-                <span dir="ltr" className="font-semibold text-slate-700">{quantity.toLocaleString(locale(), { maximumFractionDigits: 4 })}</span>
+                <span dir="ltr" className="font-semibold text-ink">{quantity.toLocaleString(locale(), { maximumFractionDigits: 4 })}</span>
               </div>
-              <div className="flex justify-between text-[10px] text-slate-500">
+              <div className="flex justify-between text-[10px] text-secondary">
                 <span>{t("Total Value")}</span>
-                <span dir="ltr" className="font-semibold text-slate-700">${totalValue.toLocaleString(locale(), { maximumFractionDigits: 2 })}</span>
+                <span dir="ltr" className="font-semibold text-ink">${totalValue.toLocaleString(locale(), { maximumFractionDigits: 2 })}</span>
               </div>
             </div>
           )}
@@ -316,8 +316,8 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                   {t("Near 52W Low")}</div>
               )}
               {formattedEarnings && (
-                <div className="text-slate-500">
-                  {t("Next Earnings: ")}<span className="text-slate-800 font-semibold">{formattedEarnings}</span>
+                <div className="text-secondary">
+                  {t("Next Earnings: ")}<span className="text-ink font-semibold">{formattedEarnings}</span>
                 </div>
               )}
             </div>
@@ -331,15 +331,15 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
           <div className="space-y-6">
             {/* Lots List */}
-            <div className="space-y-3 bg-slate-50 p-4 rounded-2xl">
-              <div className="hidden sm:grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_44px] gap-2 items-center text-[11px] font-semibold text-slate-500 px-3 uppercase tracking-wider">
+            <div className="space-y-3 bg-canvas p-4 rounded-xl">
+              <div className="hidden sm:grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_44px] gap-2 items-center text-[11px] font-semibold text-secondary px-3 uppercase tracking-wider">
                 <span>{t("Date")}</span>
                 <span className="text-end">{t("Qty")}</span>
                 <span className="text-end">{t("Price")}</span>
                 <span className="w-8"></span>
               </div>
               {lots.map((lot, index) => (
-                <div key={index} className="grid grid-cols-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_44px] gap-2 items-center glass-card-solid p-2 rounded-[20px] text-sm hover-lift">
+                <div key={index} className="lot-editor-row grid grid-cols-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_44px] gap-2 items-center bg-surface border border-line/50 p-3 rounded-lg text-caption">
                   {/* Date Input - Editable */}
                   <label className="col-span-2 sm:col-span-1 min-w-0">
                     <span className="text-xs sm:sr-only">{t("Purchase date")}</span>
@@ -348,7 +348,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                     type="date"
                     value={typeof lot.date === 'string' ? lot.date.split('T')[0] : new Date(lot.date).toISOString().split('T')[0]}
                     onChange={(e) => updateLot(index, 'date', e.target.value)}
-                    className="min-w-0 w-full h-11 text-[13px] bg-transparent border-none p-1 text-slate-800 font-medium scheme-light"
+                    className="min-w-0 w-full h-11 text-[13px] bg-transparent border-none p-1 text-ink font-medium scheme-light"
                   />
                   </label>
 
@@ -361,7 +361,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                     step="any"
                     value={lot.quantity}
                     onChange={(e) => updateLot(index, 'quantity', e.target.value)}
-                    className="min-w-0 w-full h-11 text-[14px] bg-transparent border-none p-1 text-end font-bold text-slate-800"
+                    className="min-w-0 w-full h-11 text-[14px] bg-transparent border-none p-1 text-end font-bold text-ink"
                   />
                   </label>
 
@@ -373,7 +373,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                     type="number"
                     value={lot.price}
                     onChange={(e) => updateLot(index, 'price', e.target.value)}
-                    className="min-w-0 w-full h-11 text-[14px] bg-transparent border-none p-1 text-end font-semibold text-slate-800"
+                    className="min-w-0 w-full h-11 text-[14px] bg-transparent border-none p-1 text-end font-semibold text-ink"
                   />
                   </label>
 
@@ -381,7 +381,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                     type="button"
                     aria-label={t("Remove lot {0} from draft", [index + 1])}
                     onClick={() => removeLot(index)}
-                    className="col-span-2 sm:col-span-1 justify-self-end w-11 h-11 self-end flex items-center justify-center rounded-[20px] text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                    className="col-span-2 sm:col-span-1 justify-self-end w-11 h-11 self-end flex items-center justify-center rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
                   >
                     <X className="w-5 h-5" strokeWidth={3} />
                   </button>
@@ -391,50 +391,50 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
             {/* Add Lot Form */}
             {showAddLot ? (
-              <div className="bg-slate-50 p-5 rounded-2xl space-y-4 border border-slate-200">
+              <div className="bg-canvas p-5 rounded-xl space-y-4 border border-slate-200">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider ms-1 mb-1 block">{t("Date")}</Label>
+                    <Label className="text-[11px] font-semibold text-secondary uppercase tracking-wider ms-1 mb-1 block">{t("Date")}</Label>
                     <Input
                       type="date"
                       value={typeof newLot.date === 'string' ? newLot.date : new Date(newLot.date).toISOString().split('T')[0]}
                       onChange={(e) => setNewLot({ ...newLot, date: e.target.value })}
-                      className="h-11 rounded-xl text-[14px] bg-white border border-slate-200 text-slate-800 font-medium px-4 scheme-light"
+                      className="h-11 rounded-xl text-[14px] bg-white border border-slate-200 text-ink font-medium px-4 scheme-light"
                     />
                   </div>
                   <div>
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider ms-1 mb-1 block">{t("Quantity")}</Label>
+                    <Label className="text-[11px] font-semibold text-secondary uppercase tracking-wider ms-1 mb-1 block">{t("Quantity")}</Label>
                     <Input
                       type="number"
                       step="any"
                       value={newLot.quantity !== undefined ? newLot.quantity : ''}
                       onChange={(e) => setNewLot({ ...newLot, quantity: e.target.value as unknown as number })}
-                      className="h-11 rounded-xl text-[14px] bg-white border border-slate-200 text-slate-800 font-bold px-4 placeholder:text-slate-300"
+                      className="h-11 rounded-xl text-[14px] bg-white border border-slate-200 text-ink font-bold px-4 placeholder:text-slate-300"
                       placeholder={t("Qty")}
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider ms-1 mb-1 block">{t("Price per Share")}</Label>
+                    <Label className="text-[11px] font-semibold text-secondary uppercase tracking-wider ms-1 mb-1 block">{t("Price per Share")}</Label>
                     <Input
                       type="number"
                       step="any"
                       value={newLot.price !== undefined ? newLot.price : ''}
                       onChange={(e) => setNewLot({ ...newLot, price: e.target.value as unknown as number })}
-                      className="h-11 rounded-xl text-[14px] bg-white border border-slate-200 text-slate-800 font-bold px-4 placeholder:text-slate-300"
+                      className="h-11 rounded-xl text-[14px] bg-white border border-slate-200 text-ink font-bold px-4 placeholder:text-slate-300"
                       placeholder={t("Price")}
                     />
                   </div>
                 </div>
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
-                  <Button size="sm" variant="ghost" onClick={() => setShowAddLot(false)} className="h-10 px-4 rounded-xl text-[13px] font-medium text-slate-500 transition-colors">{t("Cancel")}</Button>
-                  <Button size="sm" onClick={handleAddLot} className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">{t("Add Lot")}</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setShowAddLot(false)} className="h-10 px-4 rounded-xl text-[13px] font-medium text-secondary transition-colors">{t("Cancel")}</Button>
+                  <Button size="sm" onClick={handleAddLot} className="primary-action min-h-11 px-5 rounded-xl text-caption font-semibold transition-colors">{t("Add Lot")}</Button>
                 </div>
               </div>
             ) : (
               <Button
                 onClick={() => setShowAddLot(true)}
                 variant="outline"
-                className="w-full h-14 bg-slate-50 border border-slate-200 text-slate-500 font-medium rounded-2xl hover:bg-white hover:border-slate-300 transition-all duration-300"
+                className="w-full h-14 bg-canvas border border-slate-200 text-secondary font-medium rounded-xl hover:bg-white hover:border-slate-300 transition-all duration-300"
               >
                 <Plus className="w-5 h-5 me-2" strokeWidth={2} />
                 {t("Add Another Lot")}</Button>
@@ -443,12 +443,12 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
             {/* Summary */}
             <div className="pt-4 mt-2">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">{t("Total Shares")}</span>
-                <span dir="ltr" className="text-lg font-bold text-slate-800 tracking-tight">{projectTotalQty.toLocaleString(locale(), { maximumFractionDigits: 4 })}</span>
+                <span className="text-[12px] font-semibold text-secondary uppercase tracking-wider">{t("Total Shares")}</span>
+                <span dir="ltr" className="text-lg font-bold text-ink tracking-tight">{projectTotalQty.toLocaleString(locale(), { maximumFractionDigits: 4 })}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">{t("Avg Price")}</span>
-                <span dir="ltr" className="text-lg font-bold text-slate-800 tracking-tight">${projectAvgPrice.toFixed(2)}</span>
+                <span className="text-[12px] font-semibold text-secondary uppercase tracking-wider">{t("Avg Price")}</span>
+                <span dir="ltr" className="text-lg font-bold text-ink tracking-tight">${projectAvgPrice.toFixed(2)}</span>
               </div>
             </div>
 
@@ -457,7 +457,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
               <Button
                 type="button"
                 onClick={() => setEditOpen(false)}
-                className="rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 hover:bg-slate-200 font-medium h-12 px-8 transition-all duration-200 border-none"
+                className="rounded-xl bg-slate-100 text-secondary hover:text-ink hover:bg-slate-200 font-medium h-12 px-8 transition-all duration-200 border-none"
               >
                 {t("Cancel")}</Button>
               <Button

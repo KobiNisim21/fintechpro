@@ -8,7 +8,7 @@ export function LiveAlerts() {
     const { alerts, loading, connected } = useLiveAlerts();
 
     return (
-        <div className="mb-6">
+        <div className="live-alerts mb-6">
             {/* Header */}
             <div className="flex items-center gap-2 mb-4">
                 <Bell className="w-5 h-5 text-[var(--color-ios-success)]" />
@@ -25,7 +25,7 @@ export function LiveAlerts() {
                 {loading ? (
                     // Loading skeleton
                     Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="p-4 rounded-xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-[var(--shadow-ios-card)] animate-pulse">
+                        <div key={i} className="p-3 rounded-lg bg-surface-alt border border-line/50 animate-pulse">
                             <div className="flex items-start gap-3">
                                 <div className="w-4 h-4 bg-[var(--color-ios-secondary)]/20 rounded mt-1" />
                                 <div className="flex-1">
@@ -37,7 +37,7 @@ export function LiveAlerts() {
                     ))
                 ) : alerts.length === 0 ? (
                     // Empty state
-                    <div className="p-4 rounded-xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-[var(--shadow-ios-card)] text-center">
+                    <div className="p-3 rounded-lg bg-surface-alt border border-line/50 text-center">
                         <Bell className="w-6 h-6 text-[var(--color-ios-secondary)]/60 mx-auto mb-2" />
                         <p className="text-sm font-bold text-[var(--color-ios-fg)]">{t("No alerts yet")}</p>
                         <p className="text-xs font-medium text-[var(--color-ios-secondary)] mt-1">{t("Price moves, 52-week lows & earnings")}</p>
@@ -52,7 +52,7 @@ export function LiveAlerts() {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
                                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                                className="p-3 rounded-xl bg-white/60 backdrop-blur-xl border border-white/60 shadow-[var(--shadow-ios-card)] hover:-translate-y-1 hover:shadow-[var(--shadow-ios-card)]Hover transition-all cursor-pointer"
+                                className="p-3 rounded-lg bg-surface-alt border border-line/50 transition-shadow duration-base"
                             >
                                 <div className="flex items-center gap-3">
                                     {/* Icon based on alert type */}
@@ -78,7 +78,7 @@ export function LiveAlerts() {
                                         </p>
 
                                         {/* Ticker */}
-                                        <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-md bg-[var(--color-ios-input)] text-[var(--color-ios-secondary)] font-bold tracking-wider uppercase shadow-none">
+                                        <span className="inline-block mt-1.5 text-micro px-2 py-0.5 rounded-pill bg-accent-soft text-accent font-semibold">
                                             ${alert.ticker}
                                         </span>
                                     </div>

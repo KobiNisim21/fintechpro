@@ -300,3 +300,100 @@ main [class*="hover:-translate-y"]:hover { translate: none; transform: none; }
 .allocation-all-bubbles li { display: flex; flex-direction: column; align-items: center; min-width: 0; gap: 4px; }
 .allocation-all-bubbles svg { width: 100%; max-width: 112px; }
 .allocation-all-bubbles bdi { max-width: 100%; overflow-wrap: anywhere; text-align: center; }
+
+/* Remaining design-guide migration: readable risk hierarchy, without hiding data. */
+html .portfolio-risk-panel { padding: 24px; border-color: #e8e8ed; border-radius: 12px; box-shadow: var(--shadow-ios-card); align-self: start; }
+.risk-panel-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.risk-panel-header h3 { max-width: 100%; line-height: 1.4; }
+.risk-panel-header .data-action { font-size: 13px; padding-inline: 12px; }
+.portfolio-risk-panel .risk-score { font-size: 32px; line-height: 1.15; letter-spacing: -.035em; color: #0a101f; font-variant-numeric: tabular-nums; }
+.portfolio-risk-panel > p, .portfolio-risk-panel details { color: #64748b; font-size: 13px; line-height: 1.65; }
+.portfolio-risk-panel .risk-coverage { gap: 10px; }
+.risk-coverage > div { min-width: 0; padding: 12px; background: #fafafa; border: 1px solid #f0f0f5; border-radius: 10px; }
+.risk-coverage dt { font-size: 12px; color: #64748b; line-height: 1.5; }
+.risk-coverage dd { margin-top: 4px; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0a101f; }
+.portfolio-risk-panel .risk-funds { border-radius: 10px; background: #f5f3fc; border-color: #e7e2f8; color: #4b4766; font-size: 13px; line-height: 1.65; }
+.risk-funds h4, .risk-observations h4 { color: #0a101f; font-size: 14px; font-weight: 600; }
+.risk-observations { border-color: #e8e8ed; font-size: 13px; line-height: 1.7; color: #475569; }
+.risk-observations .text-xs { font-size: 12px; color: #64748b; }
+.portfolio-risk-panel summary { min-height: 44px; padding-block: 12px; color: #475569; font-weight: 500; }
+.portfolio-risk-panel summary::marker { color: #8a92b2; }
+.risk-breakdowns { border-top: 1px solid #e8e8ed; padding-top: 8px; }
+.risk-breakdowns details + details { border-top: 1px solid #f0f0f5; }
+.risk-breakdowns details > div { font-variant-numeric: tabular-nums; color: #475569; }
+@media (min-width: 1024px) {
+  .insights-view > .insights-summary-grid { grid-template-columns: minmax(0, 1fr); }
+  .insights-summary-grid > .benchmark-chart { grid-column: auto; }
+}
+@media (min-width: 1280px) { .insights-view > .insights-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767px) { html .portfolio-risk-panel { padding: 16px; } }
+
+.stock-card { border-radius: 12px; background: #fff; }
+.stock-card-inner { padding: 24px; }
+.stock-card-header { margin-bottom: 16px; }
+.stock-card-name { font-size: 13px; font-weight: 400; color: #64748b; }
+.stock-card-actions { gap: 2px; }
+.stock-card-actions button { border-radius: 10px; color: #64748b; }
+.stock-card-actions button:hover { background: #fafafa; color: #0a101f; }
+.holding-change-badge.text-positive { background: #def8f1; color: #08775b; }
+.holding-change-badge.text-negative { background: #ffeaeb; color: #ba3037; }
+.stock-card-price { font-size: 24px; line-height: 1.25; letter-spacing: -.02em; }
+.stock-card-price > span:first-child { font-variant-numeric: tabular-nums; }
+.stock-card .price-freshness { font-size: 12px; color: #64748b; line-height: 1.5; }
+.holding-sparkline { height: 64px; margin-block: 16px; }
+.holding-values { padding-top: 12px; border-top: 1px solid #f0f0f5; }
+.holding-values > div { font-size: 13px; line-height: 1.6; color: #64748b; }
+.holding-values > div > span:last-child { color: #0a101f; font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.desktop-stock-grid { gap: 20px; }
+@media (min-width: 768px) { .desktop-stock-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); } }
+@media (max-width: 767px) { .stock-card-inner { padding: 16px; } }
+
+/* Shared controls keep their existing handlers and disabled behavior. */
+.data-action, .language-switch { min-height: 44px; padding: 10px 14px; border-color: #e8e8ed; border-radius: 10px; color: #475569; font-size: 13px; font-weight: 500; background: #fff; box-shadow: 0 1px 3px rgb(16 16 40 / 3%); }
+.data-action:hover:not(:disabled) { border-color: #d1d1d9; background: #fafafa; }
+.language-switch { color: #5d41ec; border-color: #ddd6f7; font-weight: 600; }
+.language-switch:hover { background: #f5f3fc; border-color: #c7bcef; }
+.primary-action, .holding-dialog form button[type="submit"] { background: #5d41ec !important; color: #fff !important; border-radius: 12px; font-size: 15px; font-weight: 600; box-shadow: 0 1px 2px rgb(16 16 40 / 6%), 0 2px 6px rgb(16 16 40 / 4%) !important; }
+.primary-action:hover:not(:disabled), .holding-dialog form button[type="submit"]:hover:not(:disabled) { background: #4c33d4 !important; filter: none; }
+.primary-action:disabled { opacity: .5; }
+html .data-panel.holding-dialog { border-radius: 16px; border-color: #e8e8ed; box-shadow: 0 4px 12px rgb(16 16 40 / 6%), 0 16px 48px rgb(16 16 40 / 12%); }
+.design-dialog .holding-dialog-header { padding: 16px 24px; border-color: #e8e8ed; }
+.design-dialog .holding-dialog-title { color: #0a101f; font-weight: 600; font-size: 18px; line-height: 1.4; }
+.design-dialog .holding-dialog-body { padding: 24px; }
+.design-dialog .holding-dialog-close { padding: 0; width: 44px; min-width: 44px; height: 44px; border-color: transparent; box-shadow: none; }
+.design-dialog :is(input, select, textarea, button[role="combobox"]) { min-height: 44px; min-width: 0; max-width: 100%; padding: 10px 12px; background: #f5f5f7; border: 1px solid #e8e8ed; border-radius: 10px; color: #0a101f; font-weight: 400; font-size: 16px; box-shadow: inset 0 1px 3px rgb(16 16 40 / 4%); }
+.design-dialog :is(input, select, textarea):focus { border-color: #5d41ec; }
+.design-dialog label { color: #64748b; font-size: 13px; font-weight: 500; line-height: 1.5; letter-spacing: normal; text-transform: none; }
+.design-dialog button { min-height: 44px; }
+.design-dialog .position-form-content > p { color: #64748b; font-weight: 400; line-height: 1.6; }
+.position-search-popover { max-width: calc(100vw - 32px); border-radius: 12px; }
+.lot-editor-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lot-editor-row > label:first-of-type, .lot-editor-row > button { grid-column: span 2; }
+@media (min-width: 640px) {
+  .lot-editor-row { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 44px; }
+  .lot-editor-row > label:first-of-type, .lot-editor-row > button { grid-column: span 1; }
+}
+@media (max-width: 767px) {
+  .design-dialog .holding-dialog-header, .design-dialog .holding-dialog-body { padding: 16px; }
+}
+
+.design-sidebar { width: 280px; min-width: 280px; max-width: 280px; background: #fff; border-inline-end: 1px solid #e8e8ed; box-shadow: 4px 0 16px rgb(16 16 40 / 4%), 1px 0 4px rgb(16 16 40 / 2%); }
+[dir="rtl"] .design-sidebar { box-shadow: -4px 0 16px rgb(16 16 40 / 4%), -1px 0 4px rgb(16 16 40 / 2%); }
+.sidebar-content, .design-menu-sheet { background: #fff; }
+.sidebar-scroll { padding: 24px; }
+.sidebar-brand { margin-block: 0 28px; gap: 12px; }
+.sidebar-brand img { width: 44px; height: 44px; border-radius: 12px; box-shadow: none; }
+.sidebar-brand strong { font-size: 18px; font-weight: 600; }
+.sidebar-brand p { color: #64748b; font-size: 13px; }
+.sidebar-content h2 { font-size: 12px; font-weight: 600; letter-spacing: .045em; color: #64748b; }
+.sidebar-content .sidebar-footer { padding: 16px 24px; border-color: #e8e8ed; }
+.sidebar-footer .sidebar-logout { border-radius: 12px; font-size: 13px; min-height: 44px; color: #475569; }
+.sidebar-footer .mcp-connect-button { background: #f5f3fc; border-color: #e7e2f8; border-radius: 12px; box-shadow: none; }
+.sidebar-content :is(.live-alerts, .live-market-news) { color: #475569; }
+.live-alerts p { font-weight: 500; line-height: 1.55; }
+.live-alerts .bg-accent-soft { background: #ede9fc; color: #5d41ec; }
+.live-market-news :is([class*="rounded-\[24px\]"], [class*="rounded-\[20px\]"]) { background: #fafafa; border: 1px solid #e8e8ed; border-radius: 10px; box-shadow: none; backdrop-filter: none; }
+.mobile-header { background: rgb(255 255 255 / 96%); border-radius: 0; }
+.portfolio-tab-bar button[aria-current="page"] > div { background: #ede9fc; border-radius: 10px; box-shadow: none; }
+.portfolio-tab-bar button > span { font-size: 12px; font-weight: 500; }
+.portfolio-tab-bar button[aria-current="page"] > span { font-weight: 600; }
