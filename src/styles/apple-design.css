@@ -1,22 +1,23 @@
 /* FinTechPro: a two-currency ledger, with quiet content and distinct controls.
    Web implementation of HIG principles; no imitation of native system APIs. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --font-size: 16px;
-  --app-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --app-font: Inter, 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: var(--app-font);
   --app-surface: #ffffff;
-  --app-ink: #172b3a;
-  --app-secondary: #526476;
-  --app-accent: #0f766e;
-  --app-positive: #15803d;
-  --app-negative: #be123c;
-  --app-warning: #92400e;
-  --app-canvas: color-mix(in srgb, var(--app-surface) 97%, var(--app-ink));
-  --app-line: color-mix(in srgb, var(--app-surface) 82%, var(--app-ink)); --app-control-line: color-mix(in srgb, var(--app-surface) 30%, var(--app-secondary));
-  --app-soft: color-mix(in srgb, var(--app-surface) 94%, var(--app-ink));
-  --app-tint: color-mix(in srgb, var(--app-surface) 91%, var(--app-accent));
+  --app-ink: #0a101f;
+  --app-secondary: #8a92b2;
+  --app-accent: #5d41ec;
+  --app-positive: #07ab81;
+  --app-negative: #e5484d;
+  --app-warning: #f7931a;
+  --app-canvas: #f5f5f7;
+  --app-line: #e8e8ed; --app-control-line: #d1d1d9;
+  --app-soft: #fafafa;
+  --app-tint: #ede9fc;
   --app-bar: color-mix(in srgb, var(--app-surface) 94%, transparent);
-  --app-radius: 20px;
+  --app-radius: 12px;
   --color-ios-bg: var(--app-canvas);
   --color-ios-bg-gradient: var(--app-canvas);
   --color-ios-card: var(--app-surface);
@@ -31,8 +32,8 @@
   --color-ios-success: var(--app-positive);
   --color-ios-danger: var(--app-negative);
   --color-ios-info: var(--app-accent);
-  --shadow-ios-card: 0 2px 8px rgb(23 43 58 / 4%);
-  --shadow-ios-card-hover: 0 3px 12px rgb(23 43 58 / 7%);
+  --shadow-ios-card: 0 1px 2px rgb(16 16 40 / 4%), 0 4px 12px rgb(16 16 40 / 4%), 0 8px 26px rgb(16 16 40 / 6%);
+  --shadow-ios-card-hover: 0 2px 4px rgb(16 16 40 / 4%), 0 8px 20px rgb(16 16 40 / 6%), 0 14px 36px rgb(16 16 40 / 8%);
   --background: var(--app-surface);
   --foreground: var(--app-ink);
   --popover: var(--app-surface);
@@ -50,18 +51,6 @@
   --accent: var(--app-soft);
   --accent-foreground: var(--app-ink);
   --destructive: var(--app-negative);
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --app-surface: #111d29;
-    --app-ink: #edf3f8;
-    --app-secondary: #bac8d5;
-    --app-accent: #6ee7d8;
-    --app-positive: #86efac;
-    --app-negative: #fda4af;
-    --app-warning: #fcd34d;
-    --primary-foreground: #111d29;
-  }
 }
 body, html[lang="he"] body { font-family: var(--app-font); color: var(--app-ink); background: var(--app-canvas); }
 button, input, select, textarea { font-family: inherit; }

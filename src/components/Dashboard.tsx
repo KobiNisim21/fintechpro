@@ -22,11 +22,11 @@ const PortfolioChart = lazy(() => import('./PortfolioChart').then(m => ({ defaul
 function ViewSkeleton() {
     useLanguage();
   return (
-    <div className="space-y-4 animate-pulse">
-      <div className="h-8 bg-slate-200/50 rounded-xl w-1/3" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-5 motion-safe:animate-pulse">
+      <div className="h-8 bg-canvas rounded-lg w-1/3" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-gap">
         {[1,2,3,4].map(i => (
-          <div key={i} className="h-40 bg-slate-200/30 rounded-2xl" />
+          <div key={i} className="h-40 bg-surface rounded-xl shadow-card p-card border border-line/50" />
         ))}
       </div>
     </div>
@@ -48,7 +48,7 @@ export default function Dashboard() {
     <MotionConfig reducedMotion="user">
       <ConnectionStatus />
       <a className="skip-to-content" href="#main-content">{t("Skip to content")}</a>
-      <div className="dashboard-shell flex h-screen w-full overflow-hidden text-slate-800 relative z-0" style={{ background: 'var(--color-ios-bg-gradient)' }}>
+      <div className="dashboard-shell flex h-screen w-full bg-canvas overflow-hidden font-sans text-ink relative z-0">
       {/* Main UI Container */}
       <div className="flex h-full w-full relative z-10">
         {/* Mobile Navigation - Fixed at top for mobile only */}
@@ -62,30 +62,31 @@ export default function Dashboard() {
       </div>
 
         {/* Main Content */}
-        <main id="main-content" tabIndex={-1} className="flex-1 h-full overflow-y-auto px-4 md:px-6 md:py-6 space-y-6 md:space-y-6 w-full min-w-0 pt-20 md:pt-6 pb-24 md:pb-6">
+        <main id="main-content" tabIndex={-1} className="flex-1 h-full overflow-y-auto px-6 md:py-6 space-y-6 bg-canvas w-full min-w-0 pt-20 md:pt-6 pb-24 md:pb-6">
           <PullToRefresh onRefresh={handleRefresh}>
+            <div className="w-full max-w-[1400px] mx-auto space-y-6">
             {/* Hero Card */}
             <PortfolioHero />
             <PortfolioTools />
 
             {/* Portfolio Content */}
             <section>
-              <div className="flex flex-col xl:flex-row xl:items-center justify-between mb-6 gap-4">
+              <div className="flex flex-col xl:flex-row xl:items-center justify-between mb-6 gap-5">
                 <div className="flex items-center justify-between w-full md:w-auto">
-                  <h2 className="text-xl md:text-lg font-bold text-slate-800 desktop-section-title">
+                  <h2 className="text-heading text-ink font-semibold">
                     {viewMode === 'holdings' ? t("Portfolio Holdings") : viewMode === 'insights' ? t("Portfolio Insights") : viewMode === 'watchlist' ? t("Watchlist") : t("Market Calendar")}
                   </h2>
                 </div>
 
                 <div className="hidden md:flex flex-wrap items-center gap-3 min-w-0">
               {/* View Toggle */}
-              <div className="desktop-view-switch flex flex-wrap p-1 bg-slate-200/50 rounded-xl" role="group" aria-label={t("Portfolio views")}>
+              <div className="flex flex-wrap bg-canvas rounded-xl p-1 border border-line/50" role="group" aria-label={t("Portfolio views")}>
                 <button
                   aria-pressed={viewMode === 'holdings'}
                   onClick={() => startTransition(() => setViewMode('holdings'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'holdings'
-                    ? 'bg-white text-slate-800 font-semibold shadow-sm'
-                    : 'text-slate-500 font-medium hover:text-slate-700 hover:bg-white/50'
+                  className={`flex items-center gap-2 min-h-11 min-w-11 px-4 py-2 rounded-lg text-caption transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${viewMode === 'holdings'
+                    ? 'bg-surface shadow-badge text-ink font-semibold'
+                    : 'text-secondary font-medium hover:text-ink hover:bg-surface-alt'
                     }`}
                 >
                   <LayoutGrid className="w-4 h-4" />
@@ -94,9 +95,9 @@ export default function Dashboard() {
                 <button
                   aria-pressed={viewMode === 'insights'}
                   onClick={() => startTransition(() => setViewMode('insights'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'insights'
-                    ? 'bg-white text-slate-800 font-semibold shadow-sm'
-                    : 'text-slate-500 font-medium hover:text-slate-700 hover:bg-white/50'
+                  className={`flex items-center gap-2 min-h-11 min-w-11 px-4 py-2 rounded-lg text-caption transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${viewMode === 'insights'
+                    ? 'bg-surface shadow-badge text-ink font-semibold'
+                    : 'text-secondary font-medium hover:text-ink hover:bg-surface-alt'
                     }`}
                 >
                   <PieChart className="w-4 h-4" />
@@ -105,9 +106,9 @@ export default function Dashboard() {
                 <button
                   aria-pressed={viewMode === 'watchlist'}
                   onClick={() => startTransition(() => setViewMode('watchlist'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'watchlist'
-                    ? 'bg-white text-slate-800 font-semibold shadow-sm'
-                    : 'text-slate-500 font-medium hover:text-slate-700 hover:bg-white/50'
+                  className={`flex items-center gap-2 min-h-11 min-w-11 px-4 py-2 rounded-lg text-caption transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${viewMode === 'watchlist'
+                    ? 'bg-surface shadow-badge text-ink font-semibold'
+                    : 'text-secondary font-medium hover:text-ink hover:bg-surface-alt'
                     }`}
                 >
                   <Eye className="w-4 h-4" />
@@ -116,9 +117,9 @@ export default function Dashboard() {
                 <button
                   aria-pressed={viewMode === 'calendar'}
                   onClick={() => startTransition(() => setViewMode('calendar'))}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${viewMode === 'calendar'
-                    ? 'bg-white text-slate-800 font-semibold shadow-sm'
-                    : 'text-slate-500 font-medium hover:text-slate-700 hover:bg-white/50'
+                  className={`flex items-center gap-2 min-h-11 min-w-11 px-4 py-2 rounded-lg text-caption transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${viewMode === 'calendar'
+                    ? 'bg-surface shadow-badge text-ink font-semibold'
+                    : 'text-secondary font-medium hover:text-ink hover:bg-surface-alt'
                     }`}
                 >
                   <CalendarDays className="w-4 h-4" />
@@ -150,11 +151,12 @@ export default function Dashboard() {
 
         {/* Statistics & Analytics */}
         <section>
-            <h2 className="text-xl md:text-lg font-bold mb-4 md:mb-4 text-slate-800 desktop-section-title">{t("Performance History")}</h2>
+            <h2 className="text-heading text-ink font-semibold mb-4">{t("Performance History")}</h2>
             <Suspense fallback={<ViewSkeleton />}>
               <PortfolioChart />
             </Suspense>
           </section>
+            </div>
           </PullToRefresh>
         </main>
       </div>
