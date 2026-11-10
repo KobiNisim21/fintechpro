@@ -70,3 +70,34 @@ Stage 2 validation (2026-11-10):
 
 Continue the remaining component migration in `TraderAi-7dj`, including the
 health panel's content hierarchy and the remaining navigation/cards.
+
+## Stage 3: allocation bubbles
+
+The owner supplied the four-circle asset allocation reference and inspector
+measurements. AllocationBubbles adds that visual language to Portfolio Allocation:
+purple `#5D41EC`, gray `#8A92B2`, near-black ink, orange `#F7931A`, and offset thin
+decorative rings. Areas, rather than diameters, are proportional to actual market
+values; layout adapts to available width instead of hard-coding the reference's
+four percentages or fixed pixel sizes. Orange/green labels use ink for legibility.
+
+The presentation helper combines repeated symbols, keeps every positive-value
+holding in the legend and uses a disclosed aggregate for smaller holdings only
+when there are more than eight. Percentages and amounts remain visible in the
+legend even when a bubble is too small for an internal label. Packing is bounded
+to eight circles, deterministic, non-overlapping, and does not mutate source data.
+
+The original donut chart, its original data/props and tooltip remain available
+through a native details disclosure. All existing InsightsView hook calls/bodies,
+fetching, distribution calculations and handlers were compared with HEAD and
+remain identical. No server, schema, financial context or dependency was changed.
+New explanatory labels are translated in both languages.
+
+Validation (2026-11-10): 37 offline tests and production build passed. New tests
+cover the reference 43/27/18/12 allocation, proportional areas, deterministic
+packing, empty/single/duplicate/tiny holdings, 2–8 circles, 100 legend entries,
+aggregate totals, invalid values and viewBox bounds. Browser checked English/LTR
+and Hebrew/RTL at 320, 768 and 1440px; no horizontal overflow or console warnings
+or errors were observed in the application. Native donut opening/closing retained
+MA/GOOG/IVV at 40/40/20, matching bubble percentages and USD600/USD600/USD300.
+The synthetic financial digest remained unchanged. A separate four-asset preview
+was rendered and inspected, then removed; no production portfolio was modified.

@@ -265,3 +265,18 @@ main [class*="hover:-translate-y"]:hover { translate: none; transform: none; }
   .insights-view .allocation-chart .recharts-pie-labels text { text-anchor: middle; }
   .insights-view .allocation-chart .recharts-pie-labels line { opacity: 0; }
 }
+
+.allocation-bubbles { container-type: inline-size; }
+.allocation-bubble-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: center; }
+.allocation-bubble-graphic { width: 100%; max-width: 250px; max-height: 260px; margin-inline: auto; overflow: visible; grid-row: 1; }
+.allocation-bubble-graphic text { font-family: var(--app-font); font-variant-numeric: tabular-nums; }
+.allocation-bubble-legend { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+.allocation-bubble-legend li { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 8px; align-items: start; padding: 9px 2px; }
+.allocation-bubble-swatch { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; }
+.allocation-bubble-legend-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 8px; }
+.allocation-bubble-legend-heading bdi { overflow-wrap: anywhere; }
+.allocation-donut-details > summary::marker { color: var(--app-accent); }
+@container (min-width: 300px) {
+  .allocation-bubble-layout { grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr); gap: 12px; }
+  .allocation-bubble-graphic { grid-row: auto; }
+}

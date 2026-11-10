@@ -1,5 +1,6 @@
 import { t, useLanguage, locale } from '@/i18n';
 import PortfolioRiskPanel from './PortfolioRiskPanel';
+import AllocationBubbles from './AllocationBubbles';
 import DividendCalendar from './DividendCalendar';
 import { usePortfolio } from '@/context/PortfolioContext';
 import { useMemo, useState, useEffect, useRef } from 'react';
@@ -366,27 +367,35 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                             <PieChartIcon className="w-5 h-5 text-accent" />
                             {t("Portfolio Allocation")}</CardTitle>
                     </CardHeader>
-                    <CardContent className="allocation-chart h-[300px] md:h-[380px] px-0 [&:last-child]:pb-0 flex justify-center items-center">
+                    <CardContent className="px-0 [&:last-child]:pb-0">
                         {loading ? (
-                            <div className="w-full h-full bg-canvas motion-safe:animate-pulse rounded-lg" />
+                            <div className="w-full h-[300px] bg-canvas motion-safe:animate-pulse rounded-lg" />
                         ) : (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie data={distributionData} cx="50%" cy="50%"
-                                        innerRadius={isMobile ? 40 : 55}
-                                        outerRadius={isMobile ? 70 : 95}
-                                        paddingAngle={2}
-                                        dataKey="value" stroke="none" minAngle={3}
-                                        label={renderCustomLabel} labelLine={false}
-                                        isAnimationActive={false}
-                                    >
-                                        {distributionData.map((_, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <RechartsTooltip content={<CustomTooltip />} />
-                                </PieChart>
-                            </ResponsiveContainer>
+                            <div className="space-y-4">
+                                <AllocationBubbles data={distributionData} />
+                                <details className="allocation-donut-details border-t border-line pt-3">
+                                    <summary className="text-caption text-secondary cursor-pointer min-h-11 py-3">{t("Donut chart")}</summary>
+                                    <div className="allocation-chart h-[300px] md:h-[380px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie data={distributionData} cx="50%" cy="50%"
+                                                    innerRadius={isMobile ? 40 : 55}
+                                                    outerRadius={isMobile ? 70 : 95}
+                                                    paddingAngle={2}
+                                                    dataKey="value" stroke="none" minAngle={3}
+                                                    label={renderCustomLabel} labelLine={false}
+                                                    isAnimationActive={false}
+                                                >
+                                                    {distributionData.map((_, index) => (
+                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <RechartsTooltip content={<CustomTooltip />} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </details>
+                            </div>
                         )}
                     </CardContent>
                 </Card>

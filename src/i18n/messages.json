@@ -2738,5 +2738,33 @@
   "Portfolio views": {
     "en": "Portfolio views",
     "he": "מסכי התיק"
+  },
+  "No allocation data": {
+    "en": "No allocation data",
+    "he": "אין נתוני חלוקה"
+  },
+  "Allocation details": {
+    "en": "Allocation details",
+    "he": "פירוט משקלי ההחזקות"
+  },
+  "Portfolio allocation bubbles": {
+    "en": "Portfolio allocation bubbles",
+    "he": "בועות חלוקת ההחזקות בתיק"
+  },
+  "Other {0} holdings": {
+    "en": "Other {0} holdings",
+    "he": "יתר {0} ההחזקות"
+  },
+  "Circle area represents portfolio weight. Full values are listed alongside.": {
+    "en": "Circle area represents portfolio weight. Full values are listed alongside.",
+    "he": "שטח העיגול מייצג את משקל ההחזקה בתיק. הערכים המלאים מופיעים בפירוט."
+  },
+  "Smaller holdings are grouped in one bubble; every holding is listed.": {
+    "en": "Smaller holdings are grouped in one bubble; every holding is listed.",
+    "he": "ההחזקות הקטנות מאוגדות בבועה אחת; כל החזקה מופיעה בנפרד בפירוט."
+  },
+  "Donut chart": {
+    "en": "Donut chart",
+    "he": "תרשים טבעת"
   }
 }
