@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { protect } from '../middleware/auth.js';
 import AlertRule from '../models/AlertRule.js';
 import Position from '../models/Position.js';
-import { checkPersonalAlerts } from '../services/personalAlerts.js';
+import { checkPersonalAlertStatus } from '../services/personalAlerts.js';
 
 export function createAlertRoutes(quoteProvider) {
     const router = express.Router();
@@ -22,7 +22,7 @@ export function createAlertRoutes(quoteProvider) {
         } catch { res.status(503).json({ message: 'Could not create alert rule' }); }
     });
     router.post('/check', async (req, res) => {
-        try { res.json({ triggered: await checkPersonalAlerts(req.user._id, quoteProvider) }); }
+        try { res.set('Cache-Control', 'no-store'); res.json(await checkPersonalAlertStatus(req.user._id, quoteProvider)); }
         catch { res.status(503).json({ message: 'Alert check unavailable; try again' }); }
     });
     router.put('/:id', async (req, res) => {

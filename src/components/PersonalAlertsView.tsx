@@ -1,6 +1,6 @@
 import { t, useLanguage, locale, errorText } from '@/i18n';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { portfolioToolsAPI, portfolioToolError, type AlertRule } from '@/api/portfolioTools';
+import { portfolioToolsAPI, portfolioToolError, type AlertRule, type AlertCheck } from '@/api/portfolioTools';
 import { usePortfolio } from '@/context/PortfolioContext';
 const labels: Record<string, string> = { price_above: 'Price at or above (USD)', price_below: 'Price at or below (USD)', daily_move: 'Absolute daily move (%)', concentration: 'Holding weight at or above (%)' };
 export default function PersonalAlertsView() {
@@ -8,28 +8,36 @@ export default function PersonalAlertsView() {
     const { positions } = usePortfolio();
     const [rules, setRules] = useState<AlertRule[]>([]), [error, setError] = useState(''), [triggeredCount, setTriggeredCount] = useState<number | null>(null);
     const [busy, setBusy] = useState(false), [loaded, setLoaded] = useState(false);
+    const [lastCheck, setLastCheck] = useState<AlertCheck | null>(null);
     const load = useCallback(async () => { try { setRules(await portfolioToolsAPI.alerts()); setLoaded(true); } catch { setError('Could not load alerts. Please retry.'); } }, []);
     useEffect(() => { void load(); const timer = setInterval(() => void load(), 60_000); return () => clearInterval(timer); }, [load]);
+    useEffect(() => {
+        const onCheck = (event: Event) => { setLastCheck((event as CustomEvent<AlertCheck>).detail); void load(); };
+        window.addEventListener('portfolio-alert-check-completed', onCheck);
+        return () => window.removeEventListener('portfolio-alert-check-completed', onCheck);
+    }, [load]);
     const run = async (action: () => Promise<unknown>) => { setBusy(true); setError(''); setTriggeredCount(null); try { await action(); await load(); window.dispatchEvent(new Event('portfolio-alerts-updated')); } catch (err: unknown) { setError(portfolioToolError(err, 'Action failed. Please retry.')); } finally { setBusy(false); } };
     const create = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault(); const form = event.currentTarget, values = new FormData(form);
-        void run(async () => { await portfolioToolsAPI.createAlert({ symbol: values.get('symbol'), kind: values.get('kind'), threshold: Number(values.get('threshold')) }); form.reset(); });
+        void run(async () => { await portfolioToolsAPI.createAlert({ symbol: values.get('symbol'), kind: values.get('kind'), threshold: Number(values.get('threshold')) }); form.reset(); setLastCheck(null); const result = await portfolioToolsAPI.checkAlerts(); setLastCheck(result); setTriggeredCount(result.triggered.length); });
     };
     return <div className="data-panel p-4 sm:p-6 space-y-4">
         <h2 className="font-bold text-lg">{t("Personal alerts")}</h2>
-        <p className="text-xs text-slate-600">{t("In-app alerts, checked about once a minute by the running backend and on demand. Quotes may be delayed. Price alerts pause after triggering; percentage rules repeat at most once per 24 hours. No email or Telegram delivery.")}</p>
+        <p className="text-xs text-slate-600">{t("In-app alerts are checked when created, about once a minute while your portfolio is open, and with Check now. Background checks require a continuously running backend. Quotes may be delayed. Price alerts pause after triggering; percentage rules repeat at most once per 24 hours. No push, email or Telegram delivery.")}</p>
         <form onSubmit={create} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
             <label className="text-sm">{t("Holding")}<select name="symbol" className="data-input w-full" required>{[...new Set(positions.map(p => p.symbol))].map(symbol => <option key={symbol}>{symbol}</option>)}</select></label>
             <label className="text-sm">{t("Condition")}<select name="kind" className="data-input w-full" required>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{t(label)}</option>)}</select></label>
             <label className="text-sm">{t("Threshold")}<input name="threshold" className="data-input w-full" type="number" min="0.00000001" step="any" required /></label>
             <button className="data-action primary-action min-h-11" disabled={busy || !positions.length}>{t("Create alert")}</button>
         </form>
-        <div className="flex flex-wrap gap-2"><button className="data-action min-h-11" disabled={busy} onClick={() => void run(async () => { const result = await portfolioToolsAPI.checkAlerts(); setTriggeredCount(result.triggered.length); })}>{t("Check now")}</button><button className="data-action min-h-11" disabled={busy} onClick={() => void load()}>{t("Refresh alerts")}</button></div>
-        {error && <p role="alert" className="text-red-700 text-sm">{errorText(error)}</p>}{triggeredCount !== null && <p role="status" className="text-sm">{t("{0} alert(s) triggered. Missing data does not trigger an alert.", [triggeredCount])}</p>}
+        <div className="flex flex-wrap gap-2"><button className="data-action min-h-11" disabled={busy} onClick={() => void run(async () => { const result = await portfolioToolsAPI.checkAlerts(); setLastCheck(result); setTriggeredCount(result.triggered.length); })}>{t("Check now")}</button><button className="data-action min-h-11" disabled={busy} onClick={() => void load()}>{t("Refresh alerts")}</button></div>
+        {lastCheck && <p className="text-xs text-slate-600">{t("Last checked: {0}", [new Date(lastCheck.checkedAt).toLocaleString(locale())])}</p>}
+        {error && <p role="alert" className="text-red-700 text-sm">{errorText(error)}</p>}{triggeredCount !== null && <p role="status" className="text-sm">{t("{0} new alert(s) triggered in this check.", [triggeredCount])}</p>}
         {!loaded && !error && <p role="status">{t("Loading alerts…")}</p>}{loaded && !rules.length && <p className="text-sm">{t("No personal alerts yet.")}</p>}
         {rules.map(rule => <article key={rule._id} className="border border-slate-200 rounded-2xl p-3 space-y-2">
-            <p className="font-semibold break-words">{rule.symbol} · {t(labels[rule.kind])} {rule.threshold}</p><p className="text-xs">{rule.enabled ? t("Active") : t("Paused")}</p>
-            {rule.lastTriggeredAt && <p className="text-sm text-amber-800">{rule.lastValue != null && t("Observed value: {0}", [rule.lastValue])}<br /><time>{new Date(rule.lastTriggeredAt).toLocaleString(locale())}</time></p>}
+            <p className="font-semibold break-words">{rule.symbol} · {t(labels[rule.kind])} {rule.threshold}</p><p className="text-xs">{rule.enabled ? t("Active") : rule.lastTriggeredAt ? t("Triggered — paused") : t("Paused")}</p>
+            {lastCheck?.evaluations.filter(item => item.ruleId === rule._id).map(item => <p key={item.ruleId} className="text-sm" role="status">{t(({ triggered: 'Condition met: alert triggered.', not_met: 'Condition not met yet.', unavailable: 'Market data unavailable or stale. The alert was not evaluated.', cooldown: 'Already triggered within the last 24 hours.', no_holding: 'No active holding for this rule.' })[item.status])}{item.value != null && <> {t("Observed value: {0}", [item.value.toLocaleString(locale(), { maximumFractionDigits: 4 })])}</>}</p>)}
+            {rule.lastTriggeredAt && <p className="text-sm text-amber-800">{rule.lastValue != null && !lastCheck?.evaluations.some(item => item.ruleId === rule._id && item.status === 'triggered') && <>{t("Observed value: {0}", [rule.lastValue])}<br /></>}<time>{new Date(rule.lastTriggeredAt).toLocaleString(locale())}</time></p>}
             <div className="flex flex-wrap gap-2"><button className="data-action min-h-11" disabled={busy} onClick={() => void run(() => portfolioToolsAPI.updateAlert(rule._id, !rule.enabled, !rule.enabled))}>{rule.enabled ? t("Pause") : t("Rearm")}</button><button className="data-action min-h-11" disabled={busy} onClick={() => void run(() => portfolioToolsAPI.deleteAlert(rule._id))}>{t("Delete alert")}</button></div>
         </article>)}
     </div>;

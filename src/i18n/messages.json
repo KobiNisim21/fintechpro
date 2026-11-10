@@ -2775,6 +2775,26 @@
     "en": "Other",
     "he": "יתר"
   },
+  "Automatic alert check failed. Use Check now to retry.": {
+    "en": "Automatic alert check failed. Use Check now to retry.",
+    "he": "הבדיקה האוטומטית של ההתראות נכשלה. לחצו על בדיקה כעת כדי לנסות שוב."
+  },
+  "Personal alert triggered: {0}. Observed value: {1}": {
+    "en": "Personal alert triggered: {0}. Observed value: {1}",
+    "he": "הופעלה התראה אישית עבור {0}. הערך שנבדק: {1}"
+  },
+  "In-app alerts are checked when created, about once a minute while your portfolio is open, and with Check now. Background checks require a continuously running backend. Quotes may be delayed. Price alerts pause after triggering; percentage rules repeat at most once per 24 hours. No push, email or Telegram delivery.": {
+    "en": "In-app alerts are checked when created, about once a minute while your portfolio is open, and with Check now. Background checks require a continuously running backend. Quotes may be delayed. Price alerts pause after triggering; percentage rules repeat at most once per 24 hours. No push, email or Telegram delivery.",
+    "he": "ההתראות נבדקות בעת יצירתן, בערך פעם בדקה כשהתיק פתוח, ובלחיצה על בדיקה כעת. בדיקות כשהאתר סגור דורשות שרת שפועל ברציפות. המחירים עשויים להיות מושהים. התראות מחיר מושהות לאחר ההפעלה; כללי אחוזים מופעלים לכל היותר פעם ב־24 שעות. ההתראות מוצגות באתר בלבד, ללא פוש, דוא״ל או טלגרם."
+  },
+  "Last checked: {0}": { "en": "Last checked: {0}", "he": "בדיקה אחרונה: {0}" },
+  "{0} new alert(s) triggered in this check.": { "en": "{0} new alert(s) triggered in this check.", "he": "הופעלו {0} התראות חדשות בבדיקה זו." },
+  "Triggered — paused": { "en": "Triggered — paused", "he": "הופעלה — מושהית" },
+  "Condition met: alert triggered.": { "en": "Condition met: alert triggered.", "he": "התנאי התקיים: ההתראה הופעלה." },
+  "Condition not met yet.": { "en": "Condition not met yet.", "he": "התנאי עדיין לא התקיים." },
+  "Market data unavailable or stale. The alert was not evaluated.": { "en": "Market data unavailable or stale. The alert was not evaluated.", "he": "נתוני המחיר חסרים או אינם עדכניים. לא ניתן היה לבדוק את התנאי." },
+  "Already triggered within the last 24 hours.": { "en": "Already triggered within the last 24 hours.", "he": "ההתראה כבר הופעלה ב־24 השעות האחרונות." },
+  "No active holding for this rule.": { "en": "No active holding for this rule.", "he": "אין החזקה פעילה שמתאימה לתנאי הזה." },
   "All holding bubbles ({0})": {
     "en": "All holding bubbles ({0})",
     "he": "בועות לכל ההחזקות ({0})"

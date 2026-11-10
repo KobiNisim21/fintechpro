@@ -26,6 +26,7 @@ const fixtureProfile = createProfileResolver({
 const securities = [
   { symbol: 'AAPL', displaySymbol: 'AAPL', description: 'QA Apple fixture' },
   { symbol: 'MSFT', displaySymbol: 'MSFT', description: 'QA Microsoft fixture' },
+  ...['GOOG', 'MA', 'IVV'].map(symbol => ({ symbol, displaySymbol: symbol, description: `QA ${symbol} fixture` })),
 ];
 
 export async function fixtureQuote(symbol) {
