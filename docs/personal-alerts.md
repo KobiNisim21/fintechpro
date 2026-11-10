@@ -64,7 +64,7 @@ VAPID environment setup is needed. Manifest icons are real 180/192/512px square 
 normalized from the existing brand asset; the original asset remains intact.
 Regenerate them on Windows with scripts/generate-pwa-icons.ps1.
 
-Validation: 46 offline tests, 30 disposable MongoDB integration tests, typecheck
+Validation: 47 offline tests, 30 disposable MongoDB integration tests, typecheck
 and production build passed. Coverage includes real Web Push encryption, private
 config, owner separation, atomic triggers, durable/concurrent projection/dispatch,
 transient failure retry, endpoint expiry, account switch, worker heartbeat, strict
@@ -80,3 +80,12 @@ owner's iPhone after deployment. Keep the owner's production rules unchanged.
 
 References: https://webkit.org/blog/13878/ and
 https://github.com/web-push-libs/web-push
+
+Production follow-up: frontend d3cab72 is deployed; the authenticated push config
+returns HTTP 200 and the installation/push panel is visible. The existing Render
+backend still returns 404 for its new push config route and has no recent worker
+heartbeat, confirming it needs a deployment of the updated Node code. The Render
+dashboard is at its sign-in page and no CLI/API deployment credentials are
+configured in this workspace. Owner sign-in is needed to finish that deployment.
+Until then, open-session checks can send push but closed-app background checking
+is not confirmed. No real device opt-in or native notification receipt is claimed.

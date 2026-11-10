@@ -63,3 +63,15 @@ test('external alert scheduler refuses absent or incorrect credentials before to
     await alertScheduler({ headers: { authorization: 'Bearer wrong' } }, response); assert.equal(response.code, 401);
     await alertScheduler({ headers: { authorization: ['unexpected'] } }, response); assert.equal(response.code, 401);
 });
+
+test('installable manifest and Apple touch icons have real square bitmap sizes', () => {
+    const manifest = JSON.parse(readFileSync(new URL('../public/manifest.json', import.meta.url), 'utf8'));
+    for (const icon of manifest.icons) {
+        const bytes = readFileSync(new URL(`../public${icon.src}`, import.meta.url));
+        const size = Number(icon.sizes.split('x')[0]);
+        assert.equal(bytes.readUInt32BE(16), size); assert.equal(bytes.readUInt32BE(20), size);
+    }
+    const apple = readFileSync(new URL('../public/pwa-icon-180.png', import.meta.url));
+    assert.equal(apple.readUInt32BE(16), 180); assert.equal(apple.readUInt32BE(20), 180);
+    assert.equal(manifest.id, '/'); assert.equal(manifest.scope, '/');
+});
