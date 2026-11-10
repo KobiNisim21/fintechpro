@@ -30,11 +30,11 @@ const SECTOR_COLORS: [string, string][] = [
 
 // ─── Skeleton Component ─────────────────────────────────────────
 const Skeleton = ({ className = '' }: { className?: string }) => (
-    <div className={`animate-pulse bg-slate-100 rounded-[16px] ${className}`} />
+    <div className={`motion-safe:animate-pulse bg-canvas rounded-lg ${className}`} />
 );
 
 const SkeletonCard = () => (
-    <div className="glass-card rounded-[32px] p-5 space-y-4">
+    <div className="bg-surface rounded-xl shadow-card p-card-sm md:p-card border border-line/50 space-y-4">
         <div className="flex justify-between items-start">
             <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -67,7 +67,7 @@ const SkeletonCard = () => (
 const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
     useLanguage();
     const totalValue = data.reduce((sum, d) => sum + d.value, 0);
-    if (totalValue === 0 || data.length === 0) return <div className="text-slate-400 text-center py-8">{t("No sector data")}</div>;
+    if (totalValue === 0 || data.length === 0) return <div className="text-caption text-secondary text-center py-8">{t("No sector data")}</div>;
 
     const items = data.map((d, i) => ({
         ...d,
@@ -76,24 +76,24 @@ const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
     }));
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 auto-rows-fr gap-3 w-full h-full min-h-[340px]">
+        <div className="sector-distribution-grid grid grid-cols-2 sm:grid-cols-3 auto-rows-fr gap-3 w-full h-full min-h-[300px]">
             {items.map((item, i) => {
                 const isLarge = i < 2;
                 const textColor = item.colors[1];
                 return (
                     <div
                         key={item.name}
-                        className={`flex flex-col justify-end p-4 overflow-hidden rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer ${
+                        className={`flex flex-col justify-end min-w-0 p-4 overflow-hidden rounded-lg transition-shadow duration-base ${
                             isLarge ? 'row-span-2' : ''
                         }`}
                         style={{
                             backgroundColor: item.colors[0],
                         }}
                     >
-                        <span className="text-sm font-medium leading-tight break-words" style={{ color: textColor }}>
+                        <span className="text-caption font-medium leading-tight break-words opacity-90" style={{ color: textColor }}>
                             {t(item.name)}
                         </span>
-                        <span dir="ltr" className="text-xl font-bold mt-0.5" style={{ color: textColor }}>
+                        <span dir="ltr" className="text-heading font-bold tabular-nums mt-1" style={{ color: textColor }}>
                             {item.percent.toFixed(1)}%
                         </span>
                     </div>
@@ -109,13 +109,13 @@ const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
         const data = payload[0];
         return (
-            <div className="bg-[var(--color-ios-card)] backdrop-blur-xl border border-white/60 rounded-[16px] px-4 py-3 shadow-[var(--shadow-ios-card)]">
-                <p className="text-[var(--color-ios-secondary)] font-bold text-sm mb-1">{data.name}</p>
-                <p dir="ltr" className="text-[var(--color-ios-fg)] font-bold  text-base">
+            <div className="bg-surface rounded-lg shadow-card p-3 border border-line text-caption">
+                <p className="text-secondary text-micro mb-1">{data.name}</p>
+                <p dir="ltr" className="text-body text-ink font-semibold tabular-nums">
                     ${Number(data.value).toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 {data.payload?.percent !== undefined && (
-                    <p className="text-cyan-600 font-bold text-xs mt-1">
+                    <p className="text-accent text-caption font-medium tabular-nums mt-1">
                         {(data.payload.percent * 100).toFixed(1)}{t("% of portfolio")}</p>
                 )}
             </div>
@@ -307,10 +307,10 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
     // ═══════════════════════════  RENDER  ═══════════════════════════
     return (
-        <div className="space-y-6 pb-20 animate-in fade-in duration-500">
+        <div className="insights-view space-y-5 pb-20 motion-safe:animate-in motion-safe:fade-in duration-base">
 
             {/* ══ Analytics Row: Health Score + Benchmark ══ */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="insights-summary-grid grid grid-cols-1 lg:grid-cols-3 gap-gap">
                 {/* ── Health Score Gauge ── */}
                 <PortfolioRiskPanel />
 
@@ -326,31 +326,31 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: analytics ? 1 : 0, y: analytics ? 0 : 20 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                className="insights-income-grid grid grid-cols-1 lg:grid-cols-2 gap-gap"
             >
                 {/* ── Dividend Calendar ── */}
                 <DividendCalendar analytics={analytics} loading={analyticsLoading} />
 
                 {/* ── Sector Distribution (Grid) ── */}
                 {!insightsLoaded && !analytics?.exposures ? (
-                    <Card className="glass-card rounded-[32px] h-full flex flex-col">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2 tracking-tight">
-                                <Activity className="w-5 h-5 text-violet-400" />
+                    <Card className="bg-surface rounded-xl shadow-card p-card-sm md:p-card border border-line/50 gap-4 h-full flex flex-col">
+                        <CardHeader className="p-0">
+                            <CardTitle className="text-subhead text-ink font-semibold flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-accent" />
                                 {t("Sector Distribution")}</CardTitle>
                         </CardHeader>
-                        <CardContent className="flex-1 min-h-[340px]">
-                            <div className="w-full h-full bg-slate-100 rounded-2xl animate-pulse" />
+                        <CardContent className="px-0 [&:last-child]:pb-0 flex-1 min-h-[300px]">
+                            <div className="w-full h-full bg-canvas rounded-lg motion-safe:animate-pulse" />
                         </CardContent>
                     </Card>
                 ) : (
-                    <Card className="glass-card rounded-[32px] h-full flex flex-col">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2 tracking-tight">
-                                <Activity className="w-5 h-5 text-violet-400" />
+                    <Card className="bg-surface rounded-xl shadow-card p-card-sm md:p-card border border-line/50 gap-4 h-full flex flex-col">
+                        <CardHeader className="p-0">
+                            <CardTitle className="text-subhead text-ink font-semibold flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-accent" />
                                 {t("Sector Distribution")}</CardTitle>
                         </CardHeader>
-                        <CardContent className="flex-1">
+                        <CardContent className="px-0 [&:last-child]:pb-0 flex-1">
                             <SectorGrid data={sectorData} />
                         </CardContent>
                     </Card>
@@ -358,17 +358,17 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
             </motion.div>
 
             {/* ══ Portfolio Allocation + Correlation Matrix Row ══ */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="insights-allocation-grid grid grid-cols-1 lg:grid-cols-3 gap-gap">
                 {/* ── Portfolio Allocation (Left - Small, col-span-1) ── */}
-                <Card className="bg-[var(--color-ios-card)] border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)] lg:col-span-1">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-bold text-[var(--color-ios-fg)]  flex items-center gap-2 tracking-tight">
-                            <PieChartIcon className="w-5 h-5 text-cyan-400" />
+                <Card className="bg-surface rounded-xl shadow-card p-card-sm md:p-card border border-line/50 gap-4 min-w-0 lg:col-span-1">
+                    <CardHeader className="p-0">
+                        <CardTitle className="text-subhead text-ink font-semibold flex items-center gap-2">
+                            <PieChartIcon className="w-5 h-5 text-accent" />
                             {t("Portfolio Allocation")}</CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[280px] flex justify-center items-center">
+                    <CardContent className="allocation-chart h-[300px] md:h-[380px] px-0 [&:last-child]:pb-0 flex justify-center items-center">
                         {loading ? (
-                            <div className="w-full h-full bg-[var(--color-ios-input)] animate-pulse rounded-[16px]" />
+                            <div className="w-full h-full bg-canvas motion-safe:animate-pulse rounded-lg" />
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -400,52 +400,52 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
             {/* ── Analyst Recommendations ── */}
             <div>
-                <h3 className="text-lg font-bold text-[var(--color-ios-fg)]  mb-4 flex items-center gap-2 tracking-tight">
-                    <Target className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-subhead text-ink font-semibold mb-4 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-positive" />
                     {t("Analyst Recommendations & Price Targets")}</h3>
 
                 {!insightsLoaded ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <div className="insights-analyst-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gap">
                         {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
                     </div>
                 ) : analystCards.length === 0 ? (
-                    <p className="text-zinc-500 text-sm">{t("No analyst-rated holdings in your portfolio.")}</p>
+                    <p className="text-secondary text-body">{t("No analyst-rated holdings in your portfolio.")}</p>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <div className="insights-analyst-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gap">
                         {analystCards.map((item) => (
                             <div key={item.symbol}
-                                className="bg-[var(--color-ios-card)] border border-white/60 backdrop-blur-xl rounded-[32px] shadow-[var(--shadow-ios-card)] p-5 pb-6 hover:-translate-y-2 hover:shadow-[var(--shadow-ios-card)]Hover transition-all duration-500 cursor-pointer"
+                                className="bg-surface rounded-xl shadow-card p-card-sm md:p-card border border-line/50 hover:shadow-card-hover transition-shadow duration-base min-w-0"
                             >
                                 {/* Header */}
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <h4 className="font-bold text-[var(--color-ios-fg)] text-lg  tracking-tight">{item.symbol}</h4>
-                                            <Badge data-rating={item.consensus} className={`analyst-consensus ${item.consensusColor} text-white text-[10px] font-semibold border-none px-2 py-0.5`}>
+                                            <h4 className="text-subhead text-ink font-semibold tracking-tight">{item.symbol}</h4>
+                                            <Badge data-rating={item.consensus} className={`analyst-consensus ${item.consensusColor} rounded-pill text-micro font-semibold border-none px-2.5 py-1`}>
                                                 {t(item.consensus)}
                                             </Badge>
                                         </div>
-                                        <p className="text-sm text-[var(--color-ios-secondary)] font-bold truncate max-w-[180px]">{item.name}</p>
+                                        <p className="text-caption text-secondary truncate max-w-[180px]">{item.name}</p>
                                     </div>
                                     <div className="text-end">
-                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider">{t("Current")}</div>
-                                        <div dir="ltr" className="font-mono text-[var(--color-ios-fg)] font-bold">${item.price.toFixed(2)}</div>
+                                        <div className="text-micro text-secondary font-medium uppercase tracking-wider">{t("Current")}</div>
+                                        <div dir="ltr" className="text-body text-ink font-semibold tabular-nums">${item.price.toFixed(2)}</div>
                                     </div>
                                 </div>
 
                                 {/* Target + Potential */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <div className="bg-[var(--color-ios-input)] shadow-none rounded-[16px] p-3">
-                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider mb-1">{t("Avg Target")}</div>
-                                        <div className="font-bold text-[var(--color-ios-fg)]  text-sm">
+                                    <div className="bg-surface-alt border border-line/50 rounded-lg p-3">
+                                        <div className="text-micro text-secondary font-medium uppercase tracking-wider mb-1">{t("Avg Target")}</div>
+                                        <div className="text-body text-ink font-semibold tabular-nums">
                                             {item.target ? `$${item.target.toFixed(2)}` : t("No Data")}
                                         </div>
                                     </div>
-                                    <div className="bg-[var(--color-ios-input)] shadow-none rounded-[16px] p-3">
-                                        <div className="text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider mb-1">{t("Potential")}</div>
-                                        <div className={`font-bold  text-sm flex items-center gap-1 ${item.target
-                                            ? item.upside >= 0 ? 'text-[var(--color-ios-success)]' : 'text-[var(--color-ios-danger)]'
-                                            : 'text-[var(--color-ios-secondary)]'
+                                    <div className="bg-surface-alt border border-line/50 rounded-lg p-3">
+                                        <div className="text-micro text-secondary font-medium uppercase tracking-wider mb-1">{t("Potential")}</div>
+                                        <div className={`text-body font-semibold tabular-nums flex items-center gap-1 ${item.target
+                                            ? item.upside >= 0 ? 'text-positive' : 'text-negative'
+                                            : 'text-secondary'
                                             }`}>
                                             {item.target ? (
                                                 <>
@@ -462,24 +462,24 @@ export function InsightsView({ isActive = true }: { isActive?: boolean }) {
 
                                 {/* Rating Bar */}
                                 <div className="space-y-1.5">
-                                    <div className="flex justify-between text-[10px] text-[var(--color-ios-secondary)] font-bold uppercase tracking-wider">
+                                    <div className="flex justify-between text-micro text-secondary font-medium uppercase tracking-wider">
                                         <span>{t("Ratings (")}{item.totalVotes})</span>
                                     </div>
-                                    <div className="h-1.5 w-full flex rounded-full overflow-hidden bg-[var(--color-ios-input)] shadow-none">
+                                    <div className="h-1.5 w-full flex rounded-pill overflow-hidden bg-canvas">
                                         {item.buyVotes > 0 && (
                                             <div style={{ width: `${(item.buyVotes / item.totalVotes) * 100}%` }}
-                                                className="bg-emerald-500 h-full transition-all duration-500" />
+                                                className="bg-positive h-full transition-all duration-base" />
                                         )}
                                         {item.holdVotes > 0 && (
                                             <div style={{ width: `${(item.holdVotes / item.totalVotes) * 100}%` }}
-                                                className="bg-amber-500 h-full transition-all duration-500" />
+                                                className="bg-warning h-full transition-all duration-base" />
                                         )}
                                         {item.sellVotes > 0 && (
                                             <div style={{ width: `${(item.sellVotes / item.totalVotes) * 100}%` }}
-                                                className="bg-rose-500 h-full transition-all duration-500" />
+                                                className="bg-negative h-full transition-all duration-base" />
                                         )}
                                     </div>
-                                    <div className="flex justify-between text-[10px] text-[var(--color-ios-secondary)] font-bold">
+                                    <div className="flex justify-between text-micro text-secondary font-medium tabular-nums">
                                         <span>{t("Buy ")}{item.buyVotes}</span>
                                         <span>{t("Hold ")}{item.holdVotes}</span>
                                         <span>{t("Sell ")}{item.sellVotes}</span>

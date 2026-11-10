@@ -157,22 +157,22 @@ export function PortfolioChart() {
 
   if (loading || positionsLoading) {
     return (
-      <div className="relative overflow-hidden rounded-[32px] bg-[var(--color-ios-card)] shadow-[var(--shadow-ios-card)] p-8 h-[450px] flex items-center justify-center">
-        <div className="animate-clay-float rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+      <div className="portfolio-growth-chart bg-surface rounded-xl shadow-card p-card-sm md:p-card border border-line/50 h-[450px] flex items-center justify-center">
+        <div className="motion-safe:animate-spin rounded-full h-8 w-8 border-2 border-accent/30 border-t-accent"></div>
       </div>
     );
   }
 
   return (
-    <div className="relative overflow-hidden rounded-[32px] bg-[var(--color-ios-card)] shadow-[var(--shadow-ios-card)] p-8 transition-transform hover:-translate-y-1 hover:shadow-[var(--shadow-ios-card)]Hover duration-300">
+    <div className="portfolio-growth-chart relative bg-surface rounded-xl shadow-card p-card-sm md:p-card border border-line/50 transition-shadow hover:shadow-card-hover duration-base">
       <div className="relative z-10">
-        <div className="mb-8">
-          <h3 className="text-2xl font-bold  text-[var(--color-ios-fg)] mb-1">{t("Portfolio Growth")}</h3>
-          <p className="text-[13px] font-bold text-[var(--color-ios-secondary)] uppercase tracking-widest ">{t("Last 30 Days Performance")}</p>
-          <p className="price-freshness">{t("Historical value of today's holdings at the current exchange rate. Assets without history are excluded.")}</p>
+        <div className="mb-5 space-y-1">
+          <h3 className="text-subhead text-ink font-semibold mb-1">{t("Portfolio Growth")}</h3>
+          <p className="text-caption text-secondary font-medium">{t("Last 30 Days Performance")}</p>
+          <p className="text-caption text-secondary">{t("Historical value of today's holdings at the current exchange rate. Assets without history are excluded.")}</p>
         </div>
 
-        <div className="h-80">
+        <div className="growth-chart-area w-full h-[300px] md:h-[380px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={historyData}>
               <defs>
@@ -186,25 +186,25 @@ export function PortfolioChart() {
                 dataKey="date"
                 tickFormatter={value => new Date(value).toLocaleDateString(locale(), { month: "short", day: "numeric" })}
                 stroke="var(--color-ios-secondary)"
-                style={{ fontSize: '11px', fontWeight: 'bold', fontFamily: 'var(--)' }}
+                style={{ fontSize: '11px', fontWeight: 'bold', fontFamily: 'var(--app-font)' }}
                 minTickGap={30}
               />
               <YAxis
                 stroke="var(--color-ios-secondary)"
-                style={{ fontSize: '12px', fontWeight: 'bold', fontFamily: 'var(--)' }}
+                style={{ fontSize: '12px', fontWeight: 'bold', fontFamily: 'var(--app-font)' }}
                 tickFormatter={(value) => t('₪{0}K', [(value / 1000).toFixed(0)])}
                 domain={['auto', 'auto']}
               />
               <Tooltip
                 labelFormatter={value => new Date(value).toLocaleDateString(locale())}
                 contentStyle={{
-                  backgroundColor: 'var(--color-ios-card)',
-                  border: 'none',
-                  borderRadius: '20px',
-                  boxShadow: 'var(--shadow-[var(--shadow-ios-card)])',
-                  padding: '16px',
+                  backgroundColor: 'var(--app-surface)',
+                  border: '1px solid var(--app-line)',
+                  borderRadius: '10px',
+                  boxShadow: 'var(--shadow-ios-card)',
+                  padding: '12px',
                 }}
-                labelStyle={{ color: 'var(--color-ios-fg)', fontWeight: '900', fontFamily: 'var(--)' }}
+                labelStyle={{ color: 'var(--app-ink)', fontWeight: '600', fontFamily: 'var(--app-font)' }}
                 itemStyle={{ color: 'var(--app-positive)' }}
                 formatter={(value: number) => `₪${value.toLocaleString(locale(), { maximumFractionDigits: 0 })}`}
               />
@@ -222,22 +222,22 @@ export function PortfolioChart() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-6 mt-8 pt-6 border-t border-[var(--color-ios-secondary)]/20">
+        <div className="growth-metrics grid grid-cols-1 sm:grid-cols-3 gap-5 mt-5 pt-5 border-t border-line">
           <div>
-            <p className="text-[11px] font-bold text-[var(--color-ios-secondary)] mb-1 uppercase tracking-widest ">{t("30-day price change")}</p>
-            <p dir="ltr" className={`text-2xl font-bold  tracking-tight ${stats.monthlyReturn >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <p className="text-caption text-secondary font-medium mb-1">{t("30-day price change")}</p>
+            <p dir="ltr" className={`text-heading font-semibold tabular-nums tracking-tight ${stats.monthlyReturn >= 0 ? 'text-positive' : 'text-negative'}`}>
               {stats.monthlyReturn >= 0 ? '+' : ''}{stats.monthlyReturn.toFixed(2)}%
             </p>
           </div>
           <div>
-            <p className="text-[11px] font-bold text-[var(--color-ios-secondary)] mb-1 uppercase tracking-widest ">{t("Total Gain")}</p>
-            <p dir="ltr" className={`text-2xl font-bold  tracking-tight ${stats.totalGain >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <p className="text-caption text-secondary font-medium mb-1">{t("Total Gain")}</p>
+            <p dir="ltr" className={`text-heading font-semibold tabular-nums tracking-tight ${stats.totalGain >= 0 ? 'text-positive' : 'text-negative'}`}>
               {stats.totalGain >= 0 ? '+' : ''}₪{Math.abs(stats.totalGain).toLocaleString(locale(), { maximumFractionDigits: 0 })}
             </p>
           </div>
           <div>
-            <p className="text-[11px] font-bold text-[var(--color-ios-secondary)] mb-1 uppercase tracking-widest ">{t("Best Day")}</p>
-            <p dir="ltr" className="text-2xl font-bold  tracking-tight text-emerald-500">
+            <p className="text-caption text-secondary font-medium mb-1">{t("Best Day")}</p>
+            <p dir="ltr" className="text-heading font-semibold tabular-nums tracking-tight text-positive">
               +₪{stats.bestDay.toLocaleString(locale(), { maximumFractionDigits: 0 })}
             </p>
           </div>

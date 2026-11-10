@@ -200,3 +200,68 @@ main [class*="hover:-translate-y"]:hover { translate: none; transform: none; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+
+/* Design-guide migration: Insights chart surfaces and native SVG labels. */
+.insights-view [data-slot="card"] { border-radius: 12px; }
+.insights-view > :is(.insights-summary-grid, .insights-income-grid, .insights-allocation-grid),
+.insights-view .insights-analyst-grid { gap: 20px; min-width: 0; }
+.insights-view > :is(.insights-summary-grid, .insights-income-grid, .insights-allocation-grid) > * { min-width: 0; }
+@media (min-width: 768px) { .insights-view .insights-analyst-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) {
+  .insights-view > :is(.insights-summary-grid, .insights-allocation-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .insights-view > .insights-income-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) { .insights-view .insights-analyst-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.insights-view .allocation-chart .recharts-surface { overflow: visible; }
+.insights-view .allocation-chart .recharts-pie-labels text {
+  fill: var(--app-secondary); font-family: var(--app-font); font-size: 11px; font-weight: 500;
+}
+.insights-view .allocation-chart .recharts-pie-labels line { stroke: var(--app-line); }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 1) path { fill: #5d41ec; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 2) path { fill: #07ab81; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 3) path { fill: #f7931a; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 4) path { fill: #3b82f6; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 5) path { fill: #e5484d; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 6) path { fill: #8a92b2; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 7) path { fill: #5d41ec; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 8) path { fill: #07ab81; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 9) path { fill: #f7931a; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n) path { fill: #3b82f6; }
+.insights-view .analyst-consensus[data-rating="Strong Buy"],
+.insights-view .analyst-consensus[data-rating="Buy"] { background: #def8f1 !important; color: #07ab81 !important; }
+.insights-view .analyst-consensus[data-rating="Hold"] { background: #fff3e0 !important; color: #f7931a !important; }
+.insights-view .analyst-consensus[data-rating="Sell"],
+.insights-view .analyst-consensus[data-rating="Strong Sell"] { background: #ffeaeb !important; color: #e5484d !important; }
+
+/* Portfolio growth keeps its original data and formatters; only SVG paint changes. */
+.portfolio-growth-chart { border-radius: 12px; }
+.portfolio-growth-chart .recharts-cartesian-grid line { stroke: var(--app-line); stroke-dasharray: none; }
+.portfolio-growth-chart .recharts-cartesian-axis-tick text {
+  fill: var(--app-secondary); font-family: var(--app-font); font-size: 11px; font-weight: 500;
+}
+.portfolio-growth-chart .recharts-cartesian-axis-line,
+.portfolio-growth-chart .recharts-cartesian-axis-tick-line { stroke: var(--app-line); }
+.portfolio-growth-chart .recharts-line-curve { stroke-width: 2px; }
+.portfolio-growth-chart .recharts-tooltip-wrapper { font-variant-numeric: tabular-nums; }
+.portfolio-growth-chart .growth-metrics { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .portfolio-growth-chart .growth-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.benchmark-chart { border-radius: 12px; align-self: start; }
+.benchmark-chart .recharts-cartesian-grid line { stroke: var(--app-line); stroke-dasharray: none; }
+.benchmark-chart .recharts-cartesian-axis-tick text {
+  fill: var(--app-secondary); font-family: var(--app-font); font-size: 11px; font-weight: 500;
+}
+.benchmark-chart .recharts-area-curve[stroke="var(--app-positive)"] { stroke: var(--app-accent); }
+.benchmark-chart #portfolioFill stop { stop-color: var(--app-accent); }
+.benchmark-chart .recharts-tooltip-wrapper { font-variant-numeric: tabular-nums; }
+.benchmark-chart .recharts-tooltip-item:first-child { color: var(--app-accent) !important; }
+.benchmark-chart .recharts-tooltip-item:nth-child(2) { color: var(--app-secondary) !important; }
+@media (min-width: 768px) {
+  .benchmark-chart .benchmark-chart-area,
+  .portfolio-growth-chart .growth-chart-area,
+  .insights-view .allocation-chart { height: 380px; }
+}
+@media (max-width: 360px) {
+  .insights-view .allocation-chart .recharts-pie-labels text { text-anchor: middle; }
+  .insights-view .allocation-chart .recharts-pie-labels line { opacity: 0; }
+}
