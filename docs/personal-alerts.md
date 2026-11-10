@@ -47,3 +47,26 @@ horizontal overflow. Repeated manual checks did not retrigger paused price rules
 The synthetic financial digest was unchanged. The final browser console had zero
 errors and warnings. The owner-specific GOOG 286 production diagnosis remains
 open in TraderAi-4xh until the owner signs in through the dedicated browser.
+
+## Authenticated production verification (2026-11-10)
+
+After the owner signed in, the deployed dashboard and alert panel were verified
+in the dedicated browser. Automatic and manual POST checks returned HTTP 200.
+The owner's existing price rule correctly reported `not_met`, with an observed
+market price below its threshold, and remained active. No rule was created,
+edited, rearmed or deleted. Private portfolio values are omitted here.
+
+The deployed PWA has a registered service worker, but this repository implements
+no permission request, Push API subscription, service-worker push handler or
+server push sender. Consequently a notification permission prompt is not
+expected. Browser diagnostics showed no push subscription in the test profile;
+this does not measure permissions on the owner's physical iPhone.
+
+Apple's documented iPhone flow requires iOS 16.4 or later, opening a Home Screen
+web app, and requesting permission after a direct user action. Permission alone
+does not implement delivery. A future implementation must include explicit
+opt-in, subscription storage, a server sender and reliable background checking.
+Reference: https://webkit.org/blog/13878/
+
+The original rule diagnosis is complete (TraderAi-4xh); background/push delivery
+remains follow-up work (TraderAi-c3g). No application code changed in this check.
