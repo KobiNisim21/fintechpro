@@ -441,6 +441,10 @@ html .design-dialog .position-date-control > input[type="date"] { position: abso
 .sidebar-preferences > .language-switch { flex: 1; min-width: 0; }
 .mobile-header .notification-settings-button { width: 44px; height: 44px; padding: 0; }
 .pwa-notifications .pwa-push-row > div:last-child { grid-column: 2; }
+@media (max-width: 559px) {
+  .mobile-header-actions > .primary-action { width: 44px; height: 44px; min-height: 44px; padding: 0; gap: 0; }
+  .mobile-header-actions > .primary-action > svg { margin-inline: 0; flex-shrink: 0; }
+}
 @media (max-width: 359px) {
   .mobile-header-brand { gap: 6px; }
   .mobile-header h1 { font-size: 14px; }
