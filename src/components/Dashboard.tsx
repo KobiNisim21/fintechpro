@@ -47,6 +47,7 @@ export default function Dashboard() {
   return (
     <ErrorBoundary>
     <MotionConfig reducedMotion="user">
+      <PwaNotifications>
       <ConnectionStatus />
       <a className="skip-to-content" href="#main-content">{t("Skip to content")}</a>
       <div className="dashboard-shell flex h-screen w-full bg-canvas overflow-hidden font-sans text-ink relative z-0">
@@ -68,7 +69,6 @@ export default function Dashboard() {
             <div className="w-full max-w-[1400px] mx-auto space-y-6">
             {/* Hero Card */}
             <PortfolioHero />
-            <PwaNotifications />
             <PortfolioTools />
 
             {/* Portfolio Content */}
@@ -166,6 +166,7 @@ export default function Dashboard() {
       {/* Bottom Tab Bar - mobile only */}
       <BottomTabBar viewMode={viewMode} onViewChange={(mode) => startTransition(() => setViewMode(mode))} />
     </div>
+      </PwaNotifications>
     </MotionConfig>
     </ErrorBoundary>
   );

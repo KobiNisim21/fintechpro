@@ -1,10 +1,24 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Bell, Download, X } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
 import { pushAPI } from '@/api/push';
 import { applicationServerKey, getInstallPrompt, installApp, isAppleMobile, isStandalone, subscribeInstall } from '@/lib/pwa';
+import { SimpleDialog } from './SimpleDialog';
 
-export function PwaNotifications() {
+const NotificationSettingsContext = createContext<(() => void) | null>(null);
+
+export function NotificationSettingsButton() {
+    useLanguage();
+    const openSettings = useContext(NotificationSettingsContext);
+    return <button type="button" className="data-action notification-settings-button" onClick={() => openSettings?.()}
+        aria-label={t('Push notifications')} title={t('Push notifications')} aria-haspopup="dialog">
+        <Bell size={20} aria-hidden="true" />
+        <span>{t('Push notifications')}</span>
+    </button>;
+}
+
+export function PwaNotifications({ children }: { children: ReactNode }) {
+    const [open, setOpen] = useState(false);
     const language = useLanguage();
     const prompt = useSyncExternalStore(subscribeInstall, getInstallPrompt, () => null);
     const [installed, setInstalled] = useState(isStandalone);
@@ -81,7 +95,10 @@ export function PwaNotifications() {
         if (!prompt) { setInstructions(value => !value); return; }
         try { await installApp(); } catch { setInstructions(true); }
     };
-    return <section className="pwa-notifications data-panel p-4 sm:p-5 space-y-4" aria-label={t('App installation and notifications')}>
+    return <NotificationSettingsContext.Provider value={() => setOpen(true)}>
+        {children}
+        <SimpleDialog open={open} onClose={() => setOpen(false)} title="Push notifications">
+        <section className="pwa-notifications space-y-5" aria-label={t('App installation and notifications')}>
         {!installed && !dismissed && <div className="pwa-install-row">
             <Download size={20} className="text-accent shrink-0" aria-hidden="true" />
             <div className="min-w-0 space-y-1"><h2 className="font-semibold">{t('Install FinTechPro')}</h2><p className="text-sm text-slate-600">{t('Open your portfolio from your Home Screen. No app store download is needed.')}</p></div>
@@ -105,5 +122,7 @@ export function PwaNotifications() {
         {active && backgroundAvailable === false && <p className="text-sm text-amber-800" role="status">{t('Background checks are not available yet. Keep your portfolio open for now; push delivery while closed requires background checks to resume.')}</p>}
         {error && <p role="alert" className="text-sm text-red-700">{t(error)}</p>}
         {message && <p role="status" className="text-sm text-emerald-800">{t(message)}</p>}
-    </section>;
+    </section>
+        </SimpleDialog>
+    </NotificationSettingsContext.Provider>;
 }

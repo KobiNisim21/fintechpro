@@ -97,3 +97,20 @@ docs/northflank-alert-worker.md for completed cutover/coexistence checks and rol
 No paid upgrade was made. Physical Home Screen install,
 native permission and test-notification receipt remain in TraderAi-cz1. No real
 device opt-in or native notification receipt is claimed by the browser checks.
+
+## Device settings entry point (2026-11-11)
+
+Device push and installation settings now open in a SimpleDialog from the bell
+beside the language selector (mobile header and sidebar preferences). The large
+panel no longer interrupts the portfolio overview. A single mounted controller
+retains enrollment, readiness and background checks while the dialog is closed;
+existing enable, test, disable and install handlers are unchanged.
+
+Validation: production build/typecheck and 50 offline tests passed. Browser QA
+used a disposable local portfolio: Hebrew/English, 320/390px mobile and 1440px
+desktop, no horizontal overflow, 44px bell target, close button/Escape/focus return,
+and opening from the mobile More sheet. With simulated browser permission and
+PushManager plus fixture transport, enrollment returned 201, test-send 200 and
+unsubscribe 200; permission was requested once and active state survived closing
+and reopening the dialog. Installation instructions remained accessible. No native
+device push delivery or production account mutation was performed for this UI change.
