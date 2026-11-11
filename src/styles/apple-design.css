@@ -217,21 +217,21 @@ main [class*="hover:-translate-y"]:hover { translate: none; transform: none; }
   fill: var(--app-secondary); font-family: var(--app-font); font-size: 11px; font-weight: 500;
 }
 .insights-view .allocation-chart .recharts-pie-labels line { stroke: var(--app-line); }
-.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 1) path { fill: #5d41ec; }
-.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 2) path { fill: #07ab81; }
-.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 3) path { fill: #f7931a; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 1) path { fill: var(--app-accent); }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 2) path { fill: var(--app-positive); }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 3) path { fill: var(--app-warning); }
 .insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 4) path { fill: #3b82f6; }
-.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 5) path { fill: #e5484d; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 5) path { fill: var(--app-negative); }
 .insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 6) path { fill: #8a92b2; }
-.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 7) path { fill: #5d41ec; }
-.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 8) path { fill: #07ab81; }
-.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 9) path { fill: #f7931a; }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 7) path { fill: var(--app-accent); }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 8) path { fill: var(--app-positive); }
+.insights-view .allocation-chart .recharts-pie-sector:nth-child(10n + 9) path { fill: var(--app-warning); }
 .insights-view .allocation-chart .recharts-pie-sector:nth-child(10n) path { fill: #3b82f6; }
 .insights-view .analyst-consensus[data-rating="Strong Buy"],
-.insights-view .analyst-consensus[data-rating="Buy"] { background: #def8f1 !important; color: #07ab81 !important; }
-.insights-view .analyst-consensus[data-rating="Hold"] { background: #fff3e0 !important; color: #f7931a !important; }
+.insights-view .analyst-consensus[data-rating="Buy"] { background: var(--app-positive-soft) !important; color: var(--app-positive) !important; }
+.insights-view .analyst-consensus[data-rating="Hold"] { background: var(--app-warning-soft) !important; color: var(--app-warning) !important; }
 .insights-view .analyst-consensus[data-rating="Sell"],
-.insights-view .analyst-consensus[data-rating="Strong Sell"] { background: #ffeaeb !important; color: #e5484d !important; }
+.insights-view .analyst-consensus[data-rating="Strong Sell"] { background: var(--app-negative-soft) !important; color: var(--app-negative) !important; }
 
 /* Portfolio growth keeps its original data and formatters; only SVG paint changes. */
 .portfolio-growth-chart { border-radius: 12px; }
@@ -292,35 +292,35 @@ main [class*="hover:-translate-y"]:hover { translate: none; transform: none; }
 .insights-income-grid > [data-slot="card"]:has(.sector-distribution-grid) { align-self: start; height: auto; }
 .allocation-bubble-legend li + li { border-top: 1px solid rgb(232 232 237 / 55%); }
 .allocation-bubble-legend { scrollbar-width: thin; padding-inline-end: 0; }
-.allocation-bubble-legend-heading > span { color: #64748b; }
+.allocation-bubble-legend-heading > span { color: var(--app-muted); }
 .allocation-bubble-legend .text-micro,
-.allocation-all-bubbles li > span { color: #64748b; }
-.allocation-bubbles > p { color: #64748b; line-height: 1.55; }
-.allocation-all-bubbles { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 16px 8px; list-style: none; padding: 8px; margin: 0; max-height: 380px; overflow-y: auto; scrollbar-gutter: stable; border-radius: 10px; background: #fafafa; }
+.allocation-all-bubbles li > span { color: var(--app-muted); }
+.allocation-bubbles > p { color: var(--app-muted); line-height: 1.55; }
+.allocation-all-bubbles { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 16px 8px; list-style: none; padding: 8px; margin: 0; max-height: 380px; overflow-y: auto; scrollbar-gutter: stable; border-radius: 10px; background: var(--app-soft); }
 .allocation-all-bubbles li { display: flex; flex-direction: column; align-items: center; min-width: 0; gap: 4px; }
 .allocation-all-bubbles svg { width: 100%; max-width: 112px; }
 .allocation-all-bubbles bdi { max-width: 100%; overflow-wrap: anywhere; text-align: center; }
 
 /* Remaining design-guide migration: readable risk hierarchy, without hiding data. */
-html .portfolio-risk-panel { padding: 24px; border-color: #e8e8ed; border-radius: 12px; box-shadow: var(--shadow-ios-card); align-self: start; }
+html .portfolio-risk-panel { padding: 24px; border-color: var(--app-line); border-radius: 12px; box-shadow: var(--shadow-ios-card); align-self: start; }
 .risk-panel-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .risk-panel-header h3 { max-width: 100%; line-height: 1.4; }
 .risk-panel-header .data-action { font-size: 13px; padding-inline: 12px; }
-.portfolio-risk-panel .risk-score { font-size: 32px; line-height: 1.15; letter-spacing: -.035em; color: #0a101f; font-variant-numeric: tabular-nums; }
-.portfolio-risk-panel > p, .portfolio-risk-panel details { color: #64748b; font-size: 13px; line-height: 1.65; }
+.portfolio-risk-panel .risk-score { font-size: 32px; line-height: 1.15; letter-spacing: -.035em; color: var(--app-ink); font-variant-numeric: tabular-nums; }
+.portfolio-risk-panel > p, .portfolio-risk-panel details { color: var(--app-muted); font-size: 13px; line-height: 1.65; }
 .portfolio-risk-panel .risk-coverage { gap: 10px; }
-.risk-coverage > div { min-width: 0; padding: 12px; background: #fafafa; border: 1px solid #f0f0f5; border-radius: 10px; }
-.risk-coverage dt { font-size: 12px; color: #64748b; line-height: 1.5; }
-.risk-coverage dd { margin-top: 4px; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; color: #0a101f; }
-.portfolio-risk-panel .risk-funds { border-radius: 10px; background: #f5f3fc; border-color: #e7e2f8; color: #4b4766; font-size: 13px; line-height: 1.65; }
-.risk-funds h4, .risk-observations h4 { color: #0a101f; font-size: 14px; font-weight: 600; }
-.risk-observations { border-color: #e8e8ed; font-size: 13px; line-height: 1.7; color: #475569; }
-.risk-observations .text-xs { font-size: 12px; color: #64748b; }
-.portfolio-risk-panel summary { min-height: 44px; padding-block: 12px; color: #475569; font-weight: 500; }
+.risk-coverage > div { min-width: 0; padding: 12px; background: var(--app-soft); border: 1px solid var(--app-line); border-radius: 10px; }
+.risk-coverage dt { font-size: 12px; color: var(--app-muted); line-height: 1.5; }
+.risk-coverage dd { margin-top: 4px; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--app-ink); }
+.portfolio-risk-panel .risk-funds { border-radius: 10px; background: var(--app-tint); border-color: var(--app-tint-line); color: var(--app-body); font-size: 13px; line-height: 1.65; }
+.risk-funds h4, .risk-observations h4 { color: var(--app-ink); font-size: 14px; font-weight: 600; }
+.risk-observations { border-color: var(--app-line); font-size: 13px; line-height: 1.7; color: var(--app-body); }
+.risk-observations .text-xs { font-size: 12px; color: var(--app-muted); }
+.portfolio-risk-panel summary { min-height: 44px; padding-block: 12px; color: var(--app-body); font-weight: 500; }
 .portfolio-risk-panel summary::marker { color: #8a92b2; }
-.risk-breakdowns { border-top: 1px solid #e8e8ed; padding-top: 8px; }
-.risk-breakdowns details + details { border-top: 1px solid #f0f0f5; }
-.risk-breakdowns details > div { font-variant-numeric: tabular-nums; color: #475569; }
+.risk-breakdowns { border-top: 1px solid var(--app-line); padding-top: 8px; }
+.risk-breakdowns details + details { border-top: 1px solid var(--app-line); }
+.risk-breakdowns details > div { font-variant-numeric: tabular-nums; color: var(--app-body); }
 @media (min-width: 1024px) {
   .insights-view > .insights-summary-grid { grid-template-columns: minmax(0, 1fr); }
   .insights-summary-grid > .benchmark-chart { grid-column: auto; }
@@ -328,44 +328,44 @@ html .portfolio-risk-panel { padding: 24px; border-color: #e8e8ed; border-radius
 @media (min-width: 1280px) { .insights-view > .insights-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 767px) { html .portfolio-risk-panel { padding: 16px; } }
 
-.stock-card { border-radius: 12px; background: #fff; }
+.stock-card { border-radius: 12px; background: var(--app-surface); }
 .stock-card-inner { padding: 24px; }
 .stock-card-header { margin-bottom: 16px; }
-.stock-card-name { font-size: 13px; font-weight: 400; color: #64748b; }
+.stock-card-name { font-size: 13px; font-weight: 400; color: var(--app-muted); }
 .stock-card-actions { gap: 2px; }
-.stock-card-actions button { border-radius: 10px; color: #64748b; }
-.stock-card-actions button:hover { background: #fafafa; color: #0a101f; }
-.holding-change-badge.text-positive { background: #def8f1; color: #08775b; }
-.holding-change-badge.text-negative { background: #ffeaeb; color: #ba3037; }
+.stock-card-actions button { border-radius: 10px; color: var(--app-muted); }
+.stock-card-actions button:hover { background: var(--app-soft); color: var(--app-ink); }
+.holding-change-badge.text-positive { background: var(--app-positive-soft); color: var(--app-positive-text); }
+.holding-change-badge.text-negative { background: var(--app-negative-soft); color: var(--app-negative-text); }
 .stock-card-price { font-size: 24px; line-height: 1.25; letter-spacing: -.02em; }
 .stock-card-price > span:first-child { font-variant-numeric: tabular-nums; }
-.stock-card .price-freshness { font-size: 12px; color: #64748b; line-height: 1.5; }
+.stock-card .price-freshness { font-size: 12px; color: var(--app-muted); line-height: 1.5; }
 .holding-sparkline { height: 64px; margin-block: 16px; }
-.holding-values { padding-top: 12px; border-top: 1px solid #f0f0f5; }
-.holding-values > div { font-size: 13px; line-height: 1.6; color: #64748b; }
-.holding-values > div > span:last-child { color: #0a101f; font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.holding-values { padding-top: 12px; border-top: 1px solid var(--app-line); }
+.holding-values > div { font-size: 13px; line-height: 1.6; color: var(--app-muted); }
+.holding-values > div > span:last-child { color: var(--app-ink); font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .desktop-stock-grid { gap: 20px; }
 @media (min-width: 768px) { .desktop-stock-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); } }
 @media (max-width: 767px) { .stock-card-inner { padding: 16px; } }
 
 /* Shared controls keep their existing handlers and disabled behavior. */
-.data-action, .language-switch { min-height: 44px; padding: 10px 14px; border-color: #e8e8ed; border-radius: 10px; color: #475569; font-size: 13px; font-weight: 500; background: #fff; box-shadow: 0 1px 3px rgb(16 16 40 / 3%); }
-.data-action:hover:not(:disabled) { border-color: #d1d1d9; background: #fafafa; }
-.language-switch { color: #5d41ec; border-color: #ddd6f7; font-weight: 600; }
-.language-switch:hover { background: #f5f3fc; border-color: #c7bcef; }
-.primary-action, .holding-dialog form button[type="submit"] { background: #5d41ec !important; color: #fff !important; border-radius: 12px; font-size: 15px; font-weight: 600; box-shadow: 0 1px 2px rgb(16 16 40 / 6%), 0 2px 6px rgb(16 16 40 / 4%) !important; }
-.primary-action:hover:not(:disabled), .holding-dialog form button[type="submit"]:hover:not(:disabled) { background: #4c33d4 !important; filter: none; }
+.data-action, .language-switch { min-height: 44px; padding: 10px 14px; border-color: var(--app-line); border-radius: 10px; color: var(--app-body); font-size: 13px; font-weight: 500; background: var(--app-surface); box-shadow: 0 1px 3px rgb(16 16 40 / 3%); }
+.data-action:hover:not(:disabled) { border-color: var(--app-control-line); background: var(--app-soft); }
+.language-switch { color: var(--app-accent); border-color: var(--app-tint-line); font-weight: 600; }
+.language-switch:hover { background: var(--app-tint); border-color: var(--app-accent); }
+.primary-action, .holding-dialog form button[type="submit"] { background: var(--app-button) !important; color: #fff !important; border-radius: 12px; font-size: 15px; font-weight: 600; box-shadow: 0 1px 2px rgb(16 16 40 / 6%), 0 2px 6px rgb(16 16 40 / 4%) !important; }
+.primary-action:hover:not(:disabled), .holding-dialog form button[type="submit"]:hover:not(:disabled) { background: var(--app-button-hover) !important; filter: none; }
 .primary-action:disabled { opacity: .5; }
-html .data-panel.holding-dialog { border-radius: 16px; border-color: #e8e8ed; box-shadow: 0 4px 12px rgb(16 16 40 / 6%), 0 16px 48px rgb(16 16 40 / 12%); }
-.design-dialog .holding-dialog-header { padding: 16px 24px; border-color: #e8e8ed; }
-.design-dialog .holding-dialog-title { color: #0a101f; font-weight: 600; font-size: 18px; line-height: 1.4; }
+html .data-panel.holding-dialog { border-radius: 16px; border-color: var(--app-line); box-shadow: 0 4px 12px rgb(16 16 40 / 6%), 0 16px 48px rgb(16 16 40 / 12%); }
+.design-dialog .holding-dialog-header { padding: 16px 24px; border-color: var(--app-line); }
+.design-dialog .holding-dialog-title { color: var(--app-ink); font-weight: 600; font-size: 18px; line-height: 1.4; }
 .design-dialog .holding-dialog-body { padding: 24px; }
 .design-dialog .holding-dialog-close { padding: 0; width: 44px; min-width: 44px; height: 44px; border-color: transparent; box-shadow: none; }
-.design-dialog :is(input, select, textarea, button[role="combobox"]) { min-height: 44px; min-width: 0; max-width: 100%; padding: 10px 12px; background: #f5f5f7; border: 1px solid #e8e8ed; border-radius: 10px; color: #0a101f; font-weight: 400; font-size: 16px; box-shadow: inset 0 1px 3px rgb(16 16 40 / 4%); }
-.design-dialog :is(input, select, textarea):focus { border-color: #5d41ec; }
-.design-dialog label { color: #64748b; font-size: 13px; font-weight: 500; line-height: 1.5; letter-spacing: normal; text-transform: none; }
+.design-dialog :is(input, select, textarea, button[role="combobox"]) { min-height: 44px; min-width: 0; max-width: 100%; padding: 10px 12px; background: var(--app-canvas); border: 1px solid var(--app-line); border-radius: 10px; color: var(--app-ink); font-weight: 400; font-size: 16px; box-shadow: inset 0 1px 3px rgb(16 16 40 / 4%); }
+.design-dialog :is(input, select, textarea):focus { border-color: var(--app-accent); }
+.design-dialog label { color: var(--app-muted); font-size: 13px; font-weight: 500; line-height: 1.5; letter-spacing: normal; text-transform: none; }
 .design-dialog button { min-height: 44px; }
-.design-dialog .position-form-content > p { color: #64748b; font-weight: 400; line-height: 1.6; }
+.design-dialog .position-form-content > p { color: var(--app-muted); font-weight: 400; line-height: 1.6; }
 .position-search-popover { max-width: calc(100vw - 32px); border-radius: 12px; }
 .lot-editor-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .lot-editor-row > label:first-of-type, .lot-editor-row > button { grid-column: span 2; }
@@ -377,24 +377,24 @@ html .data-panel.holding-dialog { border-radius: 16px; border-color: #e8e8ed; bo
   .design-dialog .holding-dialog-header, .design-dialog .holding-dialog-body { padding: 16px; }
 }
 
-.design-sidebar { width: 280px; min-width: 280px; max-width: 280px; background: #fff; border-inline-end: 1px solid #e8e8ed; box-shadow: 4px 0 16px rgb(16 16 40 / 4%), 1px 0 4px rgb(16 16 40 / 2%); }
+.design-sidebar { width: 280px; min-width: 280px; max-width: 280px; background: var(--app-surface); border-inline-end: 1px solid var(--app-line); box-shadow: 4px 0 16px rgb(16 16 40 / 4%), 1px 0 4px rgb(16 16 40 / 2%); }
 [dir="rtl"] .design-sidebar { box-shadow: -4px 0 16px rgb(16 16 40 / 4%), -1px 0 4px rgb(16 16 40 / 2%); }
-.sidebar-content, .design-menu-sheet { background: #fff; }
+.sidebar-content, .design-menu-sheet { background: var(--app-surface); }
 .sidebar-scroll { padding: 24px; }
 .sidebar-brand { margin-block: 0 28px; gap: 12px; }
 .sidebar-brand img { width: 44px; height: 44px; border-radius: 12px; box-shadow: none; }
 .sidebar-brand strong { font-size: 18px; font-weight: 600; }
-.sidebar-brand p { color: #64748b; font-size: 13px; }
-.sidebar-content h2 { font-size: 12px; font-weight: 600; letter-spacing: .045em; color: #64748b; }
-.sidebar-content .sidebar-footer { padding: 16px 24px; border-color: #e8e8ed; }
-.sidebar-footer .sidebar-logout { border-radius: 12px; font-size: 13px; min-height: 44px; color: #475569; }
-.sidebar-footer .mcp-connect-button { background: #f5f3fc; border-color: #e7e2f8; border-radius: 12px; box-shadow: none; }
-.sidebar-content :is(.live-alerts, .live-market-news) { color: #475569; }
+.sidebar-brand p { color: var(--app-muted); font-size: 13px; }
+.sidebar-content h2 { font-size: 12px; font-weight: 600; letter-spacing: .045em; color: var(--app-muted); }
+.sidebar-content .sidebar-footer { padding: 16px 24px; border-color: var(--app-line); }
+.sidebar-footer .sidebar-logout { border-radius: 12px; font-size: 13px; min-height: 44px; color: var(--app-body); }
+.sidebar-footer .mcp-connect-button { background: var(--app-tint); border-color: var(--app-tint-line); border-radius: 12px; box-shadow: none; }
+.sidebar-content :is(.live-alerts, .live-market-news) { color: var(--app-body); }
 .live-alerts p { font-weight: 500; line-height: 1.55; }
-.live-alerts .bg-accent-soft { background: #ede9fc; color: #5d41ec; }
-.live-market-news :is([class*="rounded-\[24px\]"], [class*="rounded-\[20px\]"]) { background: #fafafa; border: 1px solid #e8e8ed; border-radius: 10px; box-shadow: none; backdrop-filter: none; }
-.mobile-header { background: rgb(255 255 255 / 96%); border-radius: 0; }
-.portfolio-tab-bar button[aria-current="page"] > div { background: #ede9fc; border-radius: 10px; box-shadow: none; }
+.live-alerts .bg-accent-soft { background: var(--app-tint); color: var(--app-accent); }
+.live-market-news :is([class*="rounded-\[24px\]"], [class*="rounded-\[20px\]"]) { background: var(--app-soft); border: 1px solid var(--app-line); border-radius: 10px; box-shadow: none; backdrop-filter: none; }
+.mobile-header { background: var(--app-bar); border-radius: 0; }
+.portfolio-tab-bar button[aria-current="page"] > div { background: var(--app-tint); border-radius: 10px; box-shadow: none; }
 .portfolio-tab-bar button > span { font-size: 12px; font-weight: 500; }
 .portfolio-tab-bar button[aria-current="page"] > span { font-weight: 600; }
 
@@ -403,11 +403,11 @@ html .data-panel.holding-dialog { border-radius: 16px; border-color: #e8e8ed; bo
 .news-pagination-controls { display: flex; flex-wrap: wrap; justify-content: center; width: 100%; gap: 0; }
 .news-pagination-controls .news-page-button { display: grid; place-items: center; flex: 0 0 44px; width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; box-shadow: none; }
 .news-page-button > span { display: block; min-width: 0; min-height: 0; max-width: 28px; box-shadow: none !important; pointer-events: none; }
-@media (hover: hover) { .news-page-button:hover { background: #f5f3fc; } }
-.news-page-count { color: #64748b; font-size: 12px; line-height: 1.5; white-space: nowrap; }
+@media (hover: hover) { .news-page-button:hover { background: var(--app-tint); } }
+.news-page-count { color: var(--app-muted); font-size: 12px; line-height: 1.5; white-space: nowrap; }
 
 /* Dialog button wrapping must not squeeze five navigation labels into columns. */
-html .holding-dialog-body .mcp-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 6px; padding: 6px; margin-bottom: 20px; width: 100%; min-width: 0; border: 1px solid #e8e8ed; border-radius: 12px; background: #fafafa; overflow: visible; }
+html .holding-dialog-body .mcp-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 6px; padding: 6px; margin-bottom: 20px; width: 100%; min-width: 0; border: 1px solid var(--app-line); border-radius: 12px; background: var(--app-soft); overflow: visible; }
 html .holding-dialog-body .mcp-tabs > button { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px; width: 100%; min-width: 0; min-height: 44px; height: auto; padding: 8px; flex: none; border-radius: 8px; font-size: 13px; line-height: 1.4; white-space: normal; overflow-wrap: normal; word-break: normal; text-align: center; }
 html .holding-dialog-body .mcp-tabs > button > span { min-width: 0; white-space: normal; overflow-wrap: normal; word-break: normal; }
 html .holding-dialog-body .mcp-tabs > button:last-child:nth-child(odd) { grid-column: 1 / -1; }
@@ -422,7 +422,7 @@ html .holding-dialog-body .mcp-tabs > button:last-child:nth-child(odd) { grid-co
 /* Contain iOS's native date sizing inside the same 48px form control box. */
 .position-entry-form .position-form-row { min-width: 0; }
 .position-date-control { position: relative; display: block; width: 100%; min-width: 0; max-width: 100%; inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; height: 48px; block-size: 48px; box-sizing: border-box; border-radius: 10px; overflow: hidden; direction: ltr; }
-.position-date-control:focus-within { outline: 3px solid #5d41ec; outline-offset: 3px; }
+.position-date-control:focus-within { outline: 3px solid var(--app-accent); outline-offset: 3px; }
 html .design-dialog .position-date-control > input[type="date"] { position: absolute; inset: 0; display: block; width: 100%; min-width: 0; max-width: 100%; inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; height: 48px; min-height: 48px; max-height: 48px; block-size: 48px; min-block-size: 48px; max-block-size: 48px; box-sizing: border-box; padding: 0 12px; margin: 0; line-height: normal; direction: ltr; text-align: start; -webkit-appearance: none; appearance: none; }
 .position-date-input::-webkit-date-and-time-value { display: block; min-width: 0; min-inline-size: 0; margin: 0; padding: 0; line-height: 46px; text-align: start; }
 .position-date-input::-webkit-datetime-edit { min-width: 0; padding: 0; line-height: normal; }
@@ -433,7 +433,7 @@ html .design-dialog .position-date-control > input[type="date"] { position: abso
 .pwa-install-row { position: relative; padding-inline-end: 40px; }
 .pwa-install-row > .pwa-dismiss { position: absolute; inset-inline-end: 0; top: -6px; width: 44px; height: 44px; padding: 0; justify-content: center; border: 0; box-shadow: none; }
 .pwa-notifications .data-action { white-space: normal; overflow-wrap: normal; }
-.pwa-push-row { border-top: 1px solid #e8e8ed; padding-top: 16px; }
+.pwa-push-row { border-top: 1px solid var(--app-line); padding-top: 16px; }
 .pwa-push-row:first-child { border-top: 0; padding-top: 0; }
 .notification-settings-button { flex-shrink: 0; min-width: 44px; min-height: 44px; justify-content: center; color: var(--app-accent); }
 .notification-settings-button > span { display: none; }

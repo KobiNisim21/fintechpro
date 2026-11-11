@@ -2821,6 +2821,8 @@
   "Test notification sent. Check your device.": { "en": "Test notification sent. Check your device.", "he": "התראת הבדיקה נשלחה. בדקו את המכשיר שלכם." },
   "Could not send the test notification. Wait 30 seconds or enable push again.": { "en": "Could not send the test notification. Wait 30 seconds or enable push again.", "he": "לא ניתן היה לשלוח את התראת הבדיקה. המתינו 30 שניות או הפעילו פוש מחדש." },
   "Alerts are checked when created, about once a minute while your portfolio is open, and with Check now. Enable push on each device to receive notifications outside the app. Background checks require a continuously running backend. Quotes may be delayed. Price alerts pause after triggering; percentage rules repeat at most once per 24 hours.": { "en": "Alerts are checked when created, about once a minute while your portfolio is open, and with Check now. Enable push on each device to receive notifications outside the app. Background checks require a continuously running backend. Quotes may be delayed. Price alerts pause after triggering; percentage rules repeat at most once per 24 hours.", "he": "ההתראות נבדקות בעת יצירתן, בערך פעם בדקה כשהתיק פתוח, ובלחיצה על בדיקה כעת. הפעילו פוש בכל מכשיר כדי לקבל התראות מחוץ לאפליקציה. בדיקות ברקע דורשות שרת שפועל ברציפות. המחירים עשויים להיות מושהים. התראות מחיר מושהות לאחר ההפעלה; כללי אחוזים מופעלים לכל היותר פעם ב־24 שעות." },
+  "Switch to dark mode": { "en": "Switch to dark mode", "he": "מעבר למצב כהה" },
+  "Switch to light mode": { "en": "Switch to light mode", "he": "מעבר למצב בהיר" },
   "All holding bubbles ({0})": {
     "en": "All holding bubbles ({0})",
     "he": "בועות לכל ההחזקות ({0})"

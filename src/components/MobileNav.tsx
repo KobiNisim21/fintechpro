@@ -2,6 +2,7 @@ import { LanguageSwitch } from './LanguageSwitch';
 import { t, useLanguage } from '@/i18n';
 import { AddPositionDialog } from './AddPositionDialog';
 import { NotificationSettingsButton } from './PwaNotifications';
+import { AppearanceSwitch } from './Appearance';
 
 export function MobileNav() {
     useLanguage();
@@ -14,6 +15,7 @@ export function MobileNav() {
       <div className="mobile-header-actions flex items-center gap-2">
         <LanguageSwitch />
         <NotificationSettingsButton />
+        <AppearanceSwitch />
         <AddPositionDialog compact />
       </div>
     </div>

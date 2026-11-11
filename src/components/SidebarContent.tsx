@@ -1,5 +1,6 @@
 import { LanguageSwitch } from './LanguageSwitch';
 import { NotificationSettingsButton } from './PwaNotifications';
+import { AppearanceSwitch } from './Appearance';
 import { t, useLanguage } from '@/i18n';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -28,7 +29,7 @@ export function SidebarContent() {
                 <LiveMarketNews />
             </div>
             <div className="sidebar-footer mt-auto px-6 py-5 border-t border-line bg-surface shrink-0 space-y-3">
-                <div className="sidebar-preferences"><LanguageSwitch /><NotificationSettingsButton /></div>
+                <div className="sidebar-preferences"><LanguageSwitch /><NotificationSettingsButton /><AppearanceSwitch /></div>
                 <McpModal />
                 <button
                     onClick={logout}

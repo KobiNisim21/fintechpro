@@ -4,7 +4,7 @@ import AllocationBubbles from './AllocationBubbles';
 import { sectorColors } from '@/lib/chartPalette';
 import DividendCalendar from './DividendCalendar';
 import { usePortfolio } from '@/context/PortfolioContext';
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, type CSSProperties } from 'react';
 import { useIsMobile } from '@/components/ui/use-mobile';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip,
@@ -83,7 +83,8 @@ const SectorGrid = ({ data }: { data: { name: string; value: number }[] }) => {
                         }`}
                         style={{
                             backgroundColor: item.colors[0],
-                        }}
+                            '--sector-tint': item.colors[0],
+                        } as CSSProperties}
                     >
                         <span className="text-caption font-medium leading-tight break-words" style={{ color: textColor }}>
                             {t(item.name)}

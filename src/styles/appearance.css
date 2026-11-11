@@ -1,0 +1,74 @@
+/* Appearance tokens: shared by cards, native inputs, SVG charts and portals. */
+:root {
+  --app-muted: #64748b;
+  --app-body: #475569;
+  --app-tint-line: #e7e2f8;
+  --app-button: #5d41ec;
+  --app-button-hover: #4c33d4;
+  --app-positive-soft: #def8f1;
+  --app-negative-soft: #ffeaeb;
+  --app-warning-soft: #fff3e0;
+  --app-positive-text: #08775b;
+  --app-negative-text: #ba3037;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --app-canvas: #11131b;
+  --app-surface: #1c1f2b;
+  --app-soft: #252938;
+  --app-ink: #f1f3fa;
+  --app-secondary: #acb4cc;
+  --app-muted: #acb4cc;
+  --app-body: #c7cde0;
+  --app-accent: #b2a3ff;
+  --app-tint: #302a48;
+  --app-tint-line: #51466c;
+  --app-button: #6e4ce0;
+  --app-button-hover: #6040cf;
+  --app-positive: #52d6b0;
+  --app-negative: #ff8790;
+  --app-warning: #f7be72;
+  --app-positive-soft: #1c3b35;
+  --app-negative-soft: #442830;
+  --app-warning-soft: #423523;
+  --app-positive-text: #7ce3c2;
+  --app-negative-text: #ffa4aa;
+  --app-line: #34394b;
+  --app-control-line: #596179;
+  --shadow-ios-card: 0 2px 8px rgb(0 0 0 / 18%);
+  --shadow-ios-card-hover: 0 6px 20px rgb(0 0 0 / 26%);
+}
+.appearance-switch { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-width: 44px; padding: 0; flex-shrink: 0; color: var(--app-accent); }
+.mobile-header-actions > .appearance-switch { padding: 0; }
+/* Keep all four touch targets accessible on the narrowest phones. */
+@media (max-width: 379px) { .mobile-header-brand h1 { display: none; } }
+
+/* Legacy Tailwind utilities contain literal light colors. Keep their semantic
+   roles adaptive without changing handlers or any financial color encodings. */
+:root[data-theme="dark"] :is(.bg-canvas, .bg-slate-900) { background-color: var(--app-canvas); }
+:root[data-theme="dark"] :is(.bg-surface, [class~="bg-surface/95"], .bg-surface-alt, .bg-popover) { background-color: var(--app-surface); }
+:root[data-theme="dark"] :is(.text-ink, .text-ink-soft, .text-slate-300, .text-popover-foreground) { color: var(--app-ink); }
+:root[data-theme="dark"] :is(.text-secondary, .text-tertiary, .text-gray-500) { color: var(--app-secondary); }
+:root[data-theme="dark"] .text-accent { color: var(--app-accent); }
+:root[data-theme="dark"] .text-positive { color: var(--app-positive); }
+:root[data-theme="dark"] .text-negative { color: var(--app-negative); }
+:root[data-theme="dark"] .text-warning { color: var(--app-warning); }
+:root[data-theme="dark"] .bg-accent { background-color: var(--app-button); }
+:root[data-theme="dark"] .bg-accent-soft { background-color: var(--app-tint); }
+:root[data-theme="dark"] .bg-positive-soft { background-color: var(--app-positive-soft); }
+:root[data-theme="dark"] .bg-negative-soft { background-color: var(--app-negative-soft); }
+:root[data-theme="dark"] :is(.border-line, [class~="border-line/50"]) { border-color: var(--app-line); }
+:root[data-theme="dark"] :is(.recharts-default-tooltip, [data-slot="popover-content"], [data-slot="command"]) { background: var(--app-surface); color: var(--app-ink); border-color: var(--app-control-line); }
+:root[data-theme="dark"] .recharts-tooltip-label { color: var(--app-ink); }
+:root[data-theme="dark"] .sector-tile { background-color: color-mix(in srgb, var(--sector-tint) 14%, var(--app-surface)) !important; border-color: var(--app-line); }
+:root[data-theme="dark"] .sector-tile > span { color: var(--app-ink) !important; }
+:root[data-theme="dark"] .sector-share-track { background: var(--app-line); }
+:root[data-theme="dark"] .sector-share-track > span { background: var(--app-accent) !important; opacity: 1; }
+:root[data-theme="dark"] .allocation-bubble-legend li + li { border-color: var(--app-line); }
+:root[data-theme="dark"] .allocation-bubble-graphic circle[stroke="white"] { stroke: var(--app-surface); }
+:root[data-theme="dark"] .recharts-cartesian-grid line { stroke: var(--app-line); }
+:root[data-theme="dark"] .recharts-cartesian-axis-tick text { fill: var(--app-secondary); }
+:root[data-theme="dark"] input::placeholder { color: var(--app-secondary); opacity: 1; }
+:root[data-theme="dark"] :is(input, select, textarea) { color-scheme: dark; }
+:root[data-theme="dark"] .scheme-light { color-scheme: dark; }
+@media (prefers-contrast: more) { :root[data-theme="dark"] { --app-line: #8992ab; --app-control-line: #a4adc6; --app-secondary: #d2d8e8; } }
