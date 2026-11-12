@@ -152,12 +152,12 @@ export default function Dashboard() {
         </section>
 
         {/* Statistics & Analytics */}
-        <section>
+        {viewMode === 'holdings' && <section>
             <h2 className="text-heading text-ink font-semibold mb-4">{t("Performance History")}</h2>
             <Suspense fallback={<ViewSkeleton />}>
               <PortfolioChart />
             </Suspense>
-          </section>
+          </section>}
             </div>
           </PullToRefresh>
         </main>

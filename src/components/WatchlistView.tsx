@@ -5,12 +5,14 @@ import {
     LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
 import { watchlistAPI, WatchlistItem } from '@/api/watchlist';
-import { stocksAPI } from '@/api/stocks';
+import { stocksAPI, type ExtendedQuote } from '@/api/stocks';
+import { ExtendedHoursQuotes } from './ExtendedHoursQuotes';
 import { SimpleDialog } from './SimpleDialog';
 import { Button } from '@/components/ui/button';
 
 // ─── Types ──────────────────────────────────────────────────────
 interface WatchlistStock extends WatchlistItem {
+    quote?: ExtendedQuote;
     price: number;
     dailyChange: number;
     weeklyChange: number;
@@ -120,7 +122,7 @@ export function WatchlistView() {
             const symbols = stocks.map(s => s.symbol);
 
             // 1. Batch quotes for current prices
-            let batchQuotes: Record<string, any> = {};
+            let batchQuotes: Record<string, ExtendedQuote> = {};
             try {
                 batchQuotes = await stocksAPI.getBatchExtendedQuotes(symbols);
             } catch { /* fallback below */ }
@@ -187,6 +189,7 @@ export function WatchlistView() {
                 return {
                     ...stock,
                     price: currentPrice,
+                    quote,
                     dailyChange: dailyChange ?? 0,
                     weeklyChange: weeklyChange ?? 0,
                     monthlyChange: monthlyChange ?? 0,
@@ -376,13 +379,13 @@ export function WatchlistView() {
                             </button>
 
                             {/* Header: Symbol + Price */}
-                            <div className="flex items-start justify-between mb-4 pe-8">
-                                <div>
-                                    <div className="flex items-center gap-2">
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 mb-4 pe-8">
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2 min-w-0">
                                         <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
                                             <span className="text-cyan-400 text-xs font-bold">{stock.symbol.slice(0, 2)}</span>
                                         </div>
-                                        <div>
+                                        <div className="min-w-0">
                                             <h3 className="text-[var(--color-ios-fg)] font-bold text-lg  tracking-tight leading-none"><bdi dir="ltr">{stock.symbol}</bdi></h3>
                                             <p className="text-[13px] font-bold text-[var(--color-ios-secondary)] truncate max-w-[150px]  mt-0.5"><bdi>{stock.name}</bdi></p>
                                         </div>
@@ -394,6 +397,8 @@ export function WatchlistView() {
                                     </p>
                                 </div>
                             </div>
+
+                            <div className="mb-4"><ExtendedHoursQuotes quote={stock.quote} loaded={stock.loaded} /></div>
 
                             {/* Performance Badges */}
                             <div className="grid grid-cols-4 gap-2 mb-4">
