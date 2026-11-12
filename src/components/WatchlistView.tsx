@@ -426,18 +426,9 @@ export const WatchlistView = forwardRef<WatchlistHandle>(function WatchlistView(
                             key={stock._id}
                             className="relative overflow-hidden rounded-[32px] bg-[var(--color-ios-card)] border border-white/60 backdrop-blur-xl shadow-[var(--shadow-ios-card)] p-5 pb-6 hover:-translate-y-2 hover:shadow-[var(--shadow-ios-card)]Hover transition-all duration-500 group"
                         >
-                            {/* Remove Button */}
-                            <button
-                                onClick={() => handleRemove(stock._id)}
-                                className="absolute top-3 end-3 p-2 rounded-[16px] bg-white/60 shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] hover:-translate-y-1 active:scale-[0.92] text-rose-400 hover:text-rose-600 transition-all opacity-100 z-20"
-                                title={t("Remove from watchlist")}
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-
                             {/* Header: Symbol + Price */}
-                            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 mb-4 pe-8">
-                                <div className="min-w-0">
+                            <div className="watchlist-card-header">
+                                <div className="watchlist-card-identity min-w-0">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
                                             <span className="text-cyan-400 text-xs font-bold">{stock.symbol.slice(0, 2)}</span>
@@ -448,11 +439,20 @@ export const WatchlistView = forwardRef<WatchlistHandle>(function WatchlistView(
                                         </div>
                                     </div>
                                 </div>
-                                <div className="text-end mt-1">
+                                <div className="watchlist-card-price text-end min-w-0">
                                     <p dir="ltr" className="text-xl font-bold text-[var(--color-ios-fg)]  tracking-tight">
                                         {stock.loaded ? stock.price > 0 ? `$${stock.price.toFixed(2)}` : t('Price unavailable') : '...'}
                                     </p>
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemove(stock._id)}
+                                    className="data-action watchlist-remove"
+                                    aria-label={t("Remove from watchlist")}
+                                    title={t("Remove from watchlist")}
+                                >
+                                    <Trash2 size={18} aria-hidden="true" />
+                                </button>
                             </div>
 
                             {stock.price > 0 && <PriceFreshness source={stock.priceSource} updatedAt={stock.priceUpdatedAt} status={stock.priceStatus} />}

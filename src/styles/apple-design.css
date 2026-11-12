@@ -441,6 +441,14 @@ html .design-dialog .position-date-control > input[type="date"] { position: abso
 .sidebar-preferences > .language-switch { flex: 1; min-width: 0; }
 .mobile-header .notification-settings-button { width: 44px; height: 44px; padding: 0; }
 .pwa-notifications .pwa-push-row > div:last-child { grid-column: 2; }
+.watchlist-card-header { display: grid; grid-template-columns: minmax(0, 1fr) auto 44px; align-items: center; gap: 12px; margin-bottom: 16px; }
+.watchlist-remove.data-action { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-height: 44px; padding: 0; color: var(--app-negative); }
+.watchlist-remove > svg { display: block; flex-shrink: 0; margin: 0; }
+@media (max-width: 359px) {
+  .watchlist-card-header { grid-template-columns: minmax(0, 1fr) 44px; }
+  .watchlist-card-identity { grid-column: 1 / -1; }
+  .watchlist-card-price { text-align: start; }
+}
 @media (max-width: 559px) {
   .mobile-header-actions > .primary-action { width: 44px; height: 44px; min-height: 44px; padding: 0; gap: 0; }
   .mobile-header-actions > .primary-action > svg { margin-inline: 0; flex-shrink: 0; }
