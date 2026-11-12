@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { PriceFreshness } from './PriceFreshness';
+import { holdingReturn } from '@/lib/holdingReturn';
 
 interface StockCardProps {
   stock: Position;
@@ -52,6 +53,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
 
   const quantity = stock.quantity || 0;
   const totalValue = quantity * stock.price;
+  const unrealized = holdingReturn(stock);
 
   // Visual Alert Logic
   const isNear52wLow = stock.fiftyTwoWeekLow && (stock.price <= stock.fiftyTwoWeekLow * 1.05);
@@ -194,7 +196,7 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
             </div>
 
             <div className="stock-card-actions flex items-center gap-1 shrink-0">
-              <span dir="ltr" className={`holding-change-badge text-micro font-semibold rounded-pill px-2 py-1 ${isPositive ? 'text-positive' : 'text-negative'}`}>
+              <span dir="ltr" title={t('Daily price change')} className={`holding-change-badge text-micro font-semibold rounded-pill px-2 py-1 ${isPositive ? 'text-positive' : 'text-negative'}`}>
                 {isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%
               </span>
               {stock._id && (
@@ -244,7 +246,8 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
             </div>
 
             <div className={`text-[10px] font-semibold ${isPositive ? 'text-positive' : 'text-negative'}`}>
-              {isPositive ? '+' : ''}${stock.change.toFixed(2)} ({isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%)
+              <span className="text-secondary font-medium">{t('Daily price change')}: </span>
+              <bdi dir="ltr">{isPositive ? '+' : ''}${stock.change.toFixed(2)} ({isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%)</bdi>
               {stock.marketStatus && stock.marketStatus !== 'regular' && !stock.extendedPrice && (
                 <span className="text-slate-400 font-medium ms-1 uppercase text-[9px]">{t("at close")}</span>
               )}
@@ -266,6 +269,16 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
           </div>
 
           <PriceFreshness source={stock.priceSource} updatedAt={stock.priceUpdatedAt} status={stock.priceStatus} />
+
+          {quantity > 0 && <section className="holding-unrealized rounded-lg bg-canvas p-3 mt-3" aria-label={t('Unrealized gain / loss')}>
+            <h4 className="text-caption text-secondary font-medium">{t('Unrealized gain / loss')}</h4>
+            {unrealized ? <div className={`flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1 font-semibold tabular-nums ${unrealized.amount > 0 ? 'text-positive' : unrealized.amount < 0 ? 'text-negative' : 'text-ink'}`}>
+              <bdi dir="ltr" className="holding-return-amount text-subhead">{unrealized.amount.toLocaleString(locale(), { style: 'currency', currency: 'USD', signDisplay: 'exceptZero' })}</bdi>
+              <bdi dir="ltr" className="holding-return-percent text-body">{unrealized.percent === null ? '—' : unrealized.percent.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' }) + '%'}</bdi>
+            </div> : <p className="text-caption text-secondary mt-1">{t('A market quote and purchase cost are needed to calculate this return.')}</p>}
+            <p className="text-caption text-secondary mt-2">{t('Unrealized; excludes dividends, fees and taxes.')}</p>
+            {stock.extendedPrice && stock.marketStatus !== 'regular' ? <p className="text-caption text-secondary mt-1">{t('Based on the regular-session price shown above.')}</p> : null}
+          </section>}
 
           {/* Sparkline Chart */}
           <div className="holding-sparkline h-16 w-full mb-4">
@@ -300,6 +313,14 @@ export const StockCard = memo(function StockCard({ stock, className }: StockCard
                 <span>{t("Shares")}</span>
                 <span dir="ltr" className="font-semibold text-ink">{quantity.toLocaleString(locale(), { maximumFractionDigits: 4 })}</span>
               </div>
+              <div className="flex justify-between text-[10px] text-secondary">
+                <span>{t('Average purchase price')}</span>
+                <span dir="ltr" className="font-semibold text-ink">{Number.isFinite(stock.averagePrice) && stock.averagePrice >= 0 ? stock.averagePrice.toLocaleString(locale(), { style: 'currency', currency: 'USD' }) : '—'}</span>
+              </div>
+              {unrealized && <div className="flex justify-between text-[10px] text-secondary">
+                <span>{t('Remaining purchase cost')}</span>
+                <span dir="ltr" className="font-semibold text-ink">{unrealized.costBasis.toLocaleString(locale(), { style: 'currency', currency: 'USD' })}</span>
+              </div>}
               <div className="flex justify-between text-[10px] text-secondary">
                 <span>{t("Total Value")}</span>
                 <span dir="ltr" className="font-semibold text-ink">${totalValue.toLocaleString(locale(), { maximumFractionDigits: 2 })}</span>
