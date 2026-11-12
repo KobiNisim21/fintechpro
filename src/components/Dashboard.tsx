@@ -1,5 +1,6 @@
 import { t, useLanguage } from '@/i18n';
-﻿import { lazy, Suspense, useState, startTransition, useCallback } from 'react';
+﻿import { lazy, Suspense, useState, startTransition, useCallback, useRef } from 'react';
+import type { WatchlistHandle } from './WatchlistView';
 import { LayoutGrid, PieChart, Eye, CalendarDays } from 'lucide-react';
 import { MotionConfig } from 'framer-motion';
 import { Sidebar } from './Sidebar';
@@ -39,9 +40,10 @@ export default function Dashboard() {
     useLanguage();
   const [viewMode, setViewMode] = useState<'holdings' | 'insights' | 'watchlist' | 'calendar'>('holdings');
   const { fetchPositions } = usePortfolio();
+  const watchlistRef = useRef<WatchlistHandle>(null);
 
   const handleRefresh = useCallback(async () => {
-    await fetchPositions();
+    await Promise.all([fetchPositions(), watchlistRef.current?.refresh()]);
   }, [fetchPositions]);
 
   return (
@@ -142,7 +144,7 @@ export default function Dashboard() {
             </Suspense>
           ) : viewMode === 'watchlist' ? (
             <Suspense fallback={<ViewSkeleton />}>
-              <WatchlistView />
+              <WatchlistView ref={watchlistRef} />
             </Suspense>
           ) : (
             <Suspense fallback={<ViewSkeleton />}>

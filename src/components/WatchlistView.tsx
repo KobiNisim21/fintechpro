@@ -1,12 +1,14 @@
 import { t, useLanguage, locale } from '@/i18n';
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, X, Trash2, Eye, TrendingUp, TrendingDown, Search } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef, useImperativeHandle, forwardRef } from 'react';
+import { Plus, X, Trash2, Eye, TrendingUp, TrendingDown, Search, RefreshCw } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
 import { watchlistAPI, WatchlistItem } from '@/api/watchlist';
 import { stocksAPI, type ExtendedQuote } from '@/api/stocks';
 import { ExtendedHoursQuotes } from './ExtendedHoursQuotes';
+import { PriceFreshness } from './PriceFreshness';
+import { resolvePriceDetails, type PriceStatus } from '@/lib/priceDetails';
 import { SimpleDialog } from './SimpleDialog';
 import { Button } from '@/components/ui/button';
 
@@ -14,10 +16,13 @@ import { Button } from '@/components/ui/button';
 interface WatchlistStock extends WatchlistItem {
     quote?: ExtendedQuote;
     price: number;
-    dailyChange: number;
-    weeklyChange: number;
-    monthlyChange: number;
-    yearlyChange: number;
+    priceSource?: string;
+    priceUpdatedAt?: string;
+    priceStatus?: PriceStatus;
+    dailyChange: number | null;
+    weeklyChange: number | null;
+    monthlyChange: number | null;
+    yearlyChange: number | null;
     chartData: { date: string; price: number }[];
     loaded: boolean;
 }
@@ -81,11 +86,17 @@ function ChangeBadge({ label, value }: { label: string; value: number | null }) 
 // ═════════════════════════════════════════════════════════════════
 //  WATCHLIST VIEW
 // ═════════════════════════════════════════════════════════════════
-export function WatchlistView() {
+export interface WatchlistHandle { refresh: () => Promise<void> }
+
+export const WatchlistView = forwardRef<WatchlistHandle>(function WatchlistView(_, ref) {
     useLanguage();
     const [watchlist, setWatchlist] = useState<WatchlistStock[]>([]);
     const [loading, setLoading] = useState(true);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
+    const [refreshError, setRefreshError] = useState(false);
+    const inFlight = useRef<Promise<void> | null>(null);
+    const generation = useRef(0);
+    const historyCache = useRef(new Map<string, { data: Awaited<ReturnType<typeof stocksAPI.getStockHistory>>; at: number }>());
 
     // Search state
     const [searchQuery, setSearchQuery] = useState('');
@@ -94,24 +105,30 @@ export function WatchlistView() {
     const [addingSymbol, setAddingSymbol] = useState('');
 
     // ─── Fetch watchlist from API ─────────────────────────────────
-    const fetchWatchlist = useCallback(async () => {
+    const fetchWatchlist = useCallback((): Promise<void> => {
+        if (inFlight.current) return inFlight.current;
+        const currentGeneration = generation.current;
+        const current = () => currentGeneration === generation.current;
+        const run = async () => {
         try {
             setLoading(true);
+            setRefreshError(false);
             const items = await watchlistAPI.getAll();
+            if (!current()) return;
 
             // Initialize with empty data
             const stocks: WatchlistStock[] = items.map(item => ({
                 ...item,
                 price: 0,
-                dailyChange: 0,
-                weeklyChange: 0,
-                monthlyChange: 0,
-                yearlyChange: 0,
+                dailyChange: null,
+                weeklyChange: null,
+                monthlyChange: null,
+                yearlyChange: null,
                 chartData: [],
                 loaded: false,
             }));
 
-            setWatchlist(stocks);
+            setWatchlist(prev => stocks.map(stock => ({ ...stock, ...prev.find(existing => existing._id === stock._id) })));
 
             if (stocks.length === 0) {
                 setLoading(false);
@@ -125,7 +142,15 @@ export function WatchlistView() {
             let batchQuotes: Record<string, ExtendedQuote> = {};
             try {
                 batchQuotes = await stocksAPI.getBatchExtendedQuotes(symbols);
-            } catch { /* fallback below */ }
+            } catch { if (current()) setRefreshError(true); }
+            if (!current()) return;
+            if (symbols.some(symbol => !Number.isFinite(batchQuotes[symbol]?.regularMarketPrice) || !(batchQuotes[symbol]?.regularMarketPrice > 0))) setRefreshError(true);
+            // Show received prices immediately; charts must not block quotes.
+            setWatchlist(prev => prev.map(stock => {
+                const quote = batchQuotes[stock.symbol];
+                const details = resolvePriceDetails(quote, stock, 0);
+                return { ...stock, ...details, quote: details.priceStatus === 'estimated' || details.priceStatus === 'stale' ? stock.quote : quote, loaded: true };
+            }));
 
             // 2. Historical data for each symbol (1 year)
             const to = Math.floor(Date.now() / 1000);
@@ -133,14 +158,18 @@ export function WatchlistView() {
 
             const historyResults = await Promise.all(
                 symbols.map(async (symbol) => {
+                    const cached = historyCache.current.get(symbol);
+                    if (cached && Date.now() - cached.at < 15 * 60_000) return { symbol, data: cached.data };
                     try {
                         const data = await stocksAPI.getStockHistory(symbol, from, to, 'D');
+                        if (current()) historyCache.current.set(symbol, { data, at: Date.now() });
                         return { symbol, data };
                     } catch {
-                        return { symbol, data: { c: [], t: [] } };
+                        return { symbol, data: cached?.data ?? { c: [], t: [] } };
                     }
                 })
             );
+            if (!current()) return;
 
             // 3. Combine all data
             setWatchlist(prev => prev.map(stock => {
@@ -148,7 +177,8 @@ export function WatchlistView() {
                 const histResult = historyResults.find(r => r.symbol === stock.symbol);
                 const hist = histResult?.data;
 
-                const currentPrice = quote?.regularMarketPrice || 0;
+                const details = resolvePriceDetails(quote, stock, 0);
+                const currentPrice = details.price;
                 const closePrices = hist?.c || [];
                 const timestamps = hist?.t || [];
 
@@ -165,11 +195,12 @@ export function WatchlistView() {
                 };
 
                 const calcChange = (oldPrice: number | null): number | null => {
-                    if (!oldPrice || oldPrice === 0 || currentPrice === 0) return null;
+                    if (!oldPrice || !Number.isFinite(oldPrice) || oldPrice <= 0 || currentPrice <= 0) return null;
                     return ((currentPrice - oldPrice) / oldPrice) * 100;
                 };
 
-                const dailyChange = calcChange(findPriceAtAge(1 * oneDay));
+                const dailyChange = typeof quote?.regularMarketChangePercent === 'number' && Number.isFinite(quote.regularMarketChangePercent)
+                    ? quote.regularMarketChangePercent : calcChange(findPriceAtAge(1 * oneDay));
                 const weeklyChange = calcChange(findPriceAtAge(7 * oneDay));
                 const monthlyChange = calcChange(findPriceAtAge(30 * oneDay));
                 const yearlyChange = calcChange(findPriceAtAge(365 * oneDay));
@@ -188,25 +219,45 @@ export function WatchlistView() {
 
                 return {
                     ...stock,
-                    price: currentPrice,
-                    quote,
-                    dailyChange: dailyChange ?? 0,
-                    weeklyChange: weeklyChange ?? 0,
-                    monthlyChange: monthlyChange ?? 0,
-                    yearlyChange: yearlyChange ?? 0,
-                    chartData,
+                    ...details,
+                    dailyChange,
+                    weeklyChange,
+                    monthlyChange,
+                    yearlyChange,
+                    chartData: chartData.length ? chartData : stock.chartData,
                     loaded: true,
                 };
             }));
         } catch (err) {
             console.error('Failed to load watchlist:', err);
+            if (current()) {
+                setRefreshError(true);
+                setWatchlist(prev => prev.map(stock => ({ ...stock, priceStatus: 'stale' })));
+            }
         } finally {
-            setLoading(false);
+            if (current()) setLoading(false);
         }
+        };
+        const task = run();
+        inFlight.current = task;
+        void task.finally(() => { if (inFlight.current === task) inFlight.current = null; });
+        return task;
     }, []);
 
+    useImperativeHandle(ref, () => ({ refresh: fetchWatchlist }), [fetchWatchlist]);
+
     useEffect(() => {
-        fetchWatchlist();
+        void fetchWatchlist();
+        const refreshVisible = () => { if (document.visibilityState === 'visible') void fetchWatchlist(); };
+        const timer = setInterval(refreshVisible, 60_000);
+        window.addEventListener('focus', refreshVisible);
+        document.addEventListener('visibilitychange', refreshVisible);
+        return () => {
+            generation.current++;
+            clearInterval(timer);
+            window.removeEventListener('focus', refreshVisible);
+            document.removeEventListener('visibilitychange', refreshVisible);
+        };
     }, [fetchWatchlist]);
 
     // ─── Search debounce ──────────────────────────────────────────
@@ -256,7 +307,7 @@ export function WatchlistView() {
     };
 
     // ─── Empty State ──────────────────────────────────────────────
-    if (!loading && watchlist.length === 0) {
+    if (!loading && watchlist.length === 0 && !refreshError) {
         return (
             <div className="flex flex-col items-center justify-center py-20 bg-[var(--color-ios-card)] rounded-[32px] border border-white/60 shadow-[var(--shadow-ios-card)]">
                 <div className="w-20 h-20 rounded-[24px] bg-[var(--color-ios-input)] flex items-center justify-center mb-6 shadow-none text-cyan-500">
@@ -347,18 +398,24 @@ export function WatchlistView() {
     return (
         <div>
             {/* Header with Add Button */}
-            <div className="flex items-center justify-between mb-4 px-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4 px-2">
                 <div className="flex items-center gap-2 text-[var(--color-ios-secondary)] font-bold">
                     <Eye className="w-5 h-5 text-cyan-600" />
                     <span className="text-sm">{t("{0} securities tracked", [watchlist.length])}</span>
                 </div>
+                <div className="flex flex-wrap gap-2">
+                <button type="button" className="data-action inline-flex items-center gap-2" disabled={loading} onClick={() => void fetchWatchlist()}>
+                    <RefreshCw size={16} className={loading ? 'animate-spin' : ''} aria-hidden="true" />{t('Refresh')}
+                </button>
                 <Button
                     onClick={() => setAddDialogOpen(true)}
                     size="sm"
                     className="bg-[var(--color-ios-input)] hover:bg-white text-[var(--color-ios-fg)] font-bold shadow-[var(--shadow-ios-card)] hover:shadow-[var(--shadow-ios-card)] border-none active:scale-[0.92] transition-all rounded-[16px] px-4"
                 >
                     <Plus className="w-4 h-4 me-1" /> {t(" Add Stock")}</Button>
+                </div>
             </div>
+            {refreshError && <p role="status" className="text-caption text-warning mb-4">{t('Watchlist refresh failed. Previous prices are kept where available. Retry Refresh.')}</p>}
 
             {/* Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -393,10 +450,12 @@ export function WatchlistView() {
                                 </div>
                                 <div className="text-end mt-1">
                                     <p dir="ltr" className="text-xl font-bold text-[var(--color-ios-fg)]  tracking-tight">
-                                        {stock.loaded ? `$${stock.price.toFixed(2)}` : '...'}
+                                        {stock.loaded ? stock.price > 0 ? `$${stock.price.toFixed(2)}` : t('Price unavailable') : '...'}
                                     </p>
                                 </div>
                             </div>
+
+                            {stock.price > 0 && <PriceFreshness source={stock.priceSource} updatedAt={stock.priceUpdatedAt} status={stock.priceStatus} />}
 
                             <div className="mb-4"><ExtendedHoursQuotes quote={stock.quote} loaded={stock.loaded} /></div>
 
@@ -414,9 +473,9 @@ export function WatchlistView() {
                                     <ResponsiveContainer width="100%" height="100%">
                                         <LineChart data={stock.chartData}>
                                             <defs>
-                                                <linearGradient id={`grad-$<bdi dir="ltr">{stock.symbol}</bdi>`} x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor={stock.monthlyChange >= 0 ? 'var(--app-positive)' : 'var(--app-negative)'} stopOpacity={0.2} />
-                                                    <stop offset="95%" stopColor={stock.monthlyChange >= 0 ? 'var(--app-positive)' : 'var(--app-negative)'} stopOpacity={0} />
+                                                <linearGradient id={`grad-${stock.symbol}`} x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor={(stock.monthlyChange ?? 0) >= 0 ? 'var(--app-positive)' : 'var(--app-negative)'} stopOpacity={0.2} />
+                                                    <stop offset="95%" stopColor={(stock.monthlyChange ?? 0) >= 0 ? 'var(--app-positive)' : 'var(--app-negative)'} stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
@@ -441,11 +500,11 @@ export function WatchlistView() {
                                             <Line
                                                 type="monotone"
                                                 dataKey="price"
-                                                stroke={stock.monthlyChange >= 0 ? 'var(--app-positive)' : 'var(--app-negative)'}
+                                                stroke={(stock.monthlyChange ?? 0) >= 0 ? 'var(--app-positive)' : 'var(--app-negative)'}
                                                 strokeWidth={2}
                                                 dot={false}
-                                                activeDot={{ r: 4, fill: stock.monthlyChange >= 0 ? 'var(--app-positive)' : 'var(--app-negative)', stroke: '#fff', strokeWidth: 1 }}
-                                                fill={`url(#grad-$<bdi dir="ltr">{stock.symbol}</bdi>)`}
+                                                activeDot={{ r: 4, fill: (stock.monthlyChange ?? 0) >= 0 ? 'var(--app-positive)' : 'var(--app-negative)', stroke: '#fff', strokeWidth: 1 }}
+                                                fill={`url(#grad-${stock.symbol})`}
                                             />
                                         </LineChart>
                                     </ResponsiveContainer>
@@ -463,4 +522,4 @@ export function WatchlistView() {
             {renderAddDialog()}
         </div>
     );
-}
+});

@@ -2824,6 +2824,7 @@
   "Switch to dark mode": { "en": "Switch to dark mode", "he": "מעבר למצב כהה" },
   "Extended-hours quotes": { "en": "Extended-hours quotes", "he": "מחירים מחוץ לשעות המסחר" },
   "Price unavailable": { "en": "Price unavailable", "he": "מחיר לא זמין" },
+  "Watchlist refresh failed. Previous prices are kept where available. Retry Refresh.": { "en": "Watchlist refresh failed. Previous prices are kept where available. Retry Refresh.", "he": "רענון רשימת המעקב נכשל. מחירים קודמים נשמרו ככל שהיו זמינים. נסו שוב באמצעות רענון." },
   "Latest reported extended-hours quotes. May be delayed or from an earlier session.": { "en": "Latest reported extended-hours quotes. May be delayed or from an earlier session.", "he": "המחירים האחרונים שדווחו מחוץ לשעות המסחר. עשויים להיות בעיכוב או ממועד מסחר קודם." },
   "Switch to light mode": { "en": "Switch to light mode", "he": "מעבר למצב בהיר" },
   "All holding bubbles ({0})": {
